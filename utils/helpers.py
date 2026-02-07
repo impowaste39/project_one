@@ -63,8 +63,10 @@ def get_market_status_message():
     """Get human-readable market status"""
     now = get_ist_now()
 
-    if now.weekday() >= 5:
-        return "Market Closed (Weekend)"
+    # if now.weekday() >= 5:
+    #     return "Market Closed (Weekend)"
+
+    return True # Force it to True for testing
 
     market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
     market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
