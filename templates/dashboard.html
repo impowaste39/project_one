@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Trading Bot | Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --bg-card-hover: #1c2128;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --accent-green: #3fb950;
+            --accent-red: #f85149;
+            --accent-blue: #58a6ff;
+            --accent-purple: #a371f7;
+            --accent-orange: #d29922;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: var(--bg-card) !important;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--text-primary) !important;
+        }
+        
+        .navbar-brand i {
+            color: var(--accent-green);
+        }
+        
+        .market-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .market-status.open {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--accent-green);
+        }
+        
+        .market-status.closed {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--accent-red);
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-dot.open {
+            background: var(--accent-green);
+        }
+        
+        .status-dot.closed {
+            background: var(--accent-red);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .container-fluid {
+            padding: 2rem;
+            max-width: 1600px;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .card:hover {
+            background: var(--bg-card-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card-header {
+            background: transparent;
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card-header i {
+            color: var(--accent-blue);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value.positive {
+            color: var(--accent-green);
+        }
+        
+        .stat-value.negative {
+            color: var(--accent-red);
+        }
+        
+        .table {
+            color: var(--text-primary);
+            margin-bottom: 0;
+        }
+        
+        .table thead th {
+            background: rgba(88, 166, 255, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            color: var(--text-secondary);
+        }
+        
+        .table tbody td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background: rgba(88, 166, 255, 0.05);
+        }
+        
+        .badge {
+            padding: 0.35rem 0.65rem;
+            font-weight: 500;
+            border-radius: 6px;
+        }
+        
+        .badge-open {
+            background: rgba(88, 166, 255, 0.15);
+            color: var(--accent-blue);
+        }
+        
+        .badge-closed {
+            background: rgba(139, 148, 158, 0.15);
+            color: var(--text-secondary);
+        }
+        
+        .badge-profit {
+            background: rgba(63, 185, 80, 0.15);
+            color: var(--accent-green);
+        }
+        
+        .badge-loss {
+            background: rgba(248, 81, 73, 0.15);
+            color: var(--accent-red);
+        }
+        
+        .symbol-badge {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--accent-purple);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .progress-ring {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+        
+        .win-rate-circle {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: center;
+        }
+        
+        .win-rate-bg {
+            stroke: var(--border-color);
+        }
+        
+        .win-rate-progress {
+            stroke: var(--accent-green);
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        
+        .refresh-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .refresh-btn:hover {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+        
+        .last-update {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+        
+        @media (max-width: 768px) {
+            .container-fluid {
+                padding: 1rem;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .table-responsive {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-robot me-2"></i>AI Trading Bot
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span class="market-status {{ 'open' if 'Open' in market_status else 'closed' }}">
+                    <span class="status-dot {{ 'open' if 'Open' in market_status else 'closed' }}"></span>
+                    {{ market_status }}
+                </span>
+                <button class="refresh-btn" onclick="location.reload()">
+                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container-fluid">
+        <!-- Portfolio Overview -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h5 class="text-secondary mb-3">
+                    <i class="fas fa-chart-line me-2"></i>Portfolio Overview
+                </h5>
+            </div>
+            
+            <div class="col-md-3 col-6">
+                <div class="card stat-card">
+                    <div class="stat-value">₹{{ "%.2f"|format(portfolio.total_capital if portfolio else 5000) }}</div>
+                    <div class="stat-label">Total Capital</div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-6">
+                <div class="card stat-card">
+                    <div class="stat-value">₹{{ "%.2f"|format(portfolio.available_capital if portfolio else 5000) }}</div>
+                    <div class="stat-label">Available</div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-6">
+                <div class="card stat-card">
+                    {% set pnl = portfolio.realized_pnl if portfolio else 0 %}
+                    <div class="stat-value {{ 'positive' if pnl >= 0 else 'negative' }}">
+                        ₹{{ "%+.2f"|format(pnl) }}
+                    </div>
+                    <div class="stat-label">Realized P&L</div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 col-6">
+                <div class="card stat-card">
+                    <div class="stat-value {{ 'positive' if win_rate >= 50 else 'negative' }}">{{ "%.1f"|format(win_rate) }}%</div>
+                    <div class="stat-label">Win Rate ({{ total_trades }} trades)</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <!-- Open Positions -->
+            <div class="col-lg-7">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-bar"></i>
+                        Open Positions ({{ open_trades|length }})
+                    </div>
+                    <div class="card-body p-0">
+                        {% if open_trades %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Entry</th>
+                                        <th>Qty</th>
+                                        <th>Stop Loss</th>
+                                        <th>Target</th>
+                                        <th>Score</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for trade in open_trades %}
+                                    <tr>
+                                        <td><span class="symbol-badge">{{ trade.symbol.replace('.NS', '') }}</span></td>
+                                        <td>₹{{ "%.2f"|format(trade.entry_price) }}</td>
+                                        <td>{{ trade.quantity }}</td>
+                                        <td class="text-danger">₹{{ "%.2f"|format(trade.stop_loss) }}</td>
+                                        <td class="text-success">₹{{ "%.2f"|format(trade.target) }}</td>
+                                        <td><span class="badge badge-open">{{ trade.entry_score or 'N/A' }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>No open positions</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Recent Trades -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-history"></i>
+                        Recent Trades
+                    </div>
+                    <div class="card-body p-0">
+                        {% if closed_trades %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Entry</th>
+                                        <th>Exit</th>
+                                        <th>P&L</th>
+                                        <th>Duration</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for trade in closed_trades %}
+                                    <tr>
+                                        <td><span class="symbol-badge">{{ trade.symbol.replace('.NS', '') }}</span></td>
+                                        <td>₹{{ "%.2f"|format(trade.entry_price) }}</td>
+                                        <td>₹{{ "%.2f"|format(trade.exit_price or 0) }}</td>
+                                        <td>
+                                            <span class="badge {{ 'badge-profit' if (trade.profit_loss or 0) >= 0 else 'badge-loss' }}">
+                                                ₹{{ "%+.2f"|format(trade.profit_loss or 0) }}
+                                            </span>
+                                        </td>
+                                        <td>{{ trade.hold_duration_days or 0 }}d</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-chart-area"></i>
+                            <p>No completed trades yet</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar -->
+            <div class="col-lg-5">
+                <!-- Win Rate Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-trophy"></i>
+                        Performance
+                    </div>
+                    <div class="card-body text-center">
+                        <svg class="progress-ring" viewBox="0 0 120 120">
+                            <circle class="win-rate-circle win-rate-bg" cx="60" cy="60" r="50"></circle>
+                            <circle class="win-rate-circle win-rate-progress" cx="60" cy="60" r="50"
+                                stroke-dasharray="314.16"
+                                stroke-dashoffset="{{ 314.16 - (win_rate / 100 * 314.16) }}">
+                            </circle>
+                        </svg>
+                        <div class="mt-3">
+                            <div class="stat-value {{ 'positive' if win_rate >= 50 else 'negative' }}">
+                                {{ "%.1f"|format(win_rate) }}%
+                            </div>
+                            <div class="stat-label">Win Rate</div>
+                        </div>
+                        <div class="row mt-4">
+                            <div class="col-6">
+                                <div class="text-success fs-4 fw-bold">
+                                    {{ (total_trades * win_rate / 100)|int }}
+                                </div>
+                                <div class="stat-label">Wins</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-danger fs-4 fw-bold">
+                                    {{ (total_trades - (total_trades * win_rate / 100)|int)|int }}
+                                </div>
+                                <div class="stat-label">Losses</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-info-circle"></i>
+                        Quick Stats
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom border-secondary">
+                            <span class="text-secondary">Total Trades</span>
+                            <span class="fw-bold">{{ total_trades }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom border-secondary">
+                            <span class="text-secondary">Open Positions</span>
+                            <span class="fw-bold">{{ open_trades|length }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3 pb-3 border-bottom border-secondary">
+                            <span class="text-secondary">Deployed Capital</span>
+                            <span class="fw-bold">₹{{ "%.2f"|format(portfolio.deployed_capital if portfolio else 0) }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-secondary">Unrealized P&L</span>
+                            {% set unrealized = portfolio.unrealized_pnl if portfolio else 0 %}
+                            <span class="fw-bold {{ 'text-success' if unrealized >= 0 else 'text-danger' }}">
+                                ₹{{ "%+.2f"|format(unrealized) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- System Status -->
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-server"></i>
+                        System Status
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-secondary">Last Updated</span>
+                            <span>{{ now.strftime('%I:%M %p IST') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-secondary">Market Scanner</span>
+                            <span class="text-success"><i class="fas fa-check-circle"></i> Active</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-secondary">Position Monitor</span>
+                            <span class="text-success"><i class="fas fa-check-circle"></i> Active</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-refresh every 30 seconds
+        setTimeout(() => location.reload(), 30000);
+    </script>
+</body>
+</html>

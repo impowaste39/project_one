@@ -1,0 +1,39 @@
+# Core Web Framework
+flask>=3.0.0
+gunicorn>=21.2.0
+flask-cors>=4.0.0
+
+# Background Jobs
+APScheduler>=3.10.4
+
+# Database
+sqlalchemy>=2.0.23
+psycopg[binary]>=3.1.18
+alembic>=1.13.1
+
+# Data Processing & Analysis (Python 3.13 compatible)
+pandas>=2.2.0
+numpy>=1.26.0
+yfinance>=0.2.36
+
+# Technical Analysis (use custom implementation if pandas_ta fails)
+# pandas_ta>=0.3.14b0
+
+# Machine Learning
+scikit-learn>=1.4.0
+
+# HTTP Requests
+requests>=2.31.0
+beautifulsoup4>=4.12.2
+
+# Environment & Config
+python-dotenv>=1.0.0
+
+# Email Service (Resend)
+resend>=0.7.0
+
+# Logging
+python-json-logger>=2.0.7
+
+# Timezone
+pytz>=2024.1
