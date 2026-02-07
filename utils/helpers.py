@@ -18,33 +18,31 @@ def get_ist_now():
 
 def is_market_hours():
     """Check if currently in market hours"""
-    # now = get_ist_now()
+    now = get_ist_now()
 
-    # # Weekend check
-    # if now.weekday() >= 5:
-    #     return False
+    # Weekend check
+    if now.weekday() >= 5:
+        return False
 
-    # # Market hours: 9:15 AM - 3:30 PM
-    # market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
-    # market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
+    # Market hours: 9:15 AM - 3:30 PM
+    market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
+    market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
 
-    # return market_open <= now <= market_close
-    return True  # Force it to True for testing
+    return market_open <= now <= market_close
 
 
 def is_trading_hours():
     """Check if in safe trading window (avoid first/last 15 min)"""
-    # now = get_ist_now()
+    now = get_ist_now()
 
-    # if now.weekday() >= 5:
-    #     return False
+    if now.weekday() >= 5:
+        return False
 
-    # # Safe trading: 9:30 AM - 3:15 PM
-    # safe_start = now.replace(hour=9, minute=30, second=0, microsecond=0)
-    # safe_end = now.replace(hour=15, minute=15, second=0, microsecond=0)
+    # Safe trading: 9:30 AM - 3:15 PM
+    safe_start = now.replace(hour=9, minute=30, second=0, microsecond=0)
+    safe_end = now.replace(hour=15, minute=15, second=0, microsecond=0)
 
-    # return safe_start <= now <= safe_end
-    return True  # Force it to True for testing
+    return safe_start <= now <= safe_end
 
 
 def format_currency(amount):
@@ -65,6 +63,9 @@ def get_market_status_message():
     """Get human-readable market status"""
     now = get_ist_now()
 
+    if now.weekday() >= 5:
+        return "Market Closed (Weekend)"
+
     market_open = now.replace(hour=9, minute=15, second=0, microsecond=0)
     market_close = now.replace(hour=15, minute=30, second=0, microsecond=0)
 
@@ -72,8 +73,7 @@ def get_market_status_message():
         mins_to_open = int((market_open - now).total_seconds() / 60)
         return f"Market Opens in {mins_to_open} min"
     elif now > market_close:
-        # For testing, return "Testing Mode (Market Open)"
-        return "Market Open (Testing Mode)"
+        return "Market Closed"
     else:
         mins_to_close = int((market_close - now).total_seconds() / 60)
         return f"Market Open ({mins_to_close} min remaining)"
