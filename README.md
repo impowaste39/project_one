@@ -86,15 +86,24 @@ RESEND_API_KEY=re_your_api_key_here
 
 ## API Endpoints
 
-| Endpoint | Description |
-|----------|-------------|
-| `GET /` | Dashboard |
-| `GET /health` | Health check |
-| `GET /api/portfolio` | Portfolio state |
-| `GET /api/trades` | Trade history |
-| `GET /api/open-positions` | Open positions |
-| `GET /api/performance` | Performance metrics |
-| `POST /api/trigger-scan` | Manual market scan |
+| Endpoint | Description | Auth Required |
+|----------|-------------|---------------|
+| `GET /` | Dashboard | No |
+| `GET /health` | Health check | No |
+| `GET /api/portfolio` | Portfolio state | No |
+| `GET /api/trades` | Trade history | No |
+| `GET /api/open-positions`| Open positions | No |
+| `GET /api/performance` | Performance metrics | No |
+| `POST /api/trigger-scan` | Manual market scan | **Yes (X-API-KEY)** |
+
+### Calling Protected Endpoints
+
+To trigger a manual scan securely, include your `API_WEBHOOK_KEY` in the headers:
+
+```bash
+curl -X POST https://your-app.onrender.com/api/trigger-scan \
+  -H "X-API-KEY: your_super_secret_key"
+```
 
 ## Scheduled Jobs
 

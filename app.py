@@ -3,10 +3,11 @@ AI Trading Bot - Main Flask Application
 Autonomous swing trading bot for Indian stock market
 """
 
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, abort
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
+from functools import wraps
 import os
 import logging
 import atexit
@@ -45,6 +46,29 @@ data_service = DataService()
 
 # Timezone
 IST = pytz.timezone('Asia/Kolkata')
+
+# API Security
+
+
+def require_api_key(f):
+    """Decorator to require a secret API key for sensitive endpoints"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = os.getenv('API_WEBHOOK_KEY')
+
+        # If no key is set, it's open (not recommended)
+        if not api_key:
+            return f(*args, **kwargs)
+
+        request_key = request.headers.get('X-API-KEY')
+        if not request_key or request_key != api_key:
+            logger.warning(
+                f"Unauthorized API access attempt from {request.remote_addr}")
+            return jsonify({'error': 'Unauthorized', 'message': 'Invalid or missing API key'}), 401
+
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 # Scheduler
 scheduler = BackgroundScheduler(timezone=IST)
@@ -450,6 +474,7 @@ def api_market_context():
 
 
 @app.route('/api/trigger-scan', methods=['POST'])
+@require_api_key
 def trigger_scan():
     """Manually trigger a market scan"""
     try:
