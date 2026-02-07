@@ -383,6 +383,7 @@ def dashboard():
 
 
 @app.route('/api/portfolio')
+@require_api_key
 def api_portfolio():
     """Portfolio API endpoint"""
     db = get_session()
@@ -409,6 +410,7 @@ def api_portfolio():
 
 
 @app.route('/api/trades')
+@require_api_key
 def api_trades():
     """Trades API endpoint"""
     db = get_session()
@@ -423,6 +425,7 @@ def api_trades():
 
 
 @app.route('/api/open-positions')
+@require_api_key
 def api_open_positions():
     """Open positions API endpoint"""
     db = get_session()
@@ -438,15 +441,29 @@ def api_open_positions():
 @app.route('/health')
 def health():
     """Health check endpoint for UptimeRobot"""
+    db_status = "unknown"
+    db = get_session()
+    try:
+        # Try a simple query to verify connection
+        db.query(Portfolio).first()
+        db_status = "connected"
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}")
+        db_status = f"error: {str(e)}"
+    finally:
+        db.close()
+
     return jsonify({
-        'status': 'healthy',
+        'status': 'healthy' if db_status == "connected" else "unhealthy",
+        'database': db_status,
         'timestamp': datetime.now(IST).isoformat(),
         'scheduler_running': scheduler.running,
         'market_status': get_market_status_message()
-    }), 200
+    }), 200 if db_status == "connected" else 500
 
 
 @app.route('/api/performance')
+@require_api_key
 def api_performance():
     """Performance metrics API"""
     db = get_session()
@@ -462,6 +479,7 @@ def api_performance():
 
 
 @app.route('/api/market-context')
+@require_api_key
 def api_market_context():
     """Get current market context"""
     try:
