@@ -20,7 +20,7 @@ class MarketMonitor:
         self.db = db_session
         self.data_service = DataService()
         self.indicator_service = IndicatorService()
-        self.watchlist = self.data_service.get_watchlist('nifty50')
+        self.watchlist = self.data_service.get_watchlist('custom')
 
     def fetch_stock_data(self, symbol: str, period: str = '3mo', interval: str = '1d') -> pd.DataFrame:
         """Fetch historical data for a stock"""

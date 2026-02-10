@@ -303,7 +303,7 @@ scheduler.add_job(
     'cron',
     day_of_week='mon-fri',
     hour='9-15',
-    minute='*/5',
+    minute='*/15',
     id='market_scan'
 )
 
