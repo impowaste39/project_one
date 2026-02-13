@@ -335,3 +335,149 @@ class LearningEngine:
         except Exception as e:
             logger.error(f"Error generating performance report: {e}")
             return {'error': str(e), 'total_trades': 0}
+
+    def generate_learning_insights(self) -> dict:
+        """
+        Generate comprehensive learning insights for the AI
+
+        Returns:
+            Dict with learning progress, pattern insights, and recommendations
+        """
+        try:
+            # Get pattern statistics from scan data
+            from models.scan_report import PatternOccurrence, ScanResult, ScanReport
+            from datetime import timedelta
+
+            cutoff_date = datetime.now() - timedelta(days=30)
+
+            # Pattern occurrence analysis
+            pattern_occurrences = self.db.query(PatternOccurrence).filter(
+                PatternOccurrence.timestamp >= cutoff_date
+            ).all()
+
+            pattern_insights = {}
+            for occ in pattern_occurrences:
+                if occ.pattern not in pattern_insights:
+                    pattern_insights[occ.pattern] = {
+                        'total_seen': 0,
+                        'traded': 0,
+                        'avg_score': [],
+                        'market_conditions': []
+                    }
+
+                stats = pattern_insights[occ.pattern]
+                stats['total_seen'] += 1
+                if occ.was_traded:
+                    stats['traded'] += 1
+                if occ.score:
+                    stats['avg_score'].append(occ.score)
+                if occ.market_trend:
+                    stats['market_conditions'].append(occ.market_trend)
+
+            # Calculate averages and insights
+            insights = []
+            recommendations = []
+
+            for pattern, data in pattern_insights.items():
+                avg_score = sum(
+                    data['avg_score']) / len(data['avg_score']) if data['avg_score'] else 0
+                trade_rate = (data['traded'] / data['total_seen']
+                              * 100) if data['total_seen'] > 0 else 0
+
+                # Generate insights
+                if data['total_seen'] >= 10:
+                    if trade_rate < 10:
+                        insights.append(
+                            f"Pattern '{pattern}' appears frequently ({data['total_seen']} times) "
+                            f"but rarely meets entry criteria ({trade_rate:.1f}% trade rate)"
+                        )
+                        recommendations.append(
+                            f"Consider lowering confidence threshold for '{pattern}' "
+                            f"or reviewing its scoring criteria"
+                        )
+                    elif trade_rate > 50:
+                        insights.append(
+                            f"Pattern '{pattern}' has high trade rate ({trade_rate:.1f}%) - "
+                            f"strong signal quality"
+                        )
+
+            # Analyze rejection reasons
+            recent_scans = self.db.query(ScanResult).join(ScanReport).filter(
+                ScanReport.timestamp >= cutoff_date,
+                ScanResult.decision == 'PASS'
+            ).all()
+
+            rejection_counts = {}
+            for result in recent_scans:
+                reason = result.rejection_reason or 'Unknown'
+                rejection_counts[reason] = rejection_counts.get(reason, 0) + 1
+
+            # Top rejection reason
+            if rejection_counts:
+                top_rejection = max(
+                    rejection_counts.items(), key=lambda x: x[1])
+                insights.append(
+                    f"Most common rejection reason: '{top_rejection[0]}' "
+                    f"({top_rejection[1]} occurrences)"
+                )
+
+                if 'insufficient' in top_rejection[0].lower():
+                    recommendations.append(
+                        "Consider adjusting confidence score threshold - "
+                        "many opportunities are close but not meeting criteria"
+                    )
+
+            # Get actual trade performance
+            trades = self.db.query(Trade).filter(
+                Trade.status == 'CLOSED',
+                Trade.entry_date >= cutoff_date
+            ).all()
+
+            trade_performance = {
+                'total_trades': len(trades),
+                'wins': len([t for t in trades if t.profit_loss and t.profit_loss > 0]),
+                'losses': len([t for t in trades if t.profit_loss and t.profit_loss <= 0])
+            }
+
+            if trade_performance['total_trades'] > 0:
+                win_rate = (
+                    trade_performance['wins'] / trade_performance['total_trades']) * 100
+                trade_performance['win_rate'] = round(win_rate, 2)
+
+                if win_rate < 40:
+                    recommendations.append(
+                        f"Win rate is low ({win_rate:.1f}%). Consider being more selective "
+                        "or adjusting entry criteria"
+                    )
+                elif win_rate > 60:
+                    insights.append(
+                        f"Strong win rate ({win_rate:.1f}%) - current strategy is working well"
+                    )
+                    recommendations.append(
+                        "Consider slightly lowering threshold to capture more opportunities "
+                        "while maintaining quality"
+                    )
+
+            return {
+                'insights': insights,
+                'recommendations': recommendations,
+                'pattern_analysis': {
+                    pattern: {
+                        'total_seen': data['total_seen'],
+                        'traded': data['traded'],
+                        'trade_rate': round((data['traded'] / data['total_seen'] * 100) if data['total_seen'] > 0 else 0, 2),
+                        'avg_score': round(sum(data['avg_score']) / len(data['avg_score']), 2) if data['avg_score'] else 0
+                    }
+                    for pattern, data in pattern_insights.items()
+                },
+                'trade_performance': trade_performance,
+                'top_rejections': dict(sorted(rejection_counts.items(), key=lambda x: x[1], reverse=True)[:5])
+            }
+
+        except Exception as e:
+            logger.error(f"Error generating learning insights: {e}")
+            return {
+                'insights': [],
+                'recommendations': [],
+                'error': str(e)
+            }

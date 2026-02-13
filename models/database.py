@@ -202,6 +202,12 @@ def init_database():
     """Initialize database connection and create tables"""
     global _engine, _SessionLocal
 
+    # Import scan models here to ensure they're registered
+    try:
+        from models.scan_report import ScanReport, ScanResult, PatternOccurrence
+    except ImportError:
+        pass  # Models will be created when scan_report module is available
+
     database_url = os.getenv('DATABASE_URL', 'sqlite:///trading_bot.db')
 
     # Fix for Render PostgreSQL URL format - use psycopg (v3) driver

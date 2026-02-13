@@ -116,6 +116,7 @@ def scan_market_job():
         return
 
     db = get_session()
+    scan_start_time = datetime.now(IST)
 
     try:
         logger.info("=" * 50)
@@ -123,10 +124,13 @@ def scan_market_job():
         logger.info("=" * 50)
 
         # Initialize components
+        from services.reporting_service import ReportingService
+
         monitor = MarketMonitor(db)
         risk_manager = RiskManager()
         brain = TradingBrain(db, risk_manager)
         portfolio_mgr = PortfolioManager(db, risk_manager, email_service)
+        reporting_service = ReportingService(db)
 
         # Get market context
         market_context = monitor.get_market_context()
@@ -138,6 +142,22 @@ def scan_market_job():
 
         # Scan market for opportunities
         opportunities = monitor.scan_market()
+
+        # Calculate scan duration
+        scan_duration = (datetime.now(IST) - scan_start_time).total_seconds()
+
+        # Track scan statistics
+        scan_stats = {
+            'total_scanned': len(monitor.watchlist),
+            'opportunities_found': len(opportunities),
+            'trades_entered': 0
+        }
+
+        # Save scan report
+        scan_report = reporting_service.save_scan_report(
+            market_context, scan_stats, scan_duration
+        )
+        scan_report_id = scan_report.id if scan_report else None
 
         if not opportunities:
             logger.info("No trading opportunities found")
@@ -151,12 +171,31 @@ def scan_market_job():
                 evaluation = brain.evaluate_opportunity(
                     opp, market_context, portfolio_state)
 
+                # Always save pattern occurrences (for learning) regardless of score
+                if scan_report_id and opp.get('patterns'):
+                    reporting_service._save_pattern_occurrences(
+                        opp, evaluation, scan_report_id
+                    )
+
+                # Save scan result (filtered by MIN_SCORE_TO_SAVE)
+                if scan_report_id:
+                    reporting_service.save_scan_result(
+                        scan_report_id, opp, evaluation
+                    )
+
+                # Log detailed evaluation
+                logger.info(
+                    f"📊 {opp['symbol']}: Score={evaluation['score']}/100, "
+                    f"Decision={evaluation['decision']}, Reason={evaluation['reason']}"
+                )
+
                 if evaluation['decision'] == 'ENTER':
                     success = portfolio_mgr.enter_trade(evaluation)
 
                     if success:
                         logger.info(
                             f"✅ TRADE EXECUTED: {evaluation['symbol']} @ ₹{evaluation['entry_price']}")
+                        scan_stats['trades_entered'] += 1
                         portfolio_state = portfolio_mgr.get_portfolio_state()
                 else:
                     logger.info(
@@ -166,7 +205,13 @@ def scan_market_job():
                 logger.error(f"Error evaluating {opp['symbol']}: {e}")
                 continue
 
-        logger.info("Market scan completed")
+        # Update scan report with final trade count
+        if scan_report:
+            scan_report.trades_entered = scan_stats['trades_entered']
+            db.commit()
+
+        logger.info(
+            f"Market scan completed - {scan_stats['trades_entered']} trades entered")
 
     except Exception as e:
         logger.error(f"Error in market scan job: {e}")
@@ -303,7 +348,7 @@ scheduler.add_job(
     'cron',
     day_of_week='mon-fri',
     hour='9-15',
-    minute='*/15',
+    minute='*/5',
     id='market_scan'
 )
 
@@ -383,7 +428,6 @@ def dashboard():
 
 
 @app.route('/api/portfolio')
-@require_api_key
 def api_portfolio():
     """Portfolio API endpoint"""
     db = get_session()
@@ -410,7 +454,6 @@ def api_portfolio():
 
 
 @app.route('/api/trades')
-@require_api_key
 def api_trades():
     """Trades API endpoint"""
     db = get_session()
@@ -425,7 +468,6 @@ def api_trades():
 
 
 @app.route('/api/open-positions')
-@require_api_key
 def api_open_positions():
     """Open positions API endpoint"""
     db = get_session()
@@ -500,6 +542,95 @@ def trigger_scan():
         return jsonify({'status': 'Scan triggered successfully'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/scan-history')
+def api_scan_history():
+    """Get recent scan history"""
+    db = get_session()
+    try:
+        from services.reporting_service import ReportingService
+        reporting = ReportingService(db)
+
+        limit = request.args.get('limit', 20, type=int)
+        history = reporting.get_scan_history(limit=limit)
+
+        return jsonify(history)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@app.route('/api/scan-details/<int:scan_id>')
+def api_scan_details(scan_id):
+    """Get detailed results for a specific scan"""
+    db = get_session()
+    try:
+        from services.reporting_service import ReportingService
+        reporting = ReportingService(db)
+
+        details = reporting.get_scan_details(scan_id)
+
+        if not details:
+            return jsonify({'error': 'Scan not found'}), 404
+
+        return jsonify(details)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@app.route('/api/pattern-performance')
+def api_pattern_performance():
+    """Get pattern performance statistics"""
+    db = get_session()
+    try:
+        from services.reporting_service import ReportingService
+        reporting = ReportingService(db)
+
+        days = request.args.get('days', 30, type=int)
+        stats = reporting.get_pattern_statistics(days=days)
+
+        return jsonify(stats)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@app.route('/api/rejection-analysis')
+def api_rejection_analysis():
+    """Get analysis of why opportunities are being rejected"""
+    db = get_session()
+    try:
+        from services.reporting_service import ReportingService
+        reporting = ReportingService(db)
+
+        days = request.args.get('days', 7, type=int)
+        analysis = reporting.get_rejection_analysis(days=days)
+
+        return jsonify(analysis)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+
+@app.route('/api/learning-insights')
+def api_learning_insights():
+    """Get AI learning insights"""
+    db = get_session()
+    try:
+        learning_engine = LearningEngine(db)
+        insights = learning_engine.generate_learning_insights()
+
+        return jsonify(insights)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
 
 
 if __name__ == '__main__':

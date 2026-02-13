@@ -18,7 +18,17 @@ services:
       - key: RISK_PER_TRADE
         value: 0.02
       - key: MIN_CONFIDENCE_SCORE
-        value: 70
+        value: 60
+      - key: ADAPTIVE_SCORING
+        value: true
+      - key: WATCHLIST_TYPE
+        value: custom
+      - key: SAVE_SCAN_DATA
+        value: true
+      - key: MIN_SCORE_TO_SAVE
+        value: 60
+      - key: SCAN_DATA_RETENTION_DAYS
+        value: 90
       - key: NOTIFICATION_EMAIL
         sync: false
       - key: RESEND_API_KEY
