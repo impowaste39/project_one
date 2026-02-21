@@ -847,7 +847,7 @@ def admin_flush_all():
             }), 400
 
         from models.scan_report import ScanReport, ScanResult, PatternOccurrence
-        from models.database import LearningMetrics, MLModel
+        from models.database import LearningMetrics, MLModel, Trade, Portfolio
 
         po_count = db.query(PatternOccurrence).delete()
         sr_count = db.query(ScanResult).delete()
@@ -866,8 +866,8 @@ def admin_flush_all():
             available_capital=initial_capital,
             unrealized_pnl=0,
             realized_pnl=0,
-            total_return_pct=0,
-            open_positions=0
+            open_positions=0,
+            timestamp=datetime.now()
         ))
         db.commit()
 
@@ -912,39 +912,40 @@ def admin_system_status():
     db = get_session()
     try:
         from models.scan_report import ScanReport, ScanResult, PatternOccurrence
-        from models.database import LearningMetrics, MLModel
+        from models.database import LearningMetrics, MLModel, Trade, Portfolio
 
         # DB row counts
         db_counts = {
-            'trades_open':           db.query(Trade).filter_by(status='OPEN').count(),
-            'trades_closed':         db.query(Trade).filter_by(status='CLOSED').count(),
-            'scan_reports':          db.query(ScanReport).count(),
-            'scan_results':          db.query(ScanResult).count(),
-            'pattern_occurrences':   db.query(PatternOccurrence).count(),
-            'learning_metrics':      db.query(LearningMetrics).count(),
-            'ml_models_trained':     db.query(MLModel).filter_by(is_active=True).count(),
+            'trades_open': db.query(Trade).filter_by(status='OPEN').count(),
+            'trades_closed': db.query(Trade).filter_by(status='CLOSED').count(),
+            'scan_reports': db.query(ScanReport).count(),
+            'scan_results': db.query(ScanResult).count(),
+            'pattern_occurrences': db.query(PatternOccurrence).count(),
+            'learning_metrics': db.query(LearningMetrics).count(),
+            'ml_models_active': db.query(MLModel).filter_by(is_active=True).count(),
         }
 
         # Portfolio state
-        portfolio = db.query(Portfolio).first()
+        portfolio = db.query(Portfolio).order_by(
+            Portfolio.timestamp.desc()).first()
         portfolio_state = {
-            'total_capital':     portfolio.total_capital if portfolio else None,
+            'total_capital': portfolio.total_capital if portfolio else None,
             'available_capital': portfolio.available_capital if portfolio else None,
-            'deployed_capital':  portfolio.deployed_capital if portfolio else None,
-            'open_positions':    portfolio.open_positions if portfolio else 0,
+            'deployed_capital': portfolio.deployed_capital if portfolio else None,
+            'open_positions': portfolio.open_positions if portfolio else 0,
         } if portfolio else {}
 
         # Market context
         context_ok = True
         context_info = {}
         try:
-            monitor = MarketMonitor()
+            monitor = MarketMonitor(db)
             ctx = monitor.get_market_context()
             context_ok = not ctx.get('fetch_failed', False)
             context_info = {
-                'trend':        ctx.get('trend'),
-                'strength':     ctx.get('strength'),
-                'nifty_price':  ctx.get('nifty_price'),
+                'trend': ctx.get('trend'),
+                'strength': ctx.get('strength'),
+                'nifty_price': ctx.get('nifty_price'),
                 'fetch_failed': ctx.get('fetch_failed', False),
             }
         except Exception as ce:
@@ -952,11 +953,15 @@ def admin_system_status():
             context_info = {'error': str(ce)}
 
         # Scheduler jobs
-        jobs = [
-            {'id': job.id, 'next_run': job.next_run_time.isoformat()
-             if job.next_run_time else None}
-            for job in scheduler.get_jobs()
-        ]
+        jobs = []
+        try:
+            jobs = [
+                {'id': job.id, 'next_run': job.next_run_time.isoformat()
+                 if job.next_run_time else None}
+                for job in scheduler.get_jobs()
+            ]
+        except:
+            pass
 
         # Uptime
         uptime_seconds = (datetime.now(IST) - _APP_START_TIME).total_seconds()
@@ -964,27 +969,27 @@ def admin_system_status():
         # Config summary
         config = {
             'min_confidence_score': int(os.getenv('MIN_CONFIDENCE_SCORE', 60)),
-            'min_score_to_save':    int(os.getenv('MIN_SCORE_TO_SAVE', 50)),
-            'initial_capital':      float(os.getenv('INITIAL_CAPITAL', 5000)),
-            'risk_per_trade':       float(os.getenv('RISK_PER_TRADE', 0.02)),
-            'max_positions':        int(os.getenv('MAX_POSITIONS', 5)),
-            'watchlist_type':       os.getenv('WATCHLIST_TYPE', 'custom'),
+            'min_score_to_save': int(os.getenv('MIN_SCORE_TO_SAVE', 50)),
+            'initial_capital': float(os.getenv('INITIAL_CAPITAL', 5000)),
+            'risk_per_trade': float(os.getenv('RISK_PER_TRADE', 0.02)),
+            'max_positions': int(os.getenv('MAX_POSITIONS', 5)),
+            'watchlist_type': os.getenv('WATCHLIST_TYPE', 'custom'),
         }
 
         return jsonify({
-            'status':                'healthy',
-            'uptime_seconds':        round(uptime_seconds),
-            'timestamp':             datetime.now(IST).isoformat(),
+            'status': 'healthy',
+            'uptime_seconds': round(uptime_seconds),
+            'timestamp': datetime.now(IST).isoformat(),
             'market_context_working': context_ok,
-            'market_context':        context_info,
+            'market_context': context_info,
             'consecutive_zero_trade_days': _get_consecutive_zero_trade_days(),
             'scheduler': {
-                'running': scheduler.running,
-                'jobs':    jobs,
+                'running': scheduler.running if scheduler else False,
+                'jobs': jobs,
             },
-            'database_counts':       db_counts,
-            'portfolio':             portfolio_state,
-            'config':                config,
+            'database_counts': db_counts,
+            'portfolio': portfolio_state,
+            'config': config,
         })
 
     except Exception as e:
@@ -999,70 +1004,92 @@ def admin_system_status():
 def admin_force_scan():
     """
     Immediately trigger a market scan outside the scheduler.
-    Useful for testing after a deploy or config change without waiting for the
-    next 5-minute cron window. Bypasses the market-hours and warmup guards.
+    Useful for testing after a deploy or config change.
+    Bypasses timing guards but performs full entry logic.
 
     Postman: POST /api/admin/force-scan
     Header:  X-API-KEY: <your API_WEBHOOK_KEY>
     """
     db = get_session()
+    scan_start_time = datetime.now(IST)
     try:
         logger.info("[ADMIN] force-scan triggered via API")
 
-        scan_start_time = datetime.now(IST)
-
-        market_monitor = MarketMonitor(db)
-        brain = TradingBrain(db, None)
-        risk_manager = RiskManager()
-
+        # Initialize components
         from services.reporting_service import ReportingService
-        reporting = ReportingService(db)
 
-        # Step 1: get market context (separate from scan_market)
-        market_context = market_monitor.get_market_context()
+        monitor = MarketMonitor(db)
+        risk_manager = RiskManager()
+        brain = TradingBrain(db, risk_manager)
+        portfolio_mgr = PortfolioManager(db, risk_manager, email_service)
+        reporting_service = ReportingService(db)
 
-        # Step 2: scan_market() takes NO arguments — returns list of analysis dicts
-        scan_results = market_monitor.scan_market()
+        # 1. Get market context
+        market_context = monitor.get_market_context()
 
-        opportunities_found = 0
+        # 2. Get portfolio state
+        portfolio_state = portfolio_mgr.get_portfolio_state()
+
+        # 3. Scan market
+        opportunities = monitor.scan_market()
+
+        # 4. Create scan report
+        scan_duration = (datetime.now(IST) - scan_start_time).total_seconds()
+        scan_stats = {
+            'total_scanned': len(monitor.watchlist),
+            'opportunities_found': len(opportunities),
+            'trades_entered': 0
+        }
+
+        scan_report = reporting_service.save_scan_report(
+            market_context, scan_stats, scan_duration
+        )
+        scan_report_id = scan_report.id if scan_report else None
+
         passed_stocks = []
 
-        # Step 3: iterate the list (each item is an analysis dict with a 'symbol' key)
-        for analysis in scan_results:
-            if not analysis:
+        # 5. Evaluate each opportunity
+        for opp in opportunities:
+            try:
+                evaluation = brain.evaluate_opportunity(
+                    opp, market_context, portfolio_state)
+
+                # Save patterns for learning
+                if scan_report_id and opp.get('patterns'):
+                    reporting_service._save_pattern_occurrences(
+                        opp, evaluation, scan_report_id
+                    )
+
+                # Save scan result (filtered by MIN_SCORE_TO_SAVE)
+                if scan_report_id:
+                    reporting_service.save_scan_result(
+                        scan_report_id, opp, evaluation
+                    )
+
+                if evaluation['decision'] == 'ENTER':
+                    passed_stocks.append({
+                        'symbol': evaluation['symbol'],
+                        'score': evaluation['score'],
+                        'reason': evaluation['reason']
+                    })
+                    # Note: We DONT auto-enter trades in force-scan to prevent
+                    # accidental multiple entries during testing.
+                    # If you want to test entry, use the scheduled job or
+                    # modify this to call portfolio_mgr.enter_trade(evaluation)
+
+            except Exception as e:
+                logger.error(f"Error evaluating {opp.get('symbol')}: {e}")
                 continue
 
-            symbol = analysis.get('symbol', 'UNKNOWN')
-            evaluation = brain.calculate_setup_score(analysis, market_context)
-            score = evaluation.get('total_score', 0)
-
-            reporting.save_scan_result(
-                symbol, analysis, evaluation, market_context)
-
-            if brain.should_enter_trade(evaluation, risk_manager, db):
-                opportunities_found += 1
-                passed_stocks.append({
-                    'symbol':  symbol,
-                    'score':   score,
-                    'pattern': analysis.get('patterns', [])
-                })
-
-        scan_duration = (datetime.now(IST) - scan_start_time).total_seconds()
-
-        logger.info(
-            f"[ADMIN] force-scan complete: {len(scan_results)} stocks with patterns, "
-            f"{opportunities_found} passed all gates, {scan_duration:.1f}s"
-        )
-
         return jsonify({
-            'status':              'success',
-            'message':             'Force scan complete.',
-            'scan_duration_secs':  round(scan_duration, 1),
-            'stocks_with_patterns': len(scan_results),
-            'opportunities_found': opportunities_found,
-            'top_opportunities':   passed_stocks[:10],
-            'market_context':      market_context,
-            'timestamp':           datetime.now(IST).isoformat(),
+            'status': 'success',
+            'message': 'Force scan complete.',
+            'scan_duration_secs': round(scan_duration, 1),
+            'stocks_with_patterns': len(opportunities),
+            'opportunities_passed': len(passed_stocks),
+            'market_context': market_context,
+            'top_opportunities': passed_stocks[:10],
+            'timestamp': datetime.now(IST).isoformat()
         })
 
     except Exception as e:
