@@ -775,6 +775,299 @@ def api_learning_insights():
         db.close()
 
 
+# ===== ADMIN ENDPOINTS (all require X-API-KEY header) =====
+
+@app.route('/api/admin/flush-history', methods=['DELETE'])
+@require_api_key
+def admin_flush_history():
+    """
+    Wipe scan history, pattern occurrences, and learning metrics.
+    Use this after a major system change (e.g. watchlist reduction) to start
+    with a clean analytics baseline. Does NOT delete trades or portfolio.
+
+    Postman: DELETE /api/admin/flush-history
+    Header:  X-API-KEY: <your API_WEBHOOK_KEY>
+    """
+    db = get_session()
+    try:
+        from models.scan_report import ScanReport, ScanResult, PatternOccurrence
+        from models.database import LearningMetrics
+
+        po_count = db.query(PatternOccurrence).delete()
+        sr_count = db.query(ScanResult).delete()
+        rep_count = db.query(ScanReport).delete()
+        lm_count = db.query(LearningMetrics).delete()
+        db.commit()
+
+        logger.warning(
+            f"[ADMIN] flush-history executed: "
+            f"pattern_occurrences={po_count}, scan_results={sr_count}, "
+            f"scan_reports={rep_count}, learning_metrics={lm_count}"
+        )
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Scan history and learning metrics cleared. Trades and portfolio untouched.',
+            'deleted': {
+                'pattern_occurrences': po_count,
+                'scan_results': sr_count,
+                'scan_reports': rep_count,
+                'learning_metrics': lm_count,
+            },
+            'timestamp': datetime.now(IST).isoformat()
+        })
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[ADMIN] flush-history error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    finally:
+        db.close()
+
+
+@app.route('/api/admin/flush-all', methods=['DELETE'])
+@require_api_key
+def admin_flush_all():
+    """
+    Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio.
+    Reinitialises portfolio with INITIAL_CAPITAL from env.
+    Use ONLY for a full system reset (e.g. switching capital or strategy from scratch).
+
+    Postman: DELETE /api/admin/flush-all
+    Header:  X-API-KEY: <your API_WEBHOOK_KEY>
+    Body:    { "confirm": "RESET" }   <-- safety check required
+    """
+    db = get_session()
+    try:
+        body = request.get_json(silent=True) or {}
+        if body.get('confirm') != 'RESET':
+            return jsonify({
+                'status': 'rejected',
+                'message': 'Safety check failed. Send JSON body: {"confirm": "RESET"} to proceed.'
+            }), 400
+
+        from models.scan_report import ScanReport, ScanResult, PatternOccurrence
+        from models.database import LearningMetrics, MLModel
+
+        po_count = db.query(PatternOccurrence).delete()
+        sr_count = db.query(ScanResult).delete()
+        rep_count = db.query(ScanReport).delete()
+        lm_count = db.query(LearningMetrics).delete()
+        ml_count = db.query(MLModel).delete()
+        tr_count = db.query(Trade).delete()
+        port_count = db.query(Portfolio).delete()
+        db.commit()
+
+        # Re-initialise portfolio with current INITIAL_CAPITAL
+        initial_capital = float(os.getenv('INITIAL_CAPITAL', 5000))
+        db.add(Portfolio(
+            total_capital=initial_capital,
+            deployed_capital=0,
+            available_capital=initial_capital,
+            unrealized_pnl=0,
+            realized_pnl=0,
+            total_return_pct=0,
+            open_positions=0
+        ))
+        db.commit()
+
+        logger.warning(
+            f"[ADMIN] flush-all executed: full system reset. "
+            f"Capital reinitialised to ₹{initial_capital}"
+        )
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Full system reset complete. Portfolio reinitialised with ₹{initial_capital}.',
+            'deleted': {
+                'pattern_occurrences': po_count,
+                'scan_results': sr_count,
+                'scan_reports': rep_count,
+                'learning_metrics': lm_count,
+                'ml_models': ml_count,
+                'trades': tr_count,
+                'portfolio_snapshots': port_count,
+            },
+            'timestamp': datetime.now(IST).isoformat()
+        })
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[ADMIN] flush-all error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    finally:
+        db.close()
+
+
+@app.route('/api/admin/system-status', methods=['GET'])
+@require_api_key
+def admin_system_status():
+    """
+    Deep diagnostic snapshot of the system.
+    Returns DB counts, scoring config, scheduler jobs, market context, and uptime.
+
+    Postman: GET /api/admin/system-status
+    Header:  X-API-KEY: <your API_WEBHOOK_KEY>
+    """
+    db = get_session()
+    try:
+        from models.scan_report import ScanReport, ScanResult, PatternOccurrence
+        from models.database import LearningMetrics, MLModel
+
+        # DB row counts
+        db_counts = {
+            'trades_open':           db.query(Trade).filter_by(status='OPEN').count(),
+            'trades_closed':         db.query(Trade).filter_by(status='CLOSED').count(),
+            'scan_reports':          db.query(ScanReport).count(),
+            'scan_results':          db.query(ScanResult).count(),
+            'pattern_occurrences':   db.query(PatternOccurrence).count(),
+            'learning_metrics':      db.query(LearningMetrics).count(),
+            'ml_models_trained':     db.query(MLModel).filter_by(is_active=True).count(),
+        }
+
+        # Portfolio state
+        portfolio = db.query(Portfolio).first()
+        portfolio_state = {
+            'total_capital':     portfolio.total_capital if portfolio else None,
+            'available_capital': portfolio.available_capital if portfolio else None,
+            'deployed_capital':  portfolio.deployed_capital if portfolio else None,
+            'open_positions':    portfolio.open_positions if portfolio else 0,
+        } if portfolio else {}
+
+        # Market context
+        context_ok = True
+        context_info = {}
+        try:
+            monitor = MarketMonitor()
+            ctx = monitor.get_market_context()
+            context_ok = not ctx.get('fetch_failed', False)
+            context_info = {
+                'trend':        ctx.get('trend'),
+                'strength':     ctx.get('strength'),
+                'nifty_price':  ctx.get('nifty_price'),
+                'fetch_failed': ctx.get('fetch_failed', False),
+            }
+        except Exception as ce:
+            context_ok = False
+            context_info = {'error': str(ce)}
+
+        # Scheduler jobs
+        jobs = [
+            {'id': job.id, 'next_run': job.next_run_time.isoformat()
+             if job.next_run_time else None}
+            for job in scheduler.get_jobs()
+        ]
+
+        # Uptime
+        uptime_seconds = (datetime.now(IST) - _APP_START_TIME).total_seconds()
+
+        # Config summary
+        config = {
+            'min_confidence_score': int(os.getenv('MIN_CONFIDENCE_SCORE', 60)),
+            'min_score_to_save':    int(os.getenv('MIN_SCORE_TO_SAVE', 50)),
+            'initial_capital':      float(os.getenv('INITIAL_CAPITAL', 5000)),
+            'risk_per_trade':       float(os.getenv('RISK_PER_TRADE', 0.02)),
+            'max_positions':        int(os.getenv('MAX_POSITIONS', 5)),
+            'watchlist_type':       os.getenv('WATCHLIST_TYPE', 'custom'),
+        }
+
+        return jsonify({
+            'status':                'healthy',
+            'uptime_seconds':        round(uptime_seconds),
+            'timestamp':             datetime.now(IST).isoformat(),
+            'market_context_working': context_ok,
+            'market_context':        context_info,
+            'consecutive_zero_trade_days': _get_consecutive_zero_trade_days(),
+            'scheduler': {
+                'running': scheduler.running,
+                'jobs':    jobs,
+            },
+            'database_counts':       db_counts,
+            'portfolio':             portfolio_state,
+            'config':                config,
+        })
+
+    except Exception as e:
+        logger.error(f"[ADMIN] system-status error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    finally:
+        db.close()
+
+
+@app.route('/api/admin/force-scan', methods=['POST'])
+@require_api_key
+def admin_force_scan():
+    """
+    Immediately trigger a market scan outside the scheduler.
+    Useful for testing after a deploy or config change without waiting for the
+    next 5-minute cron window. Bypasses the market-hours and warmup guards.
+
+    Postman: POST /api/admin/force-scan
+    Header:  X-API-KEY: <your API_WEBHOOK_KEY>
+    """
+    try:
+        logger.info("[ADMIN] force-scan triggered via API")
+
+        db = get_session()
+        scan_start_time = datetime.now(IST)
+
+        market_monitor = MarketMonitor(db)
+        brain = TradingBrain(db, None)
+        risk_manager = RiskManager()
+
+        from services.reporting_service import ReportingService
+        reporting = ReportingService(db)
+
+        market_context = market_monitor.get_market_context()
+        scan_results = market_monitor.scan_market(market_context)
+
+        opportunities_found = 0
+        trades_entered = 0
+        passed_stocks = []
+
+        for symbol, analysis in scan_results.items():
+            if not analysis:
+                continue
+
+            evaluation = brain.calculate_setup_score(analysis, market_context)
+            score = evaluation.get('total_score', 0)
+
+            reporting.save_scan_result(
+                symbol, analysis, evaluation, market_context)
+
+            if brain.should_enter_trade(evaluation, risk_manager, db):
+                opportunities_found += 1
+                passed_stocks.append({
+                    'symbol': symbol,
+                    'score':  score,
+                    'pattern': analysis.get('patterns', [])
+                })
+
+        scan_duration = (datetime.now(IST) - scan_start_time).total_seconds()
+        db.close()
+
+        logger.info(
+            f"[ADMIN] force-scan complete: {len(scan_results)} stocks, "
+            f"{opportunities_found} opportunities, {scan_duration:.1f}s"
+        )
+
+        return jsonify({
+            'status':              'success',
+            'message':             'Force scan complete.',
+            'scan_duration_secs':  round(scan_duration, 1),
+            'stocks_scanned':      len(scan_results),
+            'opportunities_found': opportunities_found,
+            'trades_entered':      trades_entered,
+            'top_opportunities':   passed_stocks[:10],
+            'market_context':      market_context,
+            'timestamp':           datetime.now(IST).isoformat(),
+        })
+
+    except Exception as e:
+        logger.error(f"[ADMIN] force-scan error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     debug = os.getenv('DEBUG', 'False').lower() == 'true'
