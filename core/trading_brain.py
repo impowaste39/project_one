@@ -130,6 +130,18 @@ class TradingBrain:
 
         score += technical_score
 
+        # === CONTEXT BONUS (replaces demoted noise patterns — capped at 5 pts) ===
+        # strong_uptrend and above_all_mas were removed from pattern_count to
+        # prevent score inflation, but they do carry real information as context.
+        context_bonus = 0
+        if analysis.get('signals', {}).get('strong_uptrend_context'):
+            context_bonus += 3
+            factors.append("Confirmed uptrend structure (HH+HL)")
+        if analysis.get('signals', {}).get('above_all_mas_context'):
+            context_bonus += 2
+            factors.append("Price above SMA20 & SMA50")
+        score += min(5, context_bonus)
+
         # === PATTERN SCORE (30 points) ===
         pattern_score = min(30, analysis.get('pattern_count', 0) * 10)
         score += pattern_score
@@ -158,6 +170,7 @@ class TradingBrain:
 
         try:
             if self.ml_model and hasattr(self.ml_model, 'classes_'):
+                # Trained model path — uses real learned probabilities
                 features = self.extract_features(analysis)
                 if hasattr(self.scaler, 'mean_'):
                     features_scaled = self.scaler.transform(features)
@@ -166,6 +179,23 @@ class TradingBrain:
                     ml_score = probability * 10
                     factors.append(
                         f"ML success probability: {probability:.1%}")
+            else:
+                # Heuristic fallback when ML model is untrained (< 50 closed trades).
+                # Uses RSI zone + volume confirmation as a proxy until real data exists.
+                rsi = analysis.get('rsi', 50)
+                vol = analysis.get('volume_ratio', 1.0)
+                if pd.notna(rsi) and pd.notna(vol):
+                    if 38 <= rsi <= 62 and vol >= 1.3:
+                        ml_score = 7
+                        factors.append(
+                            "Heuristic: RSI in range + strong volume")
+                    elif 35 <= rsi <= 65 and vol >= 1.1:
+                        ml_score = 4
+                        factors.append(
+                            "Heuristic: RSI acceptable + moderate volume")
+                    elif 30 <= rsi <= 70:
+                        ml_score = 2
+                        factors.append("Heuristic: RSI in broad range")
         except Exception as e:
             logger.debug(f"ML prediction skipped: {e}")
 

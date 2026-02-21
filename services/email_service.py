@@ -401,3 +401,24 @@ class EmailService:
         """
 
         return self.send_email(subject, html_content)
+
+    def send_health_alert(self, subject: str, body: str) -> bool:
+        """
+        Send a system health alert email.
+        Called by the daily health digest job when critical issues are detected
+        (e.g. 3+ consecutive zero-trade days, market context fetch failing).
+
+        Args:
+            subject: Alert subject line
+            body: Plain-text alert body (will be wrapped in HTML)
+
+        Returns:
+            True if sent successfully
+        """
+        # Convert plain-text body to basic HTML (preserve newlines)
+        html_body = body.replace('\n', '<br>')
+        return self.send_alert_email(
+            title=subject,
+            message=html_body,
+            alert_type='warning'
+        )

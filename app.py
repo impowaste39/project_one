@@ -47,6 +47,11 @@ data_service = DataService()
 # Timezone
 IST = pytz.timezone('Asia/Kolkata')
 
+# Startup timestamp — used by scan_market_job to skip scans during cold-start warmup
+_APP_START_TIME = datetime.now(IST)
+# Skip scans for 60s after startup (Render cold start takes 30-60s)
+_WARMUP_SECONDS = 60
+
 # API Security
 
 
@@ -113,6 +118,22 @@ def scan_market_job():
     """Market scanning job - runs every 5 minutes during market hours"""
     if not is_market_hours():
         logger.debug("Market closed - skipping scan")
+        return
+
+    # Guard: skip scans before NSE opens at 9:15 AM IST to avoid stale
+    # previous-day data being treated as intraday signals
+    if not data_service.is_market_open():
+        logger.info(
+            "Market not yet open (pre-9:15 AM) — skipping scan to avoid stale data")
+        return
+
+    # Guard: skip scans during cold-start warmup window (Render takes 30-60s to fully start)
+    # APScheduler fires missed jobs immediately after startup; this prevents a scan
+    # from running before the app is fully initialised.
+    uptime_seconds = (datetime.now(IST) - _APP_START_TIME).total_seconds()
+    if uptime_seconds < _WARMUP_SECONDS:
+        logger.info(
+            f"Cold-start warmup ({uptime_seconds:.0f}s < {_WARMUP_SECONDS}s) — skipping scan")
         return
 
     db = get_session()
@@ -342,7 +363,62 @@ def end_of_day_analysis_job():
         db.close()
 
 
-# Schedule jobs
+def daily_health_digest_job():
+    """
+    Daily system health digest - runs at 3:35 PM IST (after market close).
+
+    Sends an alert email when:
+    - Bot has been idle (0 trades) for 3+ consecutive trading days
+    - Market context fetch is failing (trend = unknown / fetch_failed)
+    """
+    try:
+        logger.info("Running daily health digest...")
+
+        zero_days = _get_consecutive_zero_trade_days()
+        context_ok = True
+
+        try:
+            monitor = MarketMonitor()
+            ctx = monitor.get_market_context()
+            context_ok = not ctx.get('fetch_failed', False)
+        except Exception as e:
+            context_ok = False
+            logger.error(f"Health digest: market context check failed: {e}")
+
+        alert_conditions = []
+
+        if zero_days >= 3:
+            alert_conditions.append(
+                f"Bot has executed 0 trades for {zero_days} consecutive trading days."
+            )
+
+        if not context_ok:
+            alert_conditions.append(
+                "Nifty market context fetch is failing — scoring is using fallback values. "
+                "Market context score may be inaccurate."
+            )
+
+        if alert_conditions:
+            alert_body = (
+                f"\U0001f6a8 Trading Bot Health Alert — {datetime.now(IST).strftime('%d %b %Y')}\n\n"
+                + "\n".join(f"- {c}" for c in alert_conditions)
+                + "\n\nAction required: check /health and /api/rejection-analysis endpoints."
+            )
+            logger.warning(
+                f"Health digest: sending alert ({len(alert_conditions)} issue(s))")
+            email_service.send_health_alert(
+                subject=f"Trading Bot Alert: {len(alert_conditions)} issue(s) detected",
+                body=alert_body
+            )
+        else:
+            logger.info(
+                f"Health digest: system OK — zero_trade_days={zero_days}, context_ok={context_ok}"
+            )
+
+    except Exception as e:
+        logger.error(f"Error in daily health digest job: {e}")
+
+
 scheduler.add_job(
     scan_market_job,
     'cron',
@@ -370,6 +446,15 @@ scheduler.add_job(
     id='eod_analysis'
 )
 
+scheduler.add_job(
+    daily_health_digest_job,
+    'cron',
+    day_of_week='mon-fri',
+    hour=15,
+    minute=35,
+    id='daily_health_digest'
+)
+
 # Start scheduler
 scheduler.start()
 logger.info("Scheduler started successfully")
@@ -379,6 +464,49 @@ atexit.register(lambda: scheduler.shutdown())
 
 # Initialize portfolio on startup
 initialize_portfolio()
+
+
+def _get_consecutive_zero_trade_days() -> int:
+    """Count how many consecutive trading days have had zero trades entered"""
+    db = get_session()
+    try:
+        from models.scan_report import ScanReport
+        from datetime import timedelta
+
+        # Check last 14 days of scan reports grouped by date
+        cutoff = datetime.now(IST) - timedelta(days=14)
+        recent_scans = db.query(ScanReport).filter(
+            ScanReport.timestamp >= cutoff
+        ).order_by(ScanReport.timestamp.desc()).all()
+
+        if not recent_scans:
+            return 0
+
+        # Group by date and check consecutive zero-trade days
+        date_trades = {}
+        for scan in recent_scans:
+            day = scan.timestamp.date()
+            date_trades.setdefault(day, 0)
+            date_trades[day] += scan.trades_entered or 0
+
+        # Count from today backwards
+        consecutive = 0
+        check_date = datetime.now(IST).date()
+        for _ in range(14):
+            if check_date.weekday() >= 5:  # skip weekends
+                check_date -= timedelta(days=1)
+                continue
+            if date_trades.get(check_date, 0) == 0:
+                consecutive += 1
+                check_date -= timedelta(days=1)
+            else:
+                break
+        return consecutive
+    except Exception as e:
+        logger.error(f"Error counting zero trade days: {e}")
+        return 0
+    finally:
+        db.close()
 
 
 # ===== FLASK ROUTES =====
@@ -486,7 +614,6 @@ def health():
     db_status = "unknown"
     db = get_session()
     try:
-        # Try a simple query to verify connection
         db.query(Portfolio).first()
         db_status = "connected"
     except Exception as e:
@@ -495,13 +622,28 @@ def health():
     finally:
         db.close()
 
+    # Check if market context is working (Nifty fetch is live)
+    context_working = True
+    try:
+        monitor = MarketMonitor()
+        ctx = monitor.get_market_context()
+        context_working = not ctx.get('fetch_failed', False)
+    except Exception:
+        context_working = False
+
+    zero_trade_days = _get_consecutive_zero_trade_days()
+
+    overall_healthy = (db_status == "connected")
+
     return jsonify({
-        'status': 'healthy' if db_status == "connected" else "unhealthy",
+        'status': 'healthy' if overall_healthy else 'unhealthy',
         'database': db_status,
+        'market_context_working': context_working,
+        'consecutive_zero_trade_days': zero_trade_days,
         'timestamp': datetime.now(IST).isoformat(),
         'scheduler_running': scheduler.running,
         'market_status': get_market_status_message()
-    }), 200 if db_status == "connected" else 500
+    }), 200 if overall_healthy else 500
 
 
 @app.route('/api/performance')

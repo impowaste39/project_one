@@ -28,3 +28,7 @@ Thumbs.db
 
 # Backups
 backup_*.csv
+
+raw_response.txt
+IMPROVEMENT_PLAN.md
+UPGRADE_PLAN.md

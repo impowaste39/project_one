@@ -18,7 +18,7 @@ services:
       - key: RISK_PER_TRADE
         value: 0.02
       - key: MIN_CONFIDENCE_SCORE
-        value: 60
+        value: 60                         # Lowered from 70 — market context fix (Feb 2026 audit)
       - key: ADAPTIVE_SCORING
         value: true
       - key: WATCHLIST_TYPE
@@ -26,7 +26,7 @@ services:
       - key: SAVE_SCAN_DATA
         value: true
       - key: MIN_SCORE_TO_SAVE
-        value: 60
+        value: 50                         # Lowered from 60 — capture more rejection granularity
       - key: SCAN_DATA_RETENTION_DAYS
         value: 90
       - key: NOTIFICATION_EMAIL

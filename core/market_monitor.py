@@ -21,6 +21,15 @@ class MarketMonitor:
         self.data_service = DataService()
         self.indicator_service = IndicatorService()
         self.watchlist = self.data_service.get_watchlist('custom')
+        # Fallback context: returned when Nifty fetch fails, avoiding silent 20-pt score loss
+        self._last_known_context = {
+            'trend': 'sideways',
+            'strength': 50,
+            'nifty_price': None,
+            'nifty_rsi': 50,
+            'market_breadth': 'positive',
+            'fetch_failed': False
+        }
 
     def fetch_stock_data(self, symbol: str, period: str = '3mo', interval: str = '1d') -> pd.DataFrame:
         """Fetch historical data for a stock"""
@@ -132,22 +141,23 @@ class MarketMonitor:
             signals['pullback'] = True
 
         # Pattern 6: Higher Highs & Higher Lows (Trend Strength)
-        recent_highs = data['High'].tail(10)
-        recent_lows = data['Low'].tail(10)
-        if (recent_highs.iloc[-1] > recent_highs.iloc[-3] and
-                recent_lows.iloc[-1] > recent_lows.iloc[-3]):
-            patterns.append('strong_uptrend')
+        # DEMOTED: moved to context{} — fires on ~23k stocks, too common to count as a signal
+        recent_highs = data['High'].tail(5)
+        recent_lows = data['Low'].tail(5)
+        if recent_highs.is_monotonic_increasing and recent_lows.is_monotonic_increasing:
             signals['trend_strength'] = True
+            signals['strong_uptrend_context'] = True  # Context flag, not a tradeable signal
 
         # Pattern 7: Stochastic Oversold
         if latest['Stoch_K'] < 20 and latest['Stoch_D'] < 20:
             patterns.append('stochastic_oversold')
             signals['stoch_oversold'] = True
 
-        # Pattern 8: Price above all MAs (Strong momentum)
+        # Pattern 8: Price above all MAs
+        # DEMOTED: moved to context{} — fires on ~17k stocks, structural condition not a signal
         if (latest['Close'] > latest['SMA_20'] > latest['SMA_50']):
-            patterns.append('above_all_mas')
             signals['strong_momentum'] = True
+            signals['above_all_mas_context'] = True  # Context flag, not a tradeable signal
 
         return {
             'patterns': patterns,
@@ -233,7 +243,10 @@ class MarketMonitor:
 
     def get_market_context(self) -> dict:
         """
-        Analyze overall market trend (Nifty 50)
+        Analyze overall market trend (Nifty 50).
+
+        On failure, returns the last successfully fetched context (with fetch_failed=True)
+        instead of 'unknown', preventing a silent 20-point score loss on every evaluation.
 
         Returns:
             dict: Market sentiment and trend information
@@ -242,12 +255,21 @@ class MarketMonitor:
             data = self.data_service.fetch_nifty_index(period='1mo')
 
             if data is None or data.empty:
-                return {'trend': 'unknown', 'strength': 0}
+                logger.warning(
+                    "[MarketContext] Nifty data empty — using last known context: "
+                    f"trend={self._last_known_context['trend']}"
+                )
+                self._last_known_context['fetch_failed'] = True
+                return self._last_known_context
 
             data = self.calculate_indicators(data)
 
             if data is None:
-                return {'trend': 'unknown', 'strength': 0}
+                logger.warning(
+                    "[MarketContext] Indicator calculation failed — using last known context"
+                )
+                self._last_known_context['fetch_failed'] = True
+                return self._last_known_context
 
             latest = data.iloc[-1]
 
@@ -264,14 +286,23 @@ class MarketMonitor:
                 trend = 'sideways'
                 strength = 50
 
-            return {
+            context = {
                 'trend': trend,
                 'strength': round(strength, 2),
                 'nifty_price': round(latest['Close'], 2),
                 'nifty_rsi': round(latest['RSI'], 2) if pd.notna(latest['RSI']) else 50,
-                'market_breadth': 'positive' if latest['Volume_Ratio'] > 1 else 'negative'
+                'market_breadth': 'positive' if latest['Volume_Ratio'] > 1 else 'negative',
+                'fetch_failed': False
             }
 
+            # Persist last good context for fallback use
+            self._last_known_context = context
+            return context
+
         except Exception as e:
-            logger.error(f"Error getting market context: {e}")
-            return {'trend': 'unknown', 'strength': 0}
+            logger.error(
+                f"[CRITICAL][MarketContext] Nifty fetch exception: {e}. "
+                f"Falling back to last known context: trend={self._last_known_context['trend']}"
+            )
+            self._last_known_context['fetch_failed'] = True
+            return self._last_known_context
