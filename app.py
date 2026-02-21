@@ -1005,10 +1005,10 @@ def admin_force_scan():
     Postman: POST /api/admin/force-scan
     Header:  X-API-KEY: <your API_WEBHOOK_KEY>
     """
+    db = get_session()
     try:
         logger.info("[ADMIN] force-scan triggered via API")
 
-        db = get_session()
         scan_start_time = datetime.now(IST)
 
         market_monitor = MarketMonitor(db)
@@ -1018,17 +1018,21 @@ def admin_force_scan():
         from services.reporting_service import ReportingService
         reporting = ReportingService(db)
 
+        # Step 1: get market context (separate from scan_market)
         market_context = market_monitor.get_market_context()
-        scan_results = market_monitor.scan_market(market_context)
+
+        # Step 2: scan_market() takes NO arguments — returns list of analysis dicts
+        scan_results = market_monitor.scan_market()
 
         opportunities_found = 0
-        trades_entered = 0
         passed_stocks = []
 
-        for symbol, analysis in scan_results.items():
+        # Step 3: iterate the list (each item is an analysis dict with a 'symbol' key)
+        for analysis in scan_results:
             if not analysis:
                 continue
 
+            symbol = analysis.get('symbol', 'UNKNOWN')
             evaluation = brain.calculate_setup_score(analysis, market_context)
             score = evaluation.get('total_score', 0)
 
@@ -1038,26 +1042,24 @@ def admin_force_scan():
             if brain.should_enter_trade(evaluation, risk_manager, db):
                 opportunities_found += 1
                 passed_stocks.append({
-                    'symbol': symbol,
-                    'score':  score,
+                    'symbol':  symbol,
+                    'score':   score,
                     'pattern': analysis.get('patterns', [])
                 })
 
         scan_duration = (datetime.now(IST) - scan_start_time).total_seconds()
-        db.close()
 
         logger.info(
-            f"[ADMIN] force-scan complete: {len(scan_results)} stocks, "
-            f"{opportunities_found} opportunities, {scan_duration:.1f}s"
+            f"[ADMIN] force-scan complete: {len(scan_results)} stocks with patterns, "
+            f"{opportunities_found} passed all gates, {scan_duration:.1f}s"
         )
 
         return jsonify({
             'status':              'success',
             'message':             'Force scan complete.',
             'scan_duration_secs':  round(scan_duration, 1),
-            'stocks_scanned':      len(scan_results),
+            'stocks_with_patterns': len(scan_results),
             'opportunities_found': opportunities_found,
-            'trades_entered':      trades_entered,
             'top_opportunities':   passed_stocks[:10],
             'market_context':      market_context,
             'timestamp':           datetime.now(IST).isoformat(),
@@ -1066,6 +1068,8 @@ def admin_force_scan():
     except Exception as e:
         logger.error(f"[ADMIN] force-scan error: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
+    finally:
+        db.close()
 
 
 if __name__ == '__main__':
