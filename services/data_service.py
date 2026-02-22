@@ -102,6 +102,8 @@ class DataService:
             "LTF.NS",
             "CHOLAFIN.NS",
             "SBIN.NS",
+            "UCOBANK.NS",
+            "CENTRALBK.NS",
 
             # ENERGY & POWER
             "SUZLON.NS",
@@ -114,6 +116,8 @@ class DataService:
             "TATAPOWER.NS",
             "ADANIPOWER.NS",
             "NHPC.NS",
+            "IEX.NS",
+            "PTC.NS",
 
             # METALS & MATERIALS
             "SAIL.NS",
@@ -123,6 +127,7 @@ class DataService:
             "HINDZINC.NS",
             "TATASTEEL.NS",
             "JINDALSTEL.NS",
+            "GPIL.NS",
 
             # IT & DIGITAL
             "WIPRO.NS",
