@@ -6,11 +6,17 @@ Scans markets, fetches data, and detects trading opportunities
 import pandas as pd
 import logging
 from datetime import datetime
+import time
 
 from services.data_service import DataService
 from services.indicator_service import IndicatorService
 
 logger = logging.getLogger(__name__)
+
+_NIFTY_CACHE = {
+    'context': None,
+    'timestamp': 0
+}
 
 
 class MarketMonitor:
@@ -146,7 +152,8 @@ class MarketMonitor:
         recent_lows = data['Low'].tail(5)
         if recent_highs.is_monotonic_increasing and recent_lows.is_monotonic_increasing:
             signals['trend_strength'] = True
-            signals['strong_uptrend_context'] = True  # Context flag, not a tradeable signal
+            # Context flag, not a tradeable signal
+            signals['strong_uptrend_context'] = True
 
         # Pattern 7: Stochastic Oversold
         if latest['Stoch_K'] < 20 and latest['Stoch_D'] < 20:
@@ -157,7 +164,8 @@ class MarketMonitor:
         # DEMOTED: moved to context{} — fires on ~17k stocks, structural condition not a signal
         if (latest['Close'] > latest['SMA_20'] > latest['SMA_50']):
             signals['strong_momentum'] = True
-            signals['above_all_mas_context'] = True  # Context flag, not a tradeable signal
+            # Context flag, not a tradeable signal
+            signals['above_all_mas_context'] = True
 
         return {
             'patterns': patterns,
@@ -251,8 +259,13 @@ class MarketMonitor:
         Returns:
             dict: Market sentiment and trend information
         """
+        current_time = time.time()
+        # Ensure 5-minute memory cache to prevent yfinance shadow bans
+        if _NIFTY_CACHE['context'] is not None and (current_time - _NIFTY_CACHE['timestamp'] < 300):
+            return _NIFTY_CACHE['context']
+
         try:
-            data = self.data_service.fetch_nifty_index(period='1mo')
+            data = self.data_service.fetch_nifty_index(period='6mo')
 
             if data is None or data.empty:
                 logger.warning(
@@ -297,6 +310,9 @@ class MarketMonitor:
 
             # Persist last good context for fallback use
             self._last_known_context = context
+
+            _NIFTY_CACHE['context'] = context
+            _NIFTY_CACHE['timestamp'] = time.time()
             return context
 
         except Exception as e:
@@ -305,4 +321,8 @@ class MarketMonitor:
                 f"Falling back to last known context: trend={self._last_known_context['trend']}"
             )
             self._last_known_context['fetch_failed'] = True
+
+            _NIFTY_CACHE['context'] = self._last_known_context
+            _NIFTY_CACHE['timestamp'] = time.time()
+
             return self._last_known_context

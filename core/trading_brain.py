@@ -142,8 +142,8 @@ class TradingBrain:
             factors.append("Price above SMA20 & SMA50")
         score += min(5, context_bonus)
 
-        # === PATTERN SCORE (30 points) ===
-        pattern_score = min(30, analysis.get('pattern_count', 0) * 10)
+        # === PATTERN SCORE (45 points) ===
+        pattern_score = min(45, analysis.get('pattern_count', 0) * 15)
         score += pattern_score
 
         if analysis.get('patterns'):
@@ -222,9 +222,9 @@ class TradingBrain:
         # Entry: Current market price
         entry_price = current_price
 
-        # Stop Loss: 2x ATR or 5%, whichever is smaller
+        # Stop Loss: 2x ATR or 8%, whichever is smaller
         atr_stop = current_price - (2 * atr)
-        percent_stop = current_price * 0.95
+        percent_stop = current_price * 0.92
         stop_loss = max(atr_stop, percent_stop)
 
         # Targets
@@ -301,7 +301,7 @@ class TradingBrain:
             return False
 
         # Check 2: Risk-reward ratio
-        if levels['rr_ratio'] < 1.5:
+        if levels['rr_ratio'] < 1.45:
             return False
 
         # Check 3: Portfolio constraints
@@ -331,7 +331,7 @@ class TradingBrain:
         if score_breakdown['total_score'] < self.min_confidence_score:
             return f"Setup quality insufficient (score: {score_breakdown['total_score']}/100)"
 
-        if levels['rr_ratio'] < 1.5:
+        if levels['rr_ratio'] < 1.45:
             return f"Risk-reward too low ({levels['rr_ratio']}:1)"
 
         if portfolio_state['positions_count'] >= 5:

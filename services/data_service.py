@@ -46,46 +46,122 @@ class DataService:
         # Selection criteria: Nifty 100 membership OR avg daily turnover > ₹100 Cr,
         # clean yfinance data history, readable trend structure for swing trading.
         # Target scan time: ~9s (down from ~28s). Redeploy after any changes here.
+        # self.custom = [
+        #     # --- BANKING & FINANCIAL — 12 stocks ---
+        #     # Kept: top 5 private banks, top NBFC, 2 insurance, 2 lending only
+        #     "HDFCBANK.NS", "ICICIBANK.NS", "SBIN.NS", "AXISBANK.NS", "KOTAKBANK.NS",
+        #     "BAJFINANCE.NS", "BAJAJFINSV.NS", "INDUSINDBK.NS", "FEDERALBNK.NS",
+        #     "SHRIRAMFIN.NS", "CHOLAFIN.NS", "PFC.NS",
+
+        #     # --- ENERGY & POWER — 7 stocks ---
+        #     # Kept: large-cap only; dropped PSU small utilities, project infra
+        #     "RELIANCE.NS", "ONGC.NS", "NTPC.NS", "POWERGRID.NS", "BPCL.NS",
+        #     "TATAPOWER.NS", "ADANIGREEN.NS",
+
+        #     # --- IT & TELECOM — 8 stocks ---
+        #     # Kept: Nifty IT index + Airtel; dropped micro-cap digital plays
+        #     "TCS.NS", "INFY.NS", "HCLTECH.NS", "WIPRO.NS", "TECHM.NS",
+        #     "LTIM.NS", "BHARTIARTL.NS", "NAUKRI.NS",
+
+        #     # --- FMCG & RETAIL — 9 stocks ---
+        #     # Kept: Nifty FMCG + premium retail; dropped mid-cap FMCG
+        #     "HINDUNILVR.NS", "ITC.NS", "NESTLEIND.NS", "BRITANNIA.NS", "DABUR.NS",
+        #     "TATACONSUM.NS", "TITAN.NS", "DMART.NS", "TRENT.NS",
+
+        #     # --- PHARMA & HEALTHCARE — 7 stocks ---
+        #     # Kept: all liquid large-cap pharma; dropped BIOCON (volatile, data gaps)
+        #     "SUNPHARMA.NS", "CIPLA.NS", "DRREDDY.NS", "DIVISLAB.NS",
+        #     "APOLLOHOSP.NS", "LUPIN.NS", "ZYDUSLIFE.NS",
+
+        #     # --- METALS & CEMENT — 7 stocks ---
+        #     # Kept: top by market cap and liquidity; dropped small cyclicals
+        #     "TATASTEEL.NS", "JSWSTEEL.NS", "HINDALCO.NS", "COALINDIA.NS",
+        #     "ULTRACEMCO.NS", "GRASIM.NS", "VEDL.NS",
+
+        #     # --- AUTOMOBILES — 7 stocks ---
+        #     # Kept: major OEMs only; dropped ancillaries (Bosch, Motherson etc.)
+        #     "MARUTI.NS", "M&M.NS", "BAJAJ-AUTO.NS", "TVSMOTOR.NS",
+        #     "EICHERMOT.NS", "HEROMOTOCO.NS", "TATAMOTORS.NS",
+
+        #     # --- INFRASTRUCTURE — 3 stocks ---
+        #     # Drastically cut: kept only Nifty-grade with clean swing data
+        #     "LT.NS", "HAL.NS", "ADANIPORTS.NS",
+        # ]
         self.custom = [
-            # --- BANKING & FINANCIAL — 12 stocks ---
-            # Kept: top 5 private banks, top NBFC, 2 insurance, 2 lending only
-            "HDFCBANK.NS", "ICICIBANK.NS", "SBIN.NS", "AXISBANK.NS", "KOTAKBANK.NS",
-            "BAJFINANCE.NS", "BAJAJFINSV.NS", "INDUSINDBK.NS", "FEDERALBNK.NS",
-            "SHRIRAMFIN.NS", "CHOLAFIN.NS", "PFC.NS",
 
-            # --- ENERGY & POWER — 7 stocks ---
-            # Kept: large-cap only; dropped PSU small utilities, project infra
-            "RELIANCE.NS", "ONGC.NS", "NTPC.NS", "POWERGRID.NS", "BPCL.NS",
-            "TATAPOWER.NS", "ADANIGREEN.NS",
+            # BANKING & FINANCE
+            "YESBANK.NS",
+            "PNB.NS",
+            "BANKBARODA.NS",
+            "FEDERALBNK.NS",
+            "IDFCFIRSTB.NS",
+            "IRFC.NS",
+            "RECLTD.NS",
+            "PFC.NS",
+            "MANAPPURAM.NS",
+            "LTF.NS",
+            "CHOLAFIN.NS",
+            "SBIN.NS",
 
-            # --- IT & TELECOM — 8 stocks ---
-            # Kept: Nifty IT index + Airtel; dropped micro-cap digital plays
-            "TCS.NS", "INFY.NS", "HCLTECH.NS", "WIPRO.NS", "TECHM.NS",
-            "LTIM.NS", "BHARTIARTL.NS", "NAUKRI.NS",
+            # ENERGY & POWER
+            "SUZLON.NS",
+            "JPPOWER.NS",
+            "SJVN.NS",
+            "NTPC.NS",
+            "ONGC.NS",
+            "IOC.NS",
+            "GAIL.NS",
+            "TATAPOWER.NS",
+            "ADANIPOWER.NS",
+            "NHPC.NS",
 
-            # --- FMCG & RETAIL — 9 stocks ---
-            # Kept: Nifty FMCG + premium retail; dropped mid-cap FMCG
-            "HINDUNILVR.NS", "ITC.NS", "NESTLEIND.NS", "BRITANNIA.NS", "DABUR.NS",
-            "TATACONSUM.NS", "TITAN.NS", "DMART.NS", "TRENT.NS",
+            # METALS & MATERIALS
+            "SAIL.NS",
+            "NMDC.NS",
+            "NATIONALUM.NS",
+            "VEDL.NS",
+            "HINDZINC.NS",
+            "TATASTEEL.NS",
+            "JINDALSTEL.NS",
 
-            # --- PHARMA & HEALTHCARE — 7 stocks ---
-            # Kept: all liquid large-cap pharma; dropped BIOCON (volatile, data gaps)
-            "SUNPHARMA.NS", "CIPLA.NS", "DRREDDY.NS", "DIVISLAB.NS",
-            "APOLLOHOSP.NS", "LUPIN.NS", "ZYDUSLIFE.NS",
+            # IT & DIGITAL
+            "WIPRO.NS",
+            "HGS.NS",
+            "INFIBEAM.NS",
+            "ROUTE.NS",
+            "REDINGTON.NS",
 
-            # --- METALS & CEMENT — 7 stocks ---
-            # Kept: top by market cap and liquidity; dropped small cyclicals
-            "TATASTEEL.NS", "JSWSTEEL.NS", "HINDALCO.NS", "COALINDIA.NS",
-            "ULTRACEMCO.NS", "GRASIM.NS", "VEDL.NS",
+            # AUTO & INDUSTRIAL
+            "ASHOKLEY.NS",
+            "GREAVESCOT.NS",
+            "MOTHERSON.NS",
+            "MSUMI.NS",
 
-            # --- AUTOMOBILES — 7 stocks ---
-            # Kept: major OEMs only; dropped ancillaries (Bosch, Motherson etc.)
-            "MARUTI.NS", "M&M.NS", "BAJAJ-AUTO.NS", "TVSMOTOR.NS",
-            "EICHERMOT.NS", "HEROMOTOCO.NS", "TATAMOTORS.NS",
+            # CONSUMER
+            "ITC.NS",
+            "NYKAA.NS",
+            "EMAMILTD.NS",
+            "DABUR.NS",
 
-            # --- INFRASTRUCTURE — 3 stocks ---
-            # Drastically cut: kept only Nifty-grade with clean swing data
-            "LT.NS", "HAL.NS", "ADANIPORTS.NS",
+            # PHARMA
+            "BIOCON.NS",
+            "AUROPHARMA.NS",
+            "GLENMARK.NS",
+            "ZYDUSLIFE.NS",
+
+            # INFRA & SERVICES
+            "RVNL.NS",
+            "NBCC.NS",
+            "RITES.NS",
+            "SCI.NS",
+
+            # MID & SMALL CAPS
+            "PCBL.NS",
+            "GNFC.NS",
+            "GSFC.NS",
+            "BALRAMCHIN.NS",
+            "CASTROLIND.NS",
+            "GRAPHITE.NS"
         ]
 
     def get_watchlist(self, category: str = 'nifty50') -> list:
@@ -162,7 +238,7 @@ class DataService:
             logger.error(f"Error fetching info for {symbol}: {e}")
             return {}
 
-    def fetch_nifty_index(self, period: str = '1mo') -> pd.DataFrame:
+    def fetch_nifty_index(self, period: str = '6mo') -> pd.DataFrame:
         """
         Fetch Nifty 50 index data
 
