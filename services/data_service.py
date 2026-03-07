@@ -107,7 +107,7 @@ class DataService:
 
             # ENERGY & POWER
             "SUZLON.NS",
-            "JPPOWER.NS",
+            # JPPOWER.NS removed: low liquidity, high war-volatility
             "SJVN.NS",
             "NTPC.NS",
             "ONGC.NS",
@@ -127,20 +127,20 @@ class DataService:
             "HINDZINC.NS",
             "TATASTEEL.NS",
             "JINDALSTEL.NS",
-            "GPIL.NS",
+            # GPIL.NS removed: low liquidity
 
-            # IT & DIGITAL
+            # IT & DIGITAL — added WIPRO (~₹250, defensive)
             "WIPRO.NS",
-            "HGS.NS",
-            "INFIBEAM.NS",
+            # HGS.NS removed: unreliable yfinance data
+            # INFIBEAM.NS removed: low liquidity, poor data
             "ROUTE.NS",
             "REDINGTON.NS",
 
             # AUTO & INDUSTRIAL
             "ASHOKLEY.NS",
-            "GREAVESCOT.NS",
+            # GREAVESCOT.NS removed: low liquidity
             "MOTHERSON.NS",
-            "MSUMI.NS",
+            # MSUMI.NS removed: duplicate/overlap with Motherson
 
             # CONSUMER
             "ITC.NS",
@@ -160,10 +160,10 @@ class DataService:
             "RITES.NS",
             "SCI.NS",
 
-            # MID & SMALL CAPS
-            "PCBL.NS",
-            "GNFC.NS",
-            "GSFC.NS",
+            # MID & SMALL CAPS — removed illiquid chemicals
+            # PCBL.NS removed: illiquid, chemicals sector war-sensitive
+            # GNFC.NS removed: illiquid chemicals
+            # GSFC.NS removed: illiquid chemicals
             "BALRAMCHIN.NS",
             "CASTROLIND.NS",
             "GRAPHITE.NS"

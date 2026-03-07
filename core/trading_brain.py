@@ -74,6 +74,58 @@ class TradingBrain:
 
         return np.array(features).reshape(1, -1)
 
+    def calculate_net_pnl(self, entry_price: float, exit_price: float,
+                          quantity: int) -> tuple:
+        """
+        Calculate real net P&L after Groww equity delivery charges.
+
+        Groww delivery fee structure (NSE):
+          - Brokerage:       min(₹20, 0.1%) per leg (buy + sell)
+          - STT:             0.1% on buy + sell turnover
+          - Exchange charge: 0.00297% on buy + sell turnover
+          - Stamp duty:      0.015% on buy side only
+          - SEBI + IPFT:     0.0002% on buy + sell turnover
+          - DP charge:       ₹23.60 on sell (₹20 + 18% GST)
+          - GST (18%):       on (brokerage + exchange + SEBI/IPFT + DP)
+
+        Returns:
+            Tuple of (net_pnl, total_charges) both rounded to 2 dp
+        """
+        buy_turnover = entry_price * quantity
+        sell_turnover = exit_price * quantity
+        gross_pnl = (exit_price - entry_price) * quantity
+
+        # Brokerage: min(₹20, 0.1%) per leg
+        brokerage_buy = min(20.0, buy_turnover * 0.001)
+        brokerage_sell = min(20.0, sell_turnover * 0.001)
+
+        # STT: 0.1% on both sides
+        stt = (buy_turnover + sell_turnover) * 0.001
+
+        # Exchange transaction charges: 0.00297% both sides
+        exchange = (buy_turnover + sell_turnover) * 0.0000297
+
+        # Stamp duty: 0.015% buy side only
+        stamp = buy_turnover * 0.00015
+
+        # SEBI turnover fee + IPFT: 0.0001% + 0.0001% = 0.0002% both sides
+        sebi_ipft = (buy_turnover + sell_turnover) * 0.000002
+
+        # DP charges on sell: ₹20 + 18% GST = ₹23.60
+        dp = 23.60
+
+        # GST 18% on (brokerage + exchange charges + SEBI/IPFT + DP)
+        gst = (brokerage_buy + brokerage_sell +
+               exchange + sebi_ipft + dp) * 0.18
+
+        total_charges = round(
+            brokerage_buy + brokerage_sell + stt + exchange +
+            stamp + sebi_ipft + dp + gst, 2
+        )
+        net_pnl = round(gross_pnl - total_charges, 2)
+
+        return net_pnl, total_charges
+
     def calculate_setup_score(self, analysis: dict, market_context: dict) -> dict:
         """
         Calculate trading setup quality score (0-100)
@@ -120,6 +172,19 @@ class TradingBrain:
                 technical_score += 7
                 factors.append(f"Good volume ({volume_ratio:.2f}x)")
 
+        # Stochastic Oversold + RSI confirmation — now scores properly
+        # Previously detected (11,818 hits) but contributed 0 pts. Fixed.
+        if 'stochastic_oversold' in analysis.get('patterns', []):
+            rsi_val = analysis.get('rsi', 50)
+            if pd.notna(rsi_val) and rsi_val < 45:
+                # Stochastic oversold + RSI confirming weakness = high-quality reversal signal
+                technical_score += 8
+                factors.append(
+                    f"Stochastic oversold + RSI confirmation ({rsi_val:.1f})")
+            else:
+                technical_score += 4
+                factors.append("Stochastic oversold (weak RSI confirmation)")
+
         # Moving Average Alignment
         if analysis.get('signals', {}).get('ma_crossover'):
             technical_score += 10
@@ -158,12 +223,24 @@ class TradingBrain:
             factors.append("Market in uptrend")
         elif market_context.get('trend') == 'sideways':
             market_score += 5
+        elif market_context.get('trend') == 'bearish':
+            market_score -= 5  # Active penalty for bearish conditions
+            factors.append("Market in downtrend (penalty applied)")
 
         if market_context.get('market_breadth') == 'positive':
             market_score += 10
             factors.append("Positive market breadth")
 
-        score += market_score
+        # India VIX volatility penalty
+        vix_vol = market_context.get('market_volatility', 'normal')
+        if vix_vol == 'extreme':
+            market_score -= 10
+            factors.append("India VIX extreme (war regime penalty)")
+        elif vix_vol == 'high':
+            market_score -= 5
+            factors.append("India VIX elevated (volatility penalty)")
+
+        score += max(0, market_score)  # Don't let market score go below 0
 
         # === ML PREDICTION SCORE (10 points) ===
         ml_score = 0
@@ -266,12 +343,14 @@ class TradingBrain:
                 stop_loss=levels['stop_loss']
             )
 
-        # Decision logic
+        # Decision logic — pass symbol and market_context for duplicate/trend checks
         trade_worthy = self.should_enter_trade(
             score_breakdown,
             levels,
             portfolio_state,
-            position_info
+            position_info,
+            symbol=analysis['symbol'],
+            market_context=market_context
         )
 
         return {
@@ -289,29 +368,60 @@ class TradingBrain:
             'risk_amount': position_info['risk_amount'],
             'trade_worthy': trade_worthy,
             'decision': 'ENTER' if trade_worthy else 'PASS',
-            'reason': self.get_decision_reason(trade_worthy, score_breakdown, levels, portfolio_state),
+            'reason': self.get_decision_reason(trade_worthy, score_breakdown, levels,
+                                               portfolio_state, analysis['symbol'],
+                                               market_context),
             'patterns': analysis.get('patterns', [])
         }
 
     def should_enter_trade(self, score_breakdown: dict, levels: dict,
-                           portfolio_state: dict, position_info: dict) -> bool:
+                           portfolio_state: dict, position_info: dict,
+                           symbol: str = None,
+                           market_context: dict = None) -> bool:
         """Final decision gate with multiple checks"""
-        # Check 1: Score threshold
-        if score_breakdown['total_score'] < self.min_confidence_score:
+        market_context = market_context or {}
+
+        # Check 0a: Dynamic score threshold based on market trend.
+        # Bearish market: raise bar to 75/80 to protect capital while still
+        # allowing the rarest setups through so the learning engine gets data.
+        # A hard block would starve the AI of real trade outcomes.
+        trend = market_context.get('trend', 'sideways')
+        market_strength = market_context.get('strength', 50)
+        if trend == 'bearish':
+            effective_threshold = 80 if market_strength > 5 else 75
+        else:
+            effective_threshold = self.min_confidence_score  # 65 standard
+
+        if score_breakdown['total_score'] < effective_threshold:
             return False
 
-        # Check 2: Risk-reward ratio
+        # Check 0b: Duplicate symbol guard — one open position per symbol max.
+        # Fixes the ADANIPOWER ×4 bug where the 5-min scanner entered the same
+        # stock on every cycle because only total position count was checked.
+        if symbol and self.db:
+            from models.database import Trade
+            existing = self.db.query(Trade).filter(
+                Trade.symbol == symbol,
+                Trade.status == 'OPEN'
+            ).first()
+            if existing:
+                logger.debug(
+                    f"Duplicate guard: {symbol} already held — skipping")
+                return False
+
+        # Check 1: Risk-reward ratio
         if levels['rr_ratio'] < 1.45:
             return False
 
-        # Check 3: Portfolio constraints
-        if portfolio_state['positions_count'] >= 5:
+        # Check 2: Portfolio constraints
+        max_pos = int(os.getenv('MAX_POSITIONS', 7))
+        if portfolio_state['positions_count'] >= max_pos:
             return False
 
         if portfolio_state['available_capital'] < 1000:
             return False
 
-        # Check 4: Position size validation
+        # Check 3: Position size validation
         if position_info['quantity'] <= 0:
             return False
 
@@ -322,11 +432,24 @@ class TradingBrain:
         return True
 
     def get_decision_reason(self, trade_worthy: bool, score_breakdown: dict,
-                            levels: dict, portfolio_state: dict) -> str:
+                            levels: dict, portfolio_state: dict,
+                            symbol: str = None,
+                            market_context: dict = None) -> str:
         """Generate human-readable decision reason"""
+        market_context = market_context or {}
+        trend = market_context.get('trend', 'sideways')
+        market_strength = market_context.get('strength', 50)
+
         if trade_worthy:
             return (f"Strong setup (score: {score_breakdown['total_score']}/100) "
                     f"with {levels['rr_ratio']}:1 risk-reward")
+
+        # Bearish dynamic threshold
+        if trend == 'bearish':
+            effective_threshold = 80 if market_strength > 5 else 75
+            if score_breakdown['total_score'] < effective_threshold:
+                return (f"Bearish market — score {score_breakdown['total_score']}/100 "
+                        f"below elevated threshold ({effective_threshold})")
 
         if score_breakdown['total_score'] < self.min_confidence_score:
             return f"Setup quality insufficient (score: {score_breakdown['total_score']}/100)"
@@ -334,8 +457,9 @@ class TradingBrain:
         if levels['rr_ratio'] < 1.45:
             return f"Risk-reward too low ({levels['rr_ratio']}:1)"
 
-        if portfolio_state['positions_count'] >= 5:
-            return "Maximum positions reached (5/5)"
+        max_pos = int(os.getenv('MAX_POSITIONS', 7))
+        if portfolio_state['positions_count'] >= max_pos:
+            return f"Maximum positions reached ({max_pos}/{max_pos})"
 
         if portfolio_state['available_capital'] < 1000:
             return "Insufficient capital"
@@ -379,11 +503,12 @@ class TradingBrain:
                     'urgency': 'immediate'
                 }
 
-        # Time-based Exit (stagnant losers)
+        # Time-based Exit (stagnant losers) — tightened for volatile market
+        # Reduced from 10 to 7 days: war conditions make decisions arrive faster
         days_held = (datetime.now() -
                      trade.entry_date).days if trade.entry_date else 0
 
-        if days_held >= 10 and current_price < trade.entry_price:
+        if days_held >= 7 and current_price < trade.entry_price:
             return {
                 'action': 'EXIT',
                 'reason': f'Time decay ({days_held} days with loss)',
@@ -391,8 +516,8 @@ class TradingBrain:
                 'urgency': 'normal'
             }
 
-        # Max holding period
-        if days_held >= 15:
+        # Max holding period — tightened from 15 to 12 days
+        if days_held >= 12:
             return {
                 'action': 'EXIT',
                 'reason': f'Maximum holding period reached ({days_held} days)',

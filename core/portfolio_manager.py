@@ -137,25 +137,35 @@ class PortfolioManager:
             True if trade exited successfully
         """
         try:
-            # Calculate P&L
-            profit_loss = (exit_price - trade.entry_price) * trade.quantity
+            from core.trading_brain import TradingBrain
+
+            # Calculate gross P&L
+            gross_pnl = (exit_price - trade.entry_price) * trade.quantity
             profit_loss_pct = (
                 (exit_price - trade.entry_price) / trade.entry_price) * 100
             hold_duration = (datetime.now() -
                              trade.entry_date).days if trade.entry_date else 0
 
-            # Calculate R-multiple
+            # Calculate net P&L after Groww brokerage charges
+            brain = TradingBrain()
+            net_pnl, charges = brain.calculate_net_pnl(
+                trade.entry_price, exit_price, trade.quantity
+            )
+
+            # Calculate R-multiple using net P&L for accuracy
             initial_risk = (trade.entry_price -
                             trade.stop_loss) * trade.quantity
-            r_multiple = profit_loss / initial_risk if initial_risk > 0 else 0
+            r_multiple = net_pnl / initial_risk if initial_risk > 0 else 0
 
             # Update trade
             trade.exit_date = datetime.now()
             trade.exit_price = exit_price
             trade.exit_reason = exit_reason
-            trade.profit_loss = profit_loss
-            trade.profit_loss_pct = profit_loss_pct
-            trade.r_multiple = r_multiple
+            trade.gross_profit_loss = round(gross_pnl, 2)  # Raw before charges
+            trade.profit_loss = net_pnl                    # Net after charges
+            trade.brokerage_charges = charges              # Total Groww fees
+            trade.profit_loss_pct = round(profit_loss_pct, 4)
+            trade.r_multiple = round(r_multiple, 4)
             trade.hold_duration_days = hold_duration
             trade.status = 'CLOSED'
 

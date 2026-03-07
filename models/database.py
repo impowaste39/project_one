@@ -37,7 +37,11 @@ class Trade(Base):
     exit_reason = Column(Text, nullable=True)
 
     # Results
+    # Net P&L after all charges
     profit_loss = Column(Float, nullable=True)
+    gross_profit_loss = Column(Float, nullable=True)  # Raw P&L before charges
+    # Total Groww charges paid
+    brokerage_charges = Column(Float, nullable=True)
     profit_loss_pct = Column(Float, nullable=True)
     r_multiple = Column(Float, nullable=True)  # Profit/Loss in R units
 
@@ -70,6 +74,8 @@ class Trade(Base):
             'exit_price': self.exit_price,
             'exit_reason': self.exit_reason,
             'profit_loss': self.profit_loss,
+            'gross_profit_loss': self.gross_profit_loss,
+            'brokerage_charges': self.brokerage_charges,
             'profit_loss_pct': self.profit_loss_pct,
             'r_multiple': self.r_multiple,
             'status': self.status,
@@ -223,7 +229,45 @@ def init_database():
 
     _SessionLocal = sessionmaker(bind=_engine)
 
+    # Run lightweight migrations to add new columns to existing databases
+    _migrate_database(_engine)
+
     return _engine, _SessionLocal
+
+
+def _migrate_database(engine):
+    """
+    Idempotent schema migrations.
+    SQLAlchemy create_all only creates new tables; it doesn't add columns to
+    existing tables. This function adds missing columns on every startup safely.
+    """
+    from sqlalchemy import text, inspect as sa_inspect
+    try:
+        insp = sa_inspect(engine)
+        existing_cols = {c['name'] for c in insp.get_columns('trades')}
+
+        new_columns = [
+            ('gross_profit_loss', 'FLOAT'),
+            ('brokerage_charges', 'FLOAT'),
+        ]
+
+        with engine.connect() as conn:
+            for col_name, col_type in new_columns:
+                if col_name not in existing_cols:
+                    conn.execute(
+                        text(
+                            f'ALTER TABLE trades ADD COLUMN {col_name} {col_type}')
+                    )
+                    conn.commit()
+                    import logging
+                    logging.getLogger(__name__).info(
+                        f"[Migration] Added column trades.{col_name}"
+                    )
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).warning(
+            f"[Migration] Schema migration warning (safe to ignore if Postgres handles it): {e}"
+        )
 
 
 def get_session():

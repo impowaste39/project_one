@@ -133,8 +133,10 @@ class MarketMonitor:
             signals['macd_cross'] = True
 
         # Pattern 4: Breakout with Volume
+        # Threshold raised 1.5x → 2.0x: war markets produce many fake breakouts;
+        # genuine institutional moves need stronger volume confirmation.
         if (latest['Close'] > latest['BB_Upper'] and
-                latest['Volume_Ratio'] > 1.5):
+                latest['Volume_Ratio'] > 2.0):
             patterns.append('breakout_with_volume')
             signals['breakout'] = True
 
@@ -307,6 +309,28 @@ class MarketMonitor:
                 'market_breadth': 'positive' if latest['Volume_Ratio'] > 1 else 'negative',
                 'fetch_failed': False
             }
+
+            # India VIX: fetch to gauge fear/volatility regime
+            try:
+                vix_data = self.data_service.fetch_stock_data(
+                    '^INDIAVIX', period='5d')
+                if vix_data is not None and not vix_data.empty:
+                    india_vix = round(vix_data['Close'].iloc[-1], 2)
+                    if india_vix > 30:
+                        market_volatility = 'extreme'   # War/crisis level
+                    elif india_vix > 20:
+                        market_volatility = 'high'      # Elevated fear
+                    else:
+                        market_volatility = 'normal'    # Typical 12-16 range
+                    context['india_vix'] = india_vix
+                    context['market_volatility'] = market_volatility
+                else:
+                    context['india_vix'] = None
+                    context['market_volatility'] = 'normal'  # safe default
+            except Exception as vix_err:
+                logger.warning(f"[MarketContext] VIX fetch skipped: {vix_err}")
+                context['india_vix'] = None
+                context['market_volatility'] = 'normal'
 
             # Persist last good context for fallback use
             self._last_known_context = context

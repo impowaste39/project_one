@@ -12,13 +12,15 @@ services:
       - key: PYTHON_VERSION
         value: 3.13.0
       - key: INITIAL_CAPITAL
-        value: 5000
+        value: 10000
       - key: MAX_POSITIONS
-        value: 5
+        value: 7
       - key: RISK_PER_TRADE
-        value: 0.02
+        value: 0.015
       - key: MIN_CONFIDENCE_SCORE
-        value: 60                         # Lowered from 70 — market context fix (Feb 2026 audit)
+        value: 65                         # Raised from 60 — volatile/war market selectivity
+      - key: VOLATILE_MARKET_MODE
+        value: true                       # Enables 1.5% risk, 20% max position, tighter exits
       - key: ADAPTIVE_SCORING
         value: true
       - key: WATCHLIST_TYPE
@@ -26,7 +28,7 @@ services:
       - key: SAVE_SCAN_DATA
         value: true
       - key: MIN_SCORE_TO_SAVE
-        value: 50                         # Lowered from 60 — capture more rejection granularity
+        value: 50                         # Keep low — capture more rejection granularity
       - key: SCAN_DATA_RETENTION_DAYS
         value: 90
       - key: NOTIFICATION_EMAIL

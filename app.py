@@ -775,7 +775,181 @@ def api_learning_insights():
         db.close()
 
 
+@app.route('/api/trades/summary')
+def api_trades_summary():
+    """
+    Comprehensive trade summary with real P&L (after Groww charges).
+    No auth required — designed for easy Postman sharing and data analysis.
+    """
+    db = get_session()
+    try:
+        all_trades = db.query(Trade).order_by(Trade.entry_date.desc()).all()
+        closed = [t for t in all_trades if t.status == 'CLOSED']
+        open_trades = [t for t in all_trades if t.status == 'OPEN']
+
+        wins = [t for t in closed if t.profit_loss and t.profit_loss > 0]
+        losses = [t for t in closed if t.profit_loss and t.profit_loss <= 0]
+
+        total_net_pnl = sum(
+            t.profit_loss for t in closed if t.profit_loss) or 0
+        total_gross_pnl = sum(t.gross_profit_loss for t in closed
+                              if t.gross_profit_loss) or 0
+        total_charges = sum(t.brokerage_charges for t in closed
+                            if t.brokerage_charges) or 0
+
+        win_rate = (len(wins) / len(closed) * 100) if closed else 0
+        avg_win = (sum(t.profit_loss for t in wins) / len(wins)) if wins else 0
+        avg_loss = (sum(abs(t.profit_loss)
+                    for t in losses) / len(losses)) if losses else 0
+        avg_hold = (sum(t.hold_duration_days for t in closed
+                        if t.hold_duration_days) / len(closed)) if closed else 0
+
+        # Pattern breakdown
+        pattern_stats = {}
+        for t in closed:
+            p = t.pattern or 'unknown'
+            if p not in pattern_stats:
+                pattern_stats[p] = {'trades': 0, 'wins': 0, 'total_pnl': 0.0,
+                                    'total_charges': 0.0}
+            pattern_stats[p]['trades'] += 1
+            if t.profit_loss and t.profit_loss > 0:
+                pattern_stats[p]['wins'] += 1
+            pattern_stats[p]['total_pnl'] += t.profit_loss or 0
+            pattern_stats[p]['total_charges'] += t.brokerage_charges or 0
+
+        for p in pattern_stats:
+            s = pattern_stats[p]
+            s['win_rate'] = round(
+                (s['wins'] / s['trades'] * 100), 1) if s['trades'] else 0
+            s['total_pnl'] = round(s['total_pnl'], 2)
+            s['total_charges'] = round(s['total_charges'], 2)
+
+        # Last 10 closed trades with charges breakdown
+        recent = []
+        for t in closed[:10]:
+            recent.append({
+                'id': t.id,
+                'symbol': t.symbol,
+                'pattern': t.pattern,
+                'entry_price': t.entry_price,
+                'exit_price': t.exit_price,
+                'quantity': t.quantity,
+                'gross_pnl': t.gross_profit_loss,
+                'charges': t.brokerage_charges,
+                'net_pnl': t.profit_loss,
+                'pnl_pct': round(t.profit_loss_pct, 2) if t.profit_loss_pct else None,
+                'hold_days': t.hold_duration_days,
+                'exit_reason': t.exit_reason,
+                'entry_score': t.entry_score
+            })
+
+        portfolio = db.query(Portfolio).order_by(
+            Portfolio.timestamp.desc()).first()
+
+        return jsonify({
+            'summary': {
+                'total_trades': len(all_trades),
+                'open_trades': len(open_trades),
+                'closed_trades': len(closed),
+                'wins': len(wins),
+                'losses': len(losses),
+                'win_rate': round(win_rate, 1),
+                'total_gross_pnl': round(total_gross_pnl, 2),
+                'total_charges_paid': round(total_charges, 2),
+                'total_net_pnl': round(total_net_pnl, 2),
+                'avg_win': round(avg_win, 2),
+                'avg_loss': round(avg_loss, 2),
+                'avg_hold_days': round(avg_hold, 1),
+                'current_capital': portfolio.total_capital if portfolio else None
+            },
+            'by_pattern': pattern_stats,
+            'recent_closed': recent,
+            'open_positions': [{
+                'symbol': t.symbol,
+                'entry_price': t.entry_price,
+                'quantity': t.quantity,
+                'stop_loss': t.stop_loss,
+                'target': t.target,
+                'entry_score': t.entry_score,
+                'entry_date': t.entry_date.isoformat() if t.entry_date else None
+            } for t in open_trades]
+        })
+    except Exception as e:
+        logger.error(f"Error in trades summary: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        db.close()
+
+
 # ===== ADMIN ENDPOINTS (all require X-API-KEY header) =====
+
+@app.route('/api/admin/top-up-capital', methods=['POST'])
+@require_api_key
+def admin_top_up_capital():
+    """
+    Add capital to the existing portfolio WITHOUT resetting trade history.
+    Use this when increasing capital (e.g. 5k → 10k) after trades are already live.
+
+    Postman: POST /api/admin/top-up-capital
+    Header:  X-API-KEY: <your API_WEBHOOK_KEY>
+    Body:    { "amount": 5000 }
+    """
+    db = get_session()
+    try:
+        body = request.get_json(silent=True) or {}
+        amount = float(body.get('amount', 0))
+
+        if amount <= 0:
+            return jsonify({
+                'status': 'rejected',
+                'message': 'amount must be a positive number.'
+            }), 400
+
+        portfolio = db.query(Portfolio).order_by(
+            Portfolio.timestamp.desc()).first()
+
+        if not portfolio:
+            return jsonify({'status': 'error', 'message': 'Portfolio not found'}), 404
+
+        prev_total = portfolio.total_capital
+        prev_available = portfolio.available_capital
+
+        # Create new portfolio snapshot with topped-up capital
+        new_portfolio = Portfolio(
+            total_capital=portfolio.total_capital + amount,
+            deployed_capital=portfolio.deployed_capital,
+            available_capital=portfolio.available_capital + amount,
+            unrealized_pnl=portfolio.unrealized_pnl,
+            realized_pnl=portfolio.realized_pnl,
+            open_positions=portfolio.open_positions,
+            timestamp=datetime.now(IST)
+        )
+        db.add(new_portfolio)
+        db.commit()
+
+        logger.info(
+            f"[ADMIN] top-up-capital: ₹{amount} added. "
+            f"Total: ₹{prev_total} → ₹{new_portfolio.total_capital}"
+        )
+
+        return jsonify({
+            'status': 'success',
+            'message': f'Portfolio topped up by ₹{amount:.0f}. Trade history preserved.',
+            'previous_capital': round(prev_total, 2),
+            'added': amount,
+            'new_total_capital': round(new_portfolio.total_capital, 2),
+            'previous_available': round(prev_available, 2),
+            'new_available_capital': round(new_portfolio.available_capital, 2),
+            'timestamp': datetime.now(IST).isoformat()
+        })
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[ADMIN] top-up-capital error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    finally:
+        db.close()
+
 
 @app.route('/api/admin/flush-history', methods=['DELETE'])
 @require_api_key

@@ -13,10 +13,26 @@ class RiskManager:
     """Risk management and position sizing"""
 
     def __init__(self):
-        self.max_risk_per_trade = float(
-            os.getenv('RISK_PER_TRADE', 0.02))  # 2% default
-        self.max_positions = int(os.getenv('MAX_POSITIONS', 5))
+        volatile_mode = os.getenv(
+            'VOLATILE_MARKET_MODE', 'true').lower() == 'true'
+
+        if volatile_mode:
+            # Tighter risk in volatile/war-driven markets
+            self.max_risk_per_trade = float(
+                os.getenv('RISK_PER_TRADE', 0.015))  # 1.5%
+            self.max_position_pct = 0.20   # 20% max per position
+            logger.info(
+                "RiskManager: VOLATILE MODE active (1.5% risk, 20% max position)")
+        else:
+            self.max_risk_per_trade = float(
+                os.getenv('RISK_PER_TRADE', 0.02))   # 2%
+            self.max_position_pct = 0.30   # 30% max per position
+            logger.info(
+                "RiskManager: NORMAL MODE active (2% risk, 30% max position)")
+
+        self.max_positions = int(os.getenv('MAX_POSITIONS', 7))
         self.max_portfolio_risk = 0.10  # 10% max total portfolio risk
+        self.volatile_mode = volatile_mode
 
     def calculate_position_size(self, capital: float, entry_price: float,
                                 stop_loss: float) -> dict:
@@ -38,14 +54,14 @@ class RiskManager:
         # Risk per share
         risk_per_share = entry_price - stop_loss
 
-        # Max risk amount (2% of capital)
+        # Max risk amount based on mode (1.5% volatile / 2% normal)
         max_risk = capital * self.max_risk_per_trade
 
         # Position size based on risk
         quantity = int(max_risk / risk_per_share)
 
-        # Ensure we don't invest more than 30% of capital in one trade
-        max_investment = capital * 0.30
+        # Ensure we don't invest more than max_position_pct of capital in one trade
+        max_investment = capital * self.max_position_pct
         max_shares_by_investment = int(max_investment / entry_price)
 
         # Take the smaller of the two
