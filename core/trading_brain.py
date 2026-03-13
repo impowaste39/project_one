@@ -10,6 +10,7 @@ from sklearn.preprocessing import StandardScaler
 import pickle
 import logging
 import os
+import pytz
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,6 @@ class TradingBrain:
                     logger.info("ML model loaded from database")
                     return
 
-            # Initialize new model
             self.ml_model = RandomForestClassifier(
                 n_estimators=100,
                 max_depth=10,
@@ -66,64 +66,36 @@ class TradingBrain:
             analysis.get('pattern_count', 0),
             1 if 'bullish_ma_crossover' in analysis.get('patterns', []) else 0,
             1 if 'rsi_oversold_bounce' in analysis.get('patterns', []) else 0,
-            1 if 'macd_bullish_crossover' in analysis.get(
-                'patterns', []) else 0,
+            1 if 'macd_bullish_crossover' in analysis.get('patterns', []) else 0,
             1 if 'breakout_with_volume' in analysis.get('patterns', []) else 0,
             1 if 'pullback_in_uptrend' in analysis.get('patterns', []) else 0,
         ]
-
         return np.array(features).reshape(1, -1)
 
     def calculate_net_pnl(self, entry_price: float, exit_price: float,
                           quantity: int) -> tuple:
         """
         Calculate real net P&L after Groww equity delivery charges.
-
-        Groww delivery fee structure (NSE):
-          - Brokerage:       min(₹20, 0.1%) per leg (buy + sell)
-          - STT:             0.1% on buy + sell turnover
-          - Exchange charge: 0.00297% on buy + sell turnover
-          - Stamp duty:      0.015% on buy side only
-          - SEBI + IPFT:     0.0002% on buy + sell turnover
-          - DP charge:       ₹23.60 on sell (₹20 + 18% GST)
-          - GST (18%):       on (brokerage + exchange + SEBI/IPFT + DP)
-
-        Returns:
-            Tuple of (net_pnl, total_charges) both rounded to 2 dp
+        Returns: Tuple of (net_pnl, total_charges)
         """
         buy_turnover = entry_price * quantity
         sell_turnover = exit_price * quantity
         gross_pnl = (exit_price - entry_price) * quantity
 
-        # Brokerage: min(₹20, 0.1%) per leg
         brokerage_buy = min(20.0, buy_turnover * 0.001)
         brokerage_sell = min(20.0, sell_turnover * 0.001)
-
-        # STT: 0.1% on both sides
         stt = (buy_turnover + sell_turnover) * 0.001
-
-        # Exchange transaction charges: 0.00297% both sides
         exchange = (buy_turnover + sell_turnover) * 0.0000297
-
-        # Stamp duty: 0.015% buy side only
         stamp = buy_turnover * 0.00015
-
-        # SEBI turnover fee + IPFT: 0.0001% + 0.0001% = 0.0002% both sides
         sebi_ipft = (buy_turnover + sell_turnover) * 0.000002
-
-        # DP charges on sell: ₹20 + 18% GST = ₹23.60
         dp = 23.60
-
-        # GST 18% on (brokerage + exchange charges + SEBI/IPFT + DP)
-        gst = (brokerage_buy + brokerage_sell +
-               exchange + sebi_ipft + dp) * 0.18
+        gst = (brokerage_buy + brokerage_sell + exchange + sebi_ipft + dp) * 0.18
 
         total_charges = round(
             brokerage_buy + brokerage_sell + stt + exchange +
             stamp + sebi_ipft + dp + gst, 2
         )
         net_pnl = round(gross_pnl - total_charges, 2)
-
         return net_pnl, total_charges
 
     def calculate_setup_score(self, analysis: dict, market_context: dict) -> dict:
@@ -132,7 +104,7 @@ class TradingBrain:
 
         Scoring:
         - Technical indicators: 40 points
-        - Pattern strength: 30 points
+        - Pattern strength: 45 points
         - Market context: 20 points
         - ML prediction: 10 points
         """
@@ -154,7 +126,6 @@ class TradingBrain:
                 technical_score += 5
                 factors.append(f"RSI approaching overbought ({rsi:.1f})")
 
-        # MACD
         if analysis.get('signals', {}).get('macd_cross'):
             technical_score += 10
             factors.append("MACD bullish crossover")
@@ -162,7 +133,6 @@ class TradingBrain:
             technical_score += 5
             factors.append("MACD positive")
 
-        # Volume
         volume_ratio = analysis.get('volume_ratio', 1)
         if pd.notna(volume_ratio):
             if volume_ratio >= 1.5:
@@ -172,12 +142,9 @@ class TradingBrain:
                 technical_score += 7
                 factors.append(f"Good volume ({volume_ratio:.2f}x)")
 
-        # Stochastic Oversold + RSI confirmation — now scores properly
-        # Previously detected (11,818 hits) but contributed 0 pts. Fixed.
         if 'stochastic_oversold' in analysis.get('patterns', []):
             rsi_val = analysis.get('rsi', 50)
             if pd.notna(rsi_val) and rsi_val < 45:
-                # Stochastic oversold + RSI confirming weakness = high-quality reversal signal
                 technical_score += 8
                 factors.append(
                     f"Stochastic oversold + RSI confirmation ({rsi_val:.1f})")
@@ -185,7 +152,6 @@ class TradingBrain:
                 technical_score += 4
                 factors.append("Stochastic oversold (weak RSI confirmation)")
 
-        # Moving Average Alignment
         if analysis.get('signals', {}).get('ma_crossover'):
             technical_score += 10
             factors.append("Bullish MA crossover")
@@ -195,9 +161,7 @@ class TradingBrain:
 
         score += technical_score
 
-        # === CONTEXT BONUS (replaces demoted noise patterns — capped at 5 pts) ===
-        # strong_uptrend and above_all_mas were removed from pattern_count to
-        # prevent score inflation, but they do carry real information as context.
+        # === CONTEXT BONUS (capped at 5 pts) ===
         context_bonus = 0
         if analysis.get('signals', {}).get('strong_uptrend_context'):
             context_bonus += 3
@@ -210,28 +174,25 @@ class TradingBrain:
         # === PATTERN SCORE (45 points) ===
         pattern_score = min(45, analysis.get('pattern_count', 0) * 15)
         score += pattern_score
-
         if analysis.get('patterns'):
             factors.append(
                 f"{analysis['pattern_count']} bullish patterns detected")
 
         # === MARKET CONTEXT SCORE (20 points) ===
         market_score = 0
-
         if market_context.get('trend') == 'bullish':
             market_score += 10
             factors.append("Market in uptrend")
         elif market_context.get('trend') == 'sideways':
             market_score += 5
         elif market_context.get('trend') == 'bearish':
-            market_score -= 5  # Active penalty for bearish conditions
+            market_score -= 5
             factors.append("Market in downtrend (penalty applied)")
 
         if market_context.get('market_breadth') == 'positive':
             market_score += 10
             factors.append("Positive market breadth")
 
-        # India VIX volatility penalty
         vix_vol = market_context.get('market_volatility', 'normal')
         if vix_vol == 'extreme':
             market_score -= 10
@@ -240,36 +201,29 @@ class TradingBrain:
             market_score -= 5
             factors.append("India VIX elevated (volatility penalty)")
 
-        score += max(0, market_score)  # Don't let market score go below 0
+        score += max(0, market_score)
 
         # === ML PREDICTION SCORE (10 points) ===
         ml_score = 0
-
         try:
             if self.ml_model and hasattr(self.ml_model, 'classes_'):
-                # Trained model path — uses real learned probabilities
                 features = self.extract_features(analysis)
                 if hasattr(self.scaler, 'mean_'):
                     features_scaled = self.scaler.transform(features)
-                    probability = self.ml_model.predict_proba(features_scaled)[
-                        0][1]
+                    probability = self.ml_model.predict_proba(features_scaled)[0][1]
                     ml_score = probability * 10
-                    factors.append(
-                        f"ML success probability: {probability:.1%}")
+                    factors.append(f"ML success probability: {probability:.1%}")
             else:
-                # Heuristic fallback when ML model is untrained (< 50 closed trades).
-                # Uses RSI zone + volume confirmation as a proxy until real data exists.
+                # Heuristic fallback — ML model not yet trained (needs 20+ closed trades)
                 rsi = analysis.get('rsi', 50)
                 vol = analysis.get('volume_ratio', 1.0)
                 if pd.notna(rsi) and pd.notna(vol):
                     if 38 <= rsi <= 62 and vol >= 1.3:
                         ml_score = 7
-                        factors.append(
-                            "Heuristic: RSI in range + strong volume")
+                        factors.append("Heuristic: RSI in range + strong volume")
                     elif 35 <= rsi <= 65 and vol >= 1.1:
                         ml_score = 4
-                        factors.append(
-                            "Heuristic: RSI acceptable + moderate volume")
+                        factors.append("Heuristic: RSI acceptable + moderate volume")
                     elif 30 <= rsi <= 70:
                         ml_score = 2
                         factors.append("Heuristic: RSI in broad range")
@@ -296,17 +250,12 @@ class TradingBrain:
         if pd.isna(atr) or atr == 0:
             atr = current_price * 0.02
 
-        # Entry: Current market price
         entry_price = current_price
-
-        # Stop Loss: 2x ATR or 8%, whichever is smaller
         atr_stop = current_price - (2 * atr)
         percent_stop = current_price * 0.92
         stop_loss = max(atr_stop, percent_stop)
 
-        # Targets
         risk = entry_price - stop_loss
-
         target_1 = entry_price + (risk * 1.5)
         target_2 = entry_price + (risk * 2.0)
         target_3 = entry_price + (risk * 3.0)
@@ -328,13 +277,9 @@ class TradingBrain:
     def evaluate_opportunity(self, analysis: dict, market_context: dict,
                              portfolio_state: dict) -> dict:
         """Complete evaluation of a trading opportunity"""
-        # Calculate setup score
         score_breakdown = self.calculate_setup_score(analysis, market_context)
-
-        # Calculate entry/exit levels
         levels = self.calculate_entry_exit_levels(analysis)
 
-        # Calculate position size
         position_info = {'quantity': 0, 'investment': 0, 'risk_amount': 0}
         if self.risk_manager:
             position_info = self.risk_manager.calculate_position_size(
@@ -343,14 +288,9 @@ class TradingBrain:
                 stop_loss=levels['stop_loss']
             )
 
-        # Decision logic — pass symbol and market_context for duplicate/trend checks
         trade_worthy = self.should_enter_trade(
-            score_breakdown,
-            levels,
-            portfolio_state,
-            position_info,
-            symbol=analysis['symbol'],
-            market_context=market_context
+            score_breakdown, levels, portfolio_state, position_info,
+            symbol=analysis['symbol'], market_context=market_context
         )
 
         return {
@@ -362,15 +302,17 @@ class TradingBrain:
             'stop_loss': levels['stop_loss'],
             'target_1': levels['target_1'],
             'target_2': levels['target_2'],
+            'target_3': levels['target_3'],       # NOW INCLUDED
             'rr_ratio': levels['rr_ratio'],
             'quantity': position_info['quantity'],
             'investment': position_info['investment'],
             'risk_amount': position_info['risk_amount'],
             'trade_worthy': trade_worthy,
             'decision': 'ENTER' if trade_worthy else 'PASS',
-            'reason': self.get_decision_reason(trade_worthy, score_breakdown, levels,
-                                               portfolio_state, analysis['symbol'],
-                                               market_context),
+            'reason': self.get_decision_reason(
+                trade_worthy, score_breakdown, levels,
+                portfolio_state, analysis['symbol'], market_context
+            ),
             'patterns': analysis.get('patterns', [])
         }
 
@@ -380,24 +322,17 @@ class TradingBrain:
                            market_context: dict = None) -> bool:
         """Final decision gate with multiple checks"""
         market_context = market_context or {}
-
-        # Check 0a: Dynamic score threshold based on market trend.
-        # Bearish market: raise bar to 75/80 to protect capital while still
-        # allowing the rarest setups through so the learning engine gets data.
-        # A hard block would starve the AI of real trade outcomes.
         trend = market_context.get('trend', 'sideways')
         market_strength = market_context.get('strength', 50)
+
         if trend == 'bearish':
             effective_threshold = 80 if market_strength > 5 else 75
         else:
-            effective_threshold = self.min_confidence_score  # 65 standard
+            effective_threshold = self.min_confidence_score
 
         if score_breakdown['total_score'] < effective_threshold:
             return False
 
-        # Check 0b: Duplicate symbol guard — one open position per symbol max.
-        # Fixes the ADANIPOWER ×4 bug where the 5-min scanner entered the same
-        # stock on every cycle because only total position count was checked.
         if symbol and self.db:
             from models.database import Trade
             existing = self.db.query(Trade).filter(
@@ -405,15 +340,12 @@ class TradingBrain:
                 Trade.status == 'OPEN'
             ).first()
             if existing:
-                logger.debug(
-                    f"Duplicate guard: {symbol} already held — skipping")
+                logger.debug(f"Duplicate guard: {symbol} already held — skipping")
                 return False
 
-        # Check 1: Risk-reward ratio
         if levels['rr_ratio'] < 1.45:
             return False
 
-        # Check 2: Portfolio constraints
         max_pos = int(os.getenv('MAX_POSITIONS', 7))
         if portfolio_state['positions_count'] >= max_pos:
             return False
@@ -421,14 +353,12 @@ class TradingBrain:
         if portfolio_state['available_capital'] < 1000:
             return False
 
-        # Check 3: Position size validation
         if position_info['quantity'] <= 0:
             return False
 
         if position_info['investment'] > portfolio_state['available_capital'] * 0.30:
             return False
 
-        # All checks passed
         return True
 
     def get_decision_reason(self, trade_worthy: bool, score_breakdown: dict,
@@ -444,7 +374,6 @@ class TradingBrain:
             return (f"Strong setup (score: {score_breakdown['total_score']}/100) "
                     f"with {levels['rr_ratio']}:1 risk-reward")
 
-        # Bearish dynamic threshold
         if trend == 'bearish':
             effective_threshold = 80 if market_strength > 5 else 75
             if score_breakdown['total_score'] < effective_threshold:
@@ -468,8 +397,11 @@ class TradingBrain:
 
     def check_exit_conditions(self, trade, current_price: float,
                               current_data: pd.DataFrame = None) -> dict:
-        """Determine if position should be exited"""
-        # Stop Loss Check
+        """
+        Determine if position should be exited.
+        Now supports partial exit at T1 — exits 50%, moves SL to breakeven.
+        """
+        # --- STOP LOSS ---
         if current_price <= trade.stop_loss:
             return {
                 'action': 'EXIT',
@@ -478,7 +410,30 @@ class TradingBrain:
                 'urgency': 'immediate'
             }
 
-        # Target Achievement
+        # --- PARTIAL EXIT AT TARGET 1 (if not already partially exited) ---
+        # Use target_2 if available, otherwise fall back to original target
+        t1 = trade.target  # target column = T1
+        t2 = trade.target_2 if trade.target_2 else None
+
+        if t2 and not trade.partially_exited and current_price >= t1:
+            return {
+                'action': 'PARTIAL_EXIT',
+                'reason': 'Target 1 achieved — booking 50%, riding to T2',
+                'exit_type': 'partial_exit_t1',
+                'urgency': 'immediate',
+                'new_stop_loss': trade.entry_price  # Move SL to breakeven
+            }
+
+        # --- FULL EXIT AT TARGET 2 (after partial exit) ---
+        if t2 and trade.partially_exited and current_price >= t2:
+            return {
+                'action': 'EXIT',
+                'reason': 'Target 2 achieved — full exit',
+                'exit_type': 'target_2',
+                'urgency': 'immediate'
+            }
+
+        # --- FULL EXIT AT TARGET (no T2 set, or legacy trades) ---
         if current_price >= trade.target:
             return {
                 'action': 'EXIT',
@@ -487,14 +442,13 @@ class TradingBrain:
                 'urgency': 'immediate'
             }
 
-        # Trailing Stop (after 1:1 risk-reward achieved)
+        # --- TRAILING STOP (after 1:1 RR achieved) ---
         unrealized_pnl = (current_price - trade.entry_price) * trade.quantity
         initial_risk = (trade.entry_price - trade.stop_loss) * trade.quantity
 
         if unrealized_pnl >= initial_risk:
             trailing_stop = trade.entry_price + \
                 (initial_risk / trade.quantity * 0.5)
-
             if current_price <= trailing_stop:
                 return {
                     'action': 'EXIT',
@@ -503,10 +457,9 @@ class TradingBrain:
                     'urgency': 'immediate'
                 }
 
-        # Time-based Exit (stagnant losers) — tightened for volatile market
-        # Reduced from 10 to 7 days: war conditions make decisions arrive faster
-        days_held = (datetime.now() -
-                     trade.entry_date).days if trade.entry_date else 0
+        # --- TIME STOP (stagnant losers) ---
+        IST = pytz.timezone('Asia/Kolkata')
+        days_held = (datetime.now(IST).replace(tzinfo=None) - trade.entry_date).days if trade.entry_date else 0
 
         if days_held >= 7 and current_price < trade.entry_price:
             return {
@@ -516,7 +469,6 @@ class TradingBrain:
                 'urgency': 'normal'
             }
 
-        # Max holding period — tightened from 15 to 12 days
         if days_held >= 12:
             return {
                 'action': 'EXIT',
@@ -525,7 +477,6 @@ class TradingBrain:
                 'urgency': 'normal'
             }
 
-        # No exit condition met
         return {
             'action': 'HOLD',
             'reason': 'All criteria within acceptable range',

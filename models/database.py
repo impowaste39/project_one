@@ -29,7 +29,15 @@ class Trade(Base):
 
     # Risk management
     stop_loss = Column(Float, nullable=False)
-    target = Column(Float, nullable=False)
+    target = Column(Float, nullable=False)       # Target 1 (primary)
+    target_2 = Column(Float, nullable=True)      # Target 2 (stretch) — NEW
+    target_3 = Column(Float, nullable=True)      # Target 3 (aggressive) — NEW
+
+    # Partial exit tracking — NEW
+    partially_exited = Column(Boolean, default=False, nullable=True)
+    partial_exit_price = Column(Float, nullable=True)
+    partial_exit_qty = Column(Integer, nullable=True)
+    partial_exit_date = Column(DateTime, nullable=True)
 
     # Exit details
     exit_date = Column(DateTime, nullable=True)
@@ -37,13 +45,11 @@ class Trade(Base):
     exit_reason = Column(Text, nullable=True)
 
     # Results
-    # Net P&L after all charges
-    profit_loss = Column(Float, nullable=True)
+    profit_loss = Column(Float, nullable=True)        # Net P&L after charges
     gross_profit_loss = Column(Float, nullable=True)  # Raw P&L before charges
-    # Total Groww charges paid
-    brokerage_charges = Column(Float, nullable=True)
+    brokerage_charges = Column(Float, nullable=True)  # Total charges paid
     profit_loss_pct = Column(Float, nullable=True)
-    r_multiple = Column(Float, nullable=True)  # Profit/Loss in R units
+    r_multiple = Column(Float, nullable=True)         # Profit/Loss in R units
 
     # Status
     status = Column(String(20), nullable=False,
@@ -51,8 +57,8 @@ class Trade(Base):
 
     # Analysis
     pattern = Column(String(100), nullable=True)
-    confidence_factors = Column(Text, nullable=True)  # JSON string
-    market_context = Column(Text, nullable=True)  # JSON string
+    confidence_factors = Column(Text, nullable=True)   # JSON string
+    market_context = Column(Text, nullable=True)       # JSON string
 
     # Timing
     hold_duration_days = Column(Integer, nullable=True)
@@ -70,6 +76,11 @@ class Trade(Base):
             'entry_score': self.entry_score,
             'stop_loss': self.stop_loss,
             'target': self.target,
+            'target_2': self.target_2,       # NEW
+            'target_3': self.target_3,       # NEW
+            'partially_exited': self.partially_exited,   # NEW
+            'partial_exit_price': self.partial_exit_price,  # NEW
+            'partial_exit_qty': self.partial_exit_qty,      # NEW
             'exit_date': self.exit_date.isoformat() if self.exit_date else None,
             'exit_price': self.exit_price,
             'exit_reason': self.exit_reason,
@@ -156,8 +167,7 @@ class MarketDataCache(Base):
     close = Column(Float)
     volume = Column(Integer)
 
-    # JSON string with calculated indicators
-    indicators = Column(Text, nullable=True)
+    indicators = Column(Text, nullable=True)  # JSON string
 
     created_at = Column(DateTime, default=datetime.now)
 
@@ -171,8 +181,8 @@ class MLModel(Base):
 
     id = Column(Integer, primary_key=True)
     model_name = Column(String(100), nullable=False)
-    model_data = Column(LargeBinary, nullable=False)  # Pickled model
-    scaler_data = Column(LargeBinary, nullable=True)  # Pickled scaler
+    model_data = Column(LargeBinary, nullable=False)   # Pickled model
+    scaler_data = Column(LargeBinary, nullable=True)   # Pickled scaler
 
     is_active = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.now)
@@ -208,11 +218,10 @@ def init_database():
     """Initialize database connection and create tables"""
     global _engine, _SessionLocal
 
-    # Import scan models here to ensure they're registered
     try:
         from models.scan_report import ScanReport, ScanResult, PatternOccurrence
     except ImportError:
-        pass  # Models will be created when scan_report module is available
+        pass
 
     database_url = os.getenv('DATABASE_URL', 'sqlite:///trading_bot.db')
 
@@ -229,7 +238,7 @@ def init_database():
 
     _SessionLocal = sessionmaker(bind=_engine)
 
-    # Run lightweight migrations to add new columns to existing databases
+    # Run migrations to add new columns to existing databases
     _migrate_database(_engine)
 
     return _engine, _SessionLocal
@@ -238,17 +247,23 @@ def init_database():
 def _migrate_database(engine):
     """
     Idempotent schema migrations.
-    SQLAlchemy create_all only creates new tables; it doesn't add columns to
-    existing tables. This function adds missing columns on every startup safely.
+    Safely adds missing columns on every startup.
     """
     from sqlalchemy import text, inspect as sa_inspect
     try:
         insp = sa_inspect(engine)
         existing_cols = {c['name'] for c in insp.get_columns('trades')}
 
+        # All new columns with their types
         new_columns = [
             ('gross_profit_loss', 'FLOAT'),
             ('brokerage_charges', 'FLOAT'),
+            ('target_2', 'FLOAT'),               # NEW — stretch target
+            ('target_3', 'FLOAT'),               # NEW — aggressive target
+            ('partially_exited', 'BOOLEAN'),     # NEW — partial exit flag
+            ('partial_exit_price', 'FLOAT'),     # NEW — price at partial exit
+            ('partial_exit_qty', 'INTEGER'),     # NEW — qty exited at T1
+            ('partial_exit_date', 'TIMESTAMP'),  # NEW — when partial exit happened
         ]
 
         with engine.connect() as conn:

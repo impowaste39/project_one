@@ -22,6 +22,7 @@ from core.risk_manager import RiskManager
 from core.learning_engine import LearningEngine
 from services.email_service import EmailService
 from services.data_service import DataService
+from services.discord_service import DiscordService
 from utils.helpers import get_ist_now, is_market_hours, get_market_status_message
 
 # Configure logging
@@ -43,6 +44,7 @@ init_database()
 # Initialize services
 email_service = EmailService()
 data_service = DataService()
+discord_service = DiscordService()
 
 # Timezone
 IST = pytz.timezone('Asia/Kolkata')
@@ -211,8 +213,10 @@ def scan_market_job():
                 )
 
                 if evaluation['decision'] == 'ENTER':
-                    success = portfolio_mgr.enter_trade(evaluation)
+                    # Send Discord alert BEFORE entering trade
+                    discord_service.send_trade_entry_alert(evaluation)
 
+                    success = portfolio_mgr.enter_trade(evaluation)
                     if success:
                         logger.info(
                             f"✅ TRADE EXECUTED: {evaluation['symbol']} @ ₹{evaluation['entry_price']}")
@@ -268,8 +272,8 @@ def monitor_positions_job():
 
         for trade in open_trades:
             try:
-                # Fetch current price
-                data = monitor.fetch_stock_data(trade.symbol, period='5d')
+                # Fetch current price — 2d is enough and faster than 5d
+                data = monitor.fetch_stock_data(trade.symbol, period='2d')
 
                 if data is None or data.empty:
                     logger.warning(f"Could not fetch data for {trade.symbol}")
@@ -281,7 +285,33 @@ def monitor_positions_job():
                 exit_decision = brain.check_exit_conditions(
                     trade, current_price, data)
 
-                if exit_decision['action'] == 'EXIT':
+                if exit_decision['action'] == 'PARTIAL_EXIT':
+                    # Book 50% of position at T1, move SL to breakeven
+                    partial_qty = max(1, trade.quantity // 2)
+                    partial_pnl = round(
+                        (current_price - trade.entry_price) * partial_qty, 2)
+
+                    # Update trade in DB
+                    trade.partially_exited = True
+                    trade.partial_exit_price = current_price
+                    trade.partial_exit_qty = partial_qty
+                    trade.partial_exit_date = datetime.now(IST)
+                    trade.stop_loss = trade.entry_price  # Move SL to breakeven
+                    db.commit()
+
+                    # Send Discord alert for partial exit
+                    discord_service.send_partial_exit_alert(
+                        symbol=trade.symbol,
+                        entry_price=trade.entry_price,
+                        exit_price=current_price,
+                        quantity_exited=partial_qty,
+                        pnl=partial_pnl
+                    )
+                    logger.info(
+                        f"🎯 PARTIAL EXIT: {trade.symbol} @ ₹{current_price:.2f} "
+                        f"({partial_qty} shares booked, P&L: ₹{partial_pnl})")
+
+                elif exit_decision['action'] == 'EXIT':
                     success = portfolio_mgr.exit_trade(
                         trade,
                         current_price,
@@ -299,7 +329,11 @@ def monitor_positions_job():
                         insights = learning_engine.analyze_completed_trade(
                             trade)
 
-                        # Send exit email
+                        # Send Discord exit alert
+                        discord_service.send_trade_exit_alert(
+                            trade, exit_decision['reason'])
+
+                        # Send exit email as backup
                         email_service.send_trade_exit_email(
                             trade, exit_decision['reason'], insights)
                 else:
@@ -352,6 +386,13 @@ def end_of_day_analysis_job():
             'performance': performance
         }
 
+        discord_service.send_daily_summary({
+            'total_trades': performance.get('total_trades', 0),
+            'win_rate': performance.get('win_rate', 0),
+            'total_pnl': performance.get('total_pnl', 0),
+            'open_positions': performance.get('open_positions', 0),
+            'today_trades': performance.get('today_trades', 0),
+        })
         email_service.send_daily_summary(summary_data)
 
         logger.info("End of day analysis completed")

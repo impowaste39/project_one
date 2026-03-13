@@ -185,14 +185,18 @@ class LearningEngine:
             self.db.rollback()
 
     def retrain_ml_model(self, trading_brain):
-        """Retrain ML model with latest trade data"""
+        """
+        Retrain ML model with latest trade data.
+        Requires minimum 20 closed trades (lowered from 50 for faster learning).
+        """
         try:
             trades = self.db.query(Trade).filter(
                 Trade.status == 'CLOSED').all()
 
-            if len(trades) < 50:
+            # Lowered from 50 → 20 so ML starts learning sooner
+            if len(trades) < 20:
                 logger.info(
-                    f"Not enough trades for retraining ({len(trades)}/50)")
+                    f"Not enough trades for retraining ({len(trades)}/20 required)")
                 return False
 
             # Prepare training data
@@ -235,7 +239,8 @@ class LearningEngine:
             test_score = trading_brain.ml_model.score(X_test_scaled, y_test)
 
             logger.info(
-                f"Model retrained: Train: {train_score:.2%}, Test: {test_score:.2%}")
+                f"Model retrained on {len(trades)} trades — "
+                f"Train: {train_score:.2%}, Test: {test_score:.2%}")
 
             # Save model
             self.save_ml_model(trading_brain, test_score)
@@ -252,7 +257,7 @@ class LearningEngine:
             model_data = pickle.dumps(trading_brain.ml_model)
             scaler_data = pickle.dumps(trading_brain.scaler)
 
-            # Deactivate old models
+            # Deactivate old models before saving new one
             self.db.query(MLModel).filter_by(
                 model_name='pattern_classifier',
                 is_active=True
@@ -271,7 +276,8 @@ class LearningEngine:
             self.db.add(new_model)
             self.db.commit()
 
-            logger.info("ML model saved to database")
+            logger.info(
+                f"ML model saved — accuracy: {accuracy:.2%}" if accuracy else "ML model saved")
 
         except Exception as e:
             logger.error(f"Error saving model: {e}")
@@ -338,7 +344,7 @@ class LearningEngine:
 
     def generate_learning_insights(self) -> dict:
         """
-        Generate comprehensive learning insights for the AI
+        Generate comprehensive learning insights for the AI.
 
         Returns:
             Dict with learning progress, pattern insights, and recommendations
@@ -379,8 +385,6 @@ class LearningEngine:
             recommendations = []
 
             for pattern, data in pattern_insights.items():
-                avg_score = sum(
-                    data['avg_score']) / len(data['avg_score']) if data['avg_score'] else 0
                 trade_rate = (data['traded'] / data['total_seen']
                               * 100) if data['total_seen'] > 0 else 0
 

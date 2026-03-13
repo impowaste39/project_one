@@ -73,7 +73,7 @@ class PortfolioManager:
             True if trade executed successfully
         """
         try:
-            # Create trade record
+            # Create trade record — now stores target_2 and target_3
             trade = Trade(
                 symbol=evaluation['symbol'],
                 entry_date=datetime.now(),
@@ -81,7 +81,10 @@ class PortfolioManager:
                 quantity=evaluation['quantity'],
                 entry_score=evaluation['score'],
                 stop_loss=evaluation['stop_loss'],
-                target=evaluation['target_1'],
+                target=evaluation['target_1'],            # T1 = primary exit
+                target_2=evaluation.get('target_2'),     # FIX: was missing
+                target_3=evaluation.get('target_3'),     # FIX: was missing
+                partially_exited=False,                  # FIX: explicit default
                 status='OPEN',
                 pattern=evaluation['patterns'][0] if evaluation.get(
                     'patterns') else None,
@@ -116,7 +119,8 @@ class PortfolioManager:
                 self.email_service.send_trade_entry_email(trade, evaluation)
 
             logger.info(
-                f"Trade entered: {trade.symbol} @ ₹{trade.entry_price}")
+                f"Trade entered: {trade.symbol} @ ₹{trade.entry_price} "
+                f"| T1: ₹{trade.target} | T2: ₹{trade.target_2} | T3: ₹{trade.target_3}")
             return True
 
         except Exception as e:
@@ -161,15 +165,16 @@ class PortfolioManager:
             trade.exit_date = datetime.now()
             trade.exit_price = exit_price
             trade.exit_reason = exit_reason
-            trade.gross_profit_loss = round(gross_pnl, 2)  # Raw before charges
-            trade.profit_loss = net_pnl                    # Net after charges
-            trade.brokerage_charges = charges              # Total Groww fees
+            trade.gross_profit_loss = round(gross_pnl, 2)
+            trade.profit_loss = net_pnl
+            trade.brokerage_charges = charges
             trade.profit_loss_pct = round(profit_loss_pct, 4)
             trade.r_multiple = round(r_multiple, 4)
             trade.hold_duration_days = hold_duration
             trade.status = 'CLOSED'
 
-            # Update portfolio
+            # Update portfolio — FIX: was using undefined 'profit_loss' variable
+            # Now correctly uses net_pnl which is defined above
             portfolio = self.db.query(Portfolio).order_by(
                 Portfolio.timestamp.desc()
             ).first()
@@ -178,11 +183,11 @@ class PortfolioManager:
                 investment = trade.entry_price * trade.quantity
 
                 new_portfolio = Portfolio(
-                    total_capital=portfolio.total_capital + profit_loss,
+                    total_capital=portfolio.total_capital + net_pnl,
                     deployed_capital=portfolio.deployed_capital - investment,
-                    available_capital=portfolio.available_capital + investment + profit_loss,
+                    available_capital=portfolio.available_capital + investment + net_pnl,
                     unrealized_pnl=portfolio.unrealized_pnl,
-                    realized_pnl=portfolio.realized_pnl + profit_loss,
+                    realized_pnl=portfolio.realized_pnl + net_pnl,
                     open_positions=max(0, portfolio.open_positions - 1),
                     timestamp=datetime.now()
                 )
@@ -191,7 +196,8 @@ class PortfolioManager:
             self.db.commit()
 
             logger.info(
-                f"Trade exited: {trade.symbol} @ ₹{exit_price} | P&L: ₹{profit_loss:.2f}")
+                f"Trade exited: {trade.symbol} @ ₹{exit_price} "
+                f"| Gross: ₹{gross_pnl:.2f} | Charges: ₹{charges:.2f} | Net: ₹{net_pnl:.2f}")
             return True
 
         except Exception as e:
