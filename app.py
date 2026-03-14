@@ -295,7 +295,7 @@ def monitor_positions_job():
                     trade.partially_exited = True
                     trade.partial_exit_price = current_price
                     trade.partial_exit_qty = partial_qty
-                    trade.partial_exit_date = datetime.now(IST)
+                    trade.partial_exit_date = datetime.now(IST).replace(tzinfo=None)  # FIX: naive datetime for DB
                     trade.stop_loss = trade.entry_price  # Move SL to breakeven
                     db.commit()
 
@@ -376,7 +376,7 @@ def end_of_day_analysis_job():
         logger.info(f"  Total P&L: ₹{performance.get('total_pnl', 0):.2f}")
 
         # Retrain ML model if enough data
-        if performance.get('total_trades', 0) >= 50:
+        if performance.get('total_trades', 0) >= 20:  # FIX: match learning_engine threshold (was 50)
             logger.info("Retraining ML model...")
             learning_engine.retrain_ml_model(brain)
 
@@ -386,12 +386,19 @@ def end_of_day_analysis_job():
             'performance': performance
         }
 
+        # FIX: compute open_positions and today_trades separately — not returned by generate_performance_report()
+        open_positions_count = db.query(Trade).filter(Trade.status == 'OPEN').count()
+        today_date = datetime.now(IST).date()
+        today_trades_count = db.query(Trade).filter(
+            Trade.entry_date >= datetime(today_date.year, today_date.month, today_date.day)
+        ).count()
+
         discord_service.send_daily_summary({
             'total_trades': performance.get('total_trades', 0),
             'win_rate': performance.get('win_rate', 0),
             'total_pnl': performance.get('total_pnl', 0),
-            'open_positions': performance.get('open_positions', 0),
-            'today_trades': performance.get('today_trades', 0),
+            'open_positions': open_positions_count,
+            'today_trades': today_trades_count,
         })
         email_service.send_daily_summary(summary_data)
 
