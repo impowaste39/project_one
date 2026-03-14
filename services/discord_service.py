@@ -7,6 +7,13 @@ Setup:
 2. Go to channel settings → Integrations → Webhooks → New Webhook
 3. Copy the webhook URL
 4. Add to Render environment: DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+
+Improvements in this version:
+- TradingView chart link in every alert (one tap → chart opens on phone)
+- Position tier badge (CAUTIOUS / NORMAL / HIGH CONVICTION)
+- Weekly EMA filter confirmation shown in entry alert
+- Circuit breaker status in EOD daily summary
+- Dedicated circuit breaker triggered alert
 """
 
 import requests
@@ -18,6 +25,13 @@ import pytz
 logger = logging.getLogger(__name__)
 
 IST = pytz.timezone('Asia/Kolkata')
+
+TIER_DISPLAY = {
+    'HIGH CONVICTION': '🔴 HIGH CONVICTION (1.5x size)',
+    'NORMAL':          '🟠 NORMAL (1.0x size)',
+    'CAUTIOUS':        '🟡 CAUTIOUS (0.75x size)',
+    'N/A':             '⚪ N/A',
+}
 
 
 class DiscordService:
@@ -31,6 +45,19 @@ class DiscordService:
 
     def _get_ist_time(self) -> str:
         return datetime.now(IST).strftime('%d %b %Y, %I:%M %p IST')
+
+    def _get_tradingview_url(self, symbol: str) -> str:
+        """
+        Generate TradingView chart URL.
+        FEDERALBNK.NS → https://in.tradingview.com/chart/?symbol=NSE:FEDERALBNK
+        One tap in Discord → chart opens in TradingView app or browser.
+        """
+        clean = symbol.replace('.NS', '').replace('.BO', '')
+        return f"https://in.tradingview.com/chart/?symbol=NSE:{clean}"
+
+    def _clean(self, symbol: str) -> str:
+        """Strip .NS suffix for display"""
+        return symbol.replace('.NS', '').replace('.BO', '')
 
     def _send(self, payload: dict) -> bool:
         """Send payload to Discord webhook"""
@@ -55,7 +82,12 @@ class DiscordService:
     def send_trade_entry_alert(self, evaluation: dict) -> bool:
         """
         Send alert when bot finds a high-quality trade setup.
-        Called from scan_market_job() when decision == 'ENTER'
+        Called from scan_market_job() when decision == 'ENTER'.
+
+        Includes:
+        - Position tier badge (how big the bet is)
+        - Weekly EMA confirmation (long-term trend)
+        - TradingView link (review chart instantly on phone)
         """
         symbol = evaluation.get('symbol', 'UNKNOWN')
         score = evaluation.get('score', 0)
@@ -66,77 +98,99 @@ class DiscordService:
         rr = evaluation.get('rr_ratio', 0)
         patterns = evaluation.get('patterns', [])
         factors = evaluation.get('factors', [])
+        position_tier = evaluation.get('position_tier', 'NORMAL')
+        weekly_ema_reason = evaluation.get('weekly_ema_reason', '')
 
-        # Calculate risk percent
         risk_pct = round(((entry - sl) / entry) * 100, 2) if entry > 0 else 0
         reward_pct = round(((t1 - entry) / entry) * 100, 2) if entry > 0 else 0
 
-        # Format patterns nicely
         pattern_text = '\n'.join(
             [f"• {p.replace('_', ' ').title()}" for p in patterns]
         ) if patterns else '• No specific pattern'
 
-        # Top 3 factors
         factors_text = '\n'.join(
             [f"• {f}" for f in factors[:3]]
         ) if factors else '• Score-based entry'
 
+        tier_badge = TIER_DISPLAY.get(position_tier, f'⚪ {position_tier}')
+        chart_url = self._get_tradingview_url(symbol)
+
+        fields = [
+            {
+                "name": "📊 Setup Score",
+                "value": f"**{score}/100**",
+                "inline": True
+            },
+            {
+                "name": "⚖️ Risk:Reward",
+                "value": f"**{rr}:1**",
+                "inline": True
+            },
+            {
+                "name": "💼 Position Size",
+                "value": tier_badge,
+                "inline": False
+            },
+            {
+                "name": "‎",
+                "value": "‎",
+                "inline": False
+            },
+            {
+                "name": "💰 Entry Price",
+                "value": f"**₹{entry}**",
+                "inline": True
+            },
+            {
+                "name": "🛑 Stop Loss",
+                "value": f"**₹{sl}** (-{risk_pct}%)",
+                "inline": True
+            },
+            {
+                "name": "‎",
+                "value": "‎",
+                "inline": False
+            },
+            {
+                "name": "🎯 Target 1",
+                "value": f"**₹{t1}** (+{reward_pct}%)",
+                "inline": True
+            },
+            {
+                "name": "🎯 Target 2",
+                "value": f"**₹{t2}**",
+                "inline": True
+            },
+            {
+                "name": "📈 Patterns Detected",
+                "value": pattern_text,
+                "inline": False
+            },
+            {
+                "name": "🧠 Why This Setup",
+                "value": factors_text,
+                "inline": False
+            },
+        ]
+
+        if weekly_ema_reason:
+            fields.append({
+                "name": "📅 Long-Term Trend",
+                "value": f"✅ {weekly_ema_reason}",
+                "inline": False
+            })
+
+        fields.append({
+            "name": "📉 Review Chart",
+            "value": f"[Open {self._clean(symbol)} on TradingView]({chart_url})",
+            "inline": False
+        })
+
         payload = {
             "embeds": [{
-                "title": f"🚨 TRADE ALERT — {symbol}",
-                "color": 3066993,  # Green
-                "fields": [
-                    {
-                        "name": "📊 Setup Score",
-                        "value": f"**{score}/100**",
-                        "inline": True
-                    },
-                    {
-                        "name": "⚖️ Risk:Reward",
-                        "value": f"**{rr}:1**",
-                        "inline": True
-                    },
-                    {
-                        "name": "‎",  # Empty spacer
-                        "value": "‎",
-                        "inline": False
-                    },
-                    {
-                        "name": "💰 Entry Price",
-                        "value": f"**₹{entry}**",
-                        "inline": True
-                    },
-                    {
-                        "name": "🛑 Stop Loss",
-                        "value": f"**₹{sl}** (-{risk_pct}%)",
-                        "inline": True
-                    },
-                    {
-                        "name": "‎",
-                        "value": "‎",
-                        "inline": False
-                    },
-                    {
-                        "name": "🎯 Target 1",
-                        "value": f"**₹{t1}** (+{reward_pct}%)",
-                        "inline": True
-                    },
-                    {
-                        "name": "🎯 Target 2",
-                        "value": f"**₹{t2}**",
-                        "inline": True
-                    },
-                    {
-                        "name": "📈 Patterns Detected",
-                        "value": pattern_text,
-                        "inline": False
-                    },
-                    {
-                        "name": "🧠 Why This Setup",
-                        "value": factors_text,
-                        "inline": False
-                    },
-                ],
+                "title": f"🚨 TRADE ALERT — {self._clean(symbol)}",
+                "color": 3066993,
+                "fields": fields,
                 "footer": {
                     "text": f"⚡ Place order manually on Zerodha • {self._get_ist_time()}"
                 }
@@ -145,13 +199,16 @@ class DiscordService:
 
         success = self._send(payload)
         if success:
-            logger.info(f"Discord entry alert sent for {symbol}")
+            logger.info(
+                f"Discord entry alert sent for {symbol} | Tier: {position_tier}")
         return success
 
-    def send_trade_exit_alert(self, trade, exit_reason: str, is_partial: bool = False) -> bool:
+    def send_trade_exit_alert(self, trade, exit_reason: str,
+                              is_partial: bool = False) -> bool:
         """
         Send alert when a trade is exited (full or partial).
         Called from monitor_positions_job() on exit.
+        Includes TradingView chart link.
         """
         symbol = trade.symbol
         entry = trade.entry_price
@@ -161,13 +218,14 @@ class DiscordService:
         hold_days = trade.hold_duration_days or 0
 
         is_profit = pnl >= 0
-        color = 3066993 if is_profit else 15158332  # Green or Red
+        color = 3066993 if is_profit else 15158332
         emoji = "✅" if is_profit else "❌"
         prefix = "PARTIAL EXIT" if is_partial else "TRADE CLOSED"
+        chart_url = self._get_tradingview_url(symbol)
 
         payload = {
             "embeds": [{
-                "title": f"{emoji} {prefix} — {symbol}",
+                "title": f"{emoji} {prefix} — {self._clean(symbol)}",
                 "color": color,
                 "fields": [
                     {
@@ -182,7 +240,10 @@ class DiscordService:
                     },
                     {
                         "name": "💸 Net P&L",
-                        "value": f"**{'▲' if is_profit else '▼'} ₹{abs(pnl):.2f} ({pnl_pct:.2f}%)**",
+                        "value": (
+                            f"**{'▲' if is_profit else '▼'} "
+                            f"₹{abs(pnl):.2f} ({pnl_pct:.2f}%)**"
+                        ),
                         "inline": False
                     },
                     {
@@ -194,6 +255,14 @@ class DiscordService:
                         "name": "🚪 Exit Reason",
                         "value": exit_reason,
                         "inline": True
+                    },
+                    {
+                        "name": "📉 Chart",
+                        "value": (
+                            f"[View {self._clean(symbol)} on TradingView]"
+                            f"({chart_url})"
+                        ),
+                        "inline": False
                     },
                 ],
                 "footer": {
@@ -210,15 +279,21 @@ class DiscordService:
     def send_partial_exit_alert(self, symbol: str, entry_price: float,
                                 exit_price: float, quantity_exited: int,
                                 pnl: float) -> bool:
-        """Send alert when 50% of position is booked at T1"""
+        """
+        Send alert when 50% of position is booked at T1.
+        Includes TradingView chart link.
+        """
         is_profit = pnl >= 0
         color = 3066993 if is_profit else 15158332
+        chart_url = self._get_tradingview_url(symbol)
 
         payload = {
             "embeds": [{
-                "title": f"🎯 PARTIAL EXIT (T1 HIT) — {symbol}",
+                "title": f"🎯 PARTIAL EXIT (T1 HIT) — {self._clean(symbol)}",
                 "color": color,
-                "description": "50% position booked. Stop loss moved to breakeven. Riding to T2!",
+                "description": (
+                    "50% position booked. Stop loss moved to breakeven. Riding to T2!"
+                ),
                 "fields": [
                     {
                         "name": "📥 Entry",
@@ -245,6 +320,14 @@ class DiscordService:
                         "value": f"₹{entry_price} (Breakeven)",
                         "inline": True
                     },
+                    {
+                        "name": "📉 Chart",
+                        "value": (
+                            f"[View {self._clean(symbol)} on TradingView]"
+                            f"({chart_url})"
+                        ),
+                        "inline": False
+                    },
                 ],
                 "footer": {
                     "text": self._get_ist_time()
@@ -259,8 +342,11 @@ class DiscordService:
 
     def send_daily_summary(self, performance: dict) -> bool:
         """
-        Send EOD daily summary.
-        Called from end_of_day_analysis_job() at 4 PM IST.
+        Send EOD daily summary at 4 PM IST.
+        Now includes weekly P&L and circuit breaker status.
+
+        Pass get_weekly_pnl_summary() result merged into performance dict
+        to get the weekly section.
         """
         total_trades = performance.get('total_trades', 0)
         win_rate = performance.get('win_rate', 0)
@@ -268,41 +354,89 @@ class DiscordService:
         open_positions = performance.get('open_positions', 0)
         today_trades = performance.get('today_trades', 0)
 
+        week_pnl = performance.get('week_pnl', None)
+        week_trades = performance.get('week_trades', None)
+        week_wins = performance.get('week_wins', None)
+        circuit_breaker_active = performance.get('circuit_breaker_active', False)
+        loss_pct = performance.get('loss_pct_of_capital', 0)
+        circuit_limit = performance.get('circuit_breaker_limit_pct', 3.0)
+
         is_profit = total_pnl >= 0
         color = 3066993 if is_profit else 15158332
         pnl_emoji = "📈" if is_profit else "📉"
 
+        fields = [
+            {
+                "name": "🔄 Today's Trades",
+                "value": str(today_trades),
+                "inline": True
+            },
+            {
+                "name": "📂 Open Positions",
+                "value": str(open_positions),
+                "inline": True
+            },
+            {
+                "name": f"{pnl_emoji} Total P&L",
+                "value": f"**₹{total_pnl:.2f}**",
+                "inline": True
+            },
+            {
+                "name": "🏆 Win Rate",
+                "value": f"{win_rate:.1f}%",
+                "inline": True
+            },
+            {
+                "name": "📋 Total Trades",
+                "value": str(total_trades),
+                "inline": True
+            },
+        ]
+
+        if week_pnl is not None:
+            week_pnl_emoji = "📈" if week_pnl >= 0 else "📉"
+            week_win_rate = (
+                round(week_wins / week_trades * 100, 1)
+                if week_trades and week_trades > 0 else 0
+            )
+            fields.append({"name": "‎", "value": "‎", "inline": False})
+            fields.append({
+                "name": f"{week_pnl_emoji} This Week P&L",
+                "value": (
+                    f"**₹{week_pnl:.2f}** "
+                    f"({week_trades} trades, {week_win_rate}% WR)"
+                ),
+                "inline": False
+            })
+
+            if circuit_breaker_active:
+                fields.append({
+                    "name": "⛔ Circuit Breaker",
+                    "value": (
+                        f"**ACTIVE** — Week loss {loss_pct:.1f}% exceeds "
+                        f"{circuit_limit}% limit.\nNo new trades until Monday."
+                    ),
+                    "inline": False
+                })
+            else:
+                headroom = circuit_limit - loss_pct
+                fields.append({
+                    "name": "✅ Circuit Breaker",
+                    "value": (
+                        f"Inactive — {loss_pct:.1f}% of {circuit_limit}% "
+                        f"limit used ({headroom:.1f}% headroom)"
+                    ),
+                    "inline": False
+                })
+
         payload = {
             "embeds": [{
-                "title": f"📊 Daily Summary — {datetime.now(IST).strftime('%d %b %Y')}",
+                "title": (
+                    f"📊 Daily Summary — "
+                    f"{datetime.now(IST).strftime('%d %b %Y')}"
+                ),
                 "color": color,
-                "fields": [
-                    {
-                        "name": "🔄 Today's Trades",
-                        "value": str(today_trades),
-                        "inline": True
-                    },
-                    {
-                        "name": "📂 Open Positions",
-                        "value": str(open_positions),
-                        "inline": True
-                    },
-                    {
-                        "name": f"{pnl_emoji} Total P&L",
-                        "value": f"**₹{total_pnl:.2f}**",
-                        "inline": True
-                    },
-                    {
-                        "name": "🏆 Win Rate",
-                        "value": f"{win_rate:.1f}%",
-                        "inline": True
-                    },
-                    {
-                        "name": "📋 Total Trades",
-                        "value": str(total_trades),
-                        "inline": True
-                    },
-                ],
+                "fields": fields,
                 "footer": {
                     "text": f"Market closed • {self._get_ist_time()}"
                 }
@@ -314,13 +448,40 @@ class DiscordService:
             logger.info("Discord daily summary sent")
         return success
 
+    def send_circuit_breaker_alert(self, week_pnl: float, loss_pct: float,
+                                   limit_pct: float) -> bool:
+        """
+        Dedicated alert the moment circuit breaker triggers mid-day.
+        Call this from portfolio_manager when circuit breaker fires for the
+        first time in the week so you know immediately — don't wait for EOD.
+        """
+        payload = {
+            "embeds": [{
+                "title": "⛔ CIRCUIT BREAKER TRIGGERED",
+                "color": 15158332,
+                "description": (
+                    f"Weekly loss has reached **{loss_pct:.1f}%** of capital "
+                    f"(₹{abs(week_pnl):.2f}), exceeding the **{limit_pct}% limit**.\n\n"
+                    f"**No new trades will be entered until Monday.**\n"
+                    f"Existing positions continue to be monitored and can still exit."
+                ),
+                "footer": {
+                    "text": f"Review your open positions • {self._get_ist_time()}"
+                }
+            }]
+        }
+        success = self._send(payload)
+        if success:
+            logger.warning("Discord circuit breaker alert sent")
+        return success
+
     def send_health_alert(self, subject: str, body: str) -> bool:
         """Send system health alert"""
         payload = {
             "embeds": [{
                 "title": f"🚨 {subject}",
                 "description": body,
-                "color": 15158332,  # Red
+                "color": 15158332,
                 "footer": {
                     "text": self._get_ist_time()
                 }

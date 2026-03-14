@@ -1,6 +1,10 @@
 """
 Trading Brain - AI Decision Engine
 Makes intelligent trading decisions using ML and rule-based systems
+
+Improvements in this version:
+- Weekly EMA filter: only enter if price is above 50-week EMA (long-term trend check)
+- Position scaling by score: bet bigger only on high-conviction setups
 """
 
 import numpy as np
@@ -66,7 +70,8 @@ class TradingBrain:
             analysis.get('pattern_count', 0),
             1 if 'bullish_ma_crossover' in analysis.get('patterns', []) else 0,
             1 if 'rsi_oversold_bounce' in analysis.get('patterns', []) else 0,
-            1 if 'macd_bullish_crossover' in analysis.get('patterns', []) else 0,
+            1 if 'macd_bullish_crossover' in analysis.get(
+                'patterns', []) else 0,
             1 if 'breakout_with_volume' in analysis.get('patterns', []) else 0,
             1 if 'pullback_in_uptrend' in analysis.get('patterns', []) else 0,
         ]
@@ -89,7 +94,8 @@ class TradingBrain:
         stamp = buy_turnover * 0.00015
         sebi_ipft = (buy_turnover + sell_turnover) * 0.000002
         dp = 23.60
-        gst = (brokerage_buy + brokerage_sell + exchange + sebi_ipft + dp) * 0.18
+        gst = (brokerage_buy + brokerage_sell +
+               exchange + sebi_ipft + dp) * 0.18
 
         total_charges = round(
             brokerage_buy + brokerage_sell + stt + exchange +
@@ -97,6 +103,92 @@ class TradingBrain:
         )
         net_pnl = round(gross_pnl - total_charges, 2)
         return net_pnl, total_charges
+
+    # =========================================================================
+    # NEW: WEEKLY EMA FILTER
+    # Fetches 1-year weekly data and checks if price is above 50-week EMA.
+    # If below — stock is in long-term downtrend — skip regardless of daily setup.
+    #
+    # Why 50-week EMA?
+    # It represents ~1 year of trend. Stocks below it are falling knives.
+    # Daily patterns can look bullish but bigger trend is against you.
+    # We only trade WITH the long-term trend — that's disciplined swing trading.
+    #
+    # Failure handling: if fetch fails for any reason, filter is bypassed (True)
+    # so a network hiccup doesn't block the entire scan.
+    # =========================================================================
+    def check_weekly_ema_filter(self, symbol: str) -> tuple:
+        """
+        Check if stock price is above its 50-week EMA.
+
+        Returns:
+            (passes: bool, reason: str)
+            passes=True  → above 50W EMA, safe to enter
+            passes=False → below 50W EMA, skip this stock
+        """
+        try:
+            import yfinance as yf
+
+            ticker = yf.Ticker(symbol)
+            weekly_data = ticker.history(period='1y', interval='1wk')
+
+            if weekly_data is None or weekly_data.empty or len(weekly_data) < 20:
+                logger.debug(
+                    f"[WeeklyEMA] {symbol}: insufficient weekly data, bypassing filter")
+                return True, "Weekly EMA: insufficient data (bypassed)"
+
+            weekly_data['ema_50w'] = weekly_data['Close'].ewm(
+                span=50, min_periods=10, adjust=False
+            ).mean()
+
+            current_price = weekly_data['Close'].iloc[-1]
+            ema_50w = weekly_data['ema_50w'].iloc[-1]
+
+            if pd.isna(ema_50w):
+                logger.debug(
+                    f"[WeeklyEMA] {symbol}: EMA is NaN, bypassing filter")
+                return True, "Weekly EMA: unavailable (bypassed)"
+
+            distance_pct = ((current_price - ema_50w) / ema_50w) * 100
+
+            if current_price >= ema_50w:
+                reason = f"Above 50W EMA ₹{ema_50w:.1f} (+{distance_pct:.1f}%)"
+                logger.debug(f"[WeeklyEMA] {symbol}: PASS — {reason}")
+                return True, reason
+            else:
+                reason = (
+                    f"Below 50W EMA ₹{ema_50w:.1f} ({distance_pct:.1f}%) "
+                    f"— long-term downtrend"
+                )
+                logger.info(f"[WeeklyEMA] {symbol}: BLOCKED — {reason}")
+                return False, reason
+
+        except Exception as e:
+            logger.warning(
+                f"[WeeklyEMA] {symbol}: fetch failed ({e}), bypassing filter")
+            return True, "Weekly EMA: fetch error (bypassed)"
+
+    # =========================================================================
+    # NEW: POSITION SCALING BY SCORE
+    # Same rules, different bet sizes based on conviction.
+    #
+    # Score 65-74  → 0.75x  CAUTIOUS   (valid setup, not outstanding)
+    # Score 75-84  → 1.0x   NORMAL     (solid setup, standard bet)
+    # Score 85-100 → 1.5x   HIGH CONVICTION (rare, strong setup, bet bigger)
+    #
+    # Applied AFTER base risk_manager sizing.
+    # Hard cap of 30% available capital always enforced.
+    # =========================================================================
+    def get_position_size_multiplier(self, score: int) -> tuple:
+        """
+        Returns (multiplier, tier_label) based on setup score.
+        """
+        if score >= 85:
+            return 1.5, "HIGH CONVICTION"
+        elif score >= 75:
+            return 1.0, "NORMAL"
+        else:
+            return 0.75, "CAUTIOUS"
 
     def calculate_setup_score(self, analysis: dict, market_context: dict) -> dict:
         """
@@ -210,9 +302,11 @@ class TradingBrain:
                 features = self.extract_features(analysis)
                 if hasattr(self.scaler, 'mean_'):
                     features_scaled = self.scaler.transform(features)
-                    probability = self.ml_model.predict_proba(features_scaled)[0][1]
+                    probability = self.ml_model.predict_proba(
+                        features_scaled)[0][1]
                     ml_score = probability * 10
-                    factors.append(f"ML success probability: {probability:.1%}")
+                    factors.append(
+                        f"ML success probability: {probability:.1%}")
             else:
                 # Heuristic fallback — ML model not yet trained (needs 20+ closed trades)
                 rsi = analysis.get('rsi', 50)
@@ -220,10 +314,12 @@ class TradingBrain:
                 if pd.notna(rsi) and pd.notna(vol):
                     if 38 <= rsi <= 62 and vol >= 1.3:
                         ml_score = 7
-                        factors.append("Heuristic: RSI in range + strong volume")
+                        factors.append(
+                            "Heuristic: RSI in range + strong volume")
                     elif 35 <= rsi <= 65 and vol >= 1.1:
                         ml_score = 4
-                        factors.append("Heuristic: RSI acceptable + moderate volume")
+                        factors.append(
+                            "Heuristic: RSI acceptable + moderate volume")
                     elif 30 <= rsi <= 70:
                         ml_score = 2
                         factors.append("Heuristic: RSI in broad range")
@@ -276,10 +372,47 @@ class TradingBrain:
 
     def evaluate_opportunity(self, analysis: dict, market_context: dict,
                              portfolio_state: dict) -> dict:
-        """Complete evaluation of a trading opportunity"""
+        """
+        Complete evaluation of a trading opportunity.
+        Now includes:
+        - Weekly EMA filter (long-term trend check before any sizing)
+        - Position scaling by score (bet bigger on high-conviction setups)
+        """
         score_breakdown = self.calculate_setup_score(analysis, market_context)
         levels = self.calculate_entry_exit_levels(analysis)
+        symbol = analysis['symbol']
 
+        # --- WEEKLY EMA FILTER ---
+        # Check long-term trend first — no point sizing if trend is against us
+        weekly_ema_passes, weekly_ema_reason = self.check_weekly_ema_filter(
+            symbol)
+
+        if not weekly_ema_passes:
+            logger.info(
+                f"[WeeklyEMA] {symbol} blocked — {weekly_ema_reason}")
+            return {
+                'symbol': symbol,
+                'score': score_breakdown['total_score'],
+                'confidence': score_breakdown['confidence'],
+                'factors': score_breakdown['factors'],
+                'entry_price': levels['entry_price'],
+                'stop_loss': levels['stop_loss'],
+                'target_1': levels['target_1'],
+                'target_2': levels['target_2'],
+                'target_3': levels['target_3'],
+                'rr_ratio': levels['rr_ratio'],
+                'quantity': 0,
+                'investment': 0,
+                'risk_amount': 0,
+                'trade_worthy': False,
+                'decision': 'PASS',
+                'reason': f"Weekly EMA filter: {weekly_ema_reason}",
+                'patterns': analysis.get('patterns', []),
+                'weekly_ema_reason': weekly_ema_reason,
+                'position_tier': 'N/A'
+            }
+
+        # --- BASE POSITION SIZING ---
         position_info = {'quantity': 0, 'investment': 0, 'risk_amount': 0}
         if self.risk_manager:
             position_info = self.risk_manager.calculate_position_size(
@@ -288,13 +421,39 @@ class TradingBrain:
                 stop_loss=levels['stop_loss']
             )
 
+        # --- POSITION SCALING BY SCORE ---
+        score = score_breakdown['total_score']
+        multiplier, position_tier = self.get_position_size_multiplier(score)
+
+        if position_info['quantity'] > 0 and multiplier != 1.0:
+            scaled_qty = max(1, round(position_info['quantity'] * multiplier))
+            scaled_investment = scaled_qty * levels['entry_price']
+
+            # Hard cap: never exceed 30% of available capital
+            max_investment = portfolio_state['available_capital'] * 0.30
+            if scaled_investment > max_investment:
+                scaled_qty = max(
+                    1, int(max_investment / levels['entry_price']))
+                scaled_investment = scaled_qty * levels['entry_price']
+
+            position_info['quantity'] = scaled_qty
+            position_info['investment'] = round(scaled_investment, 2)
+            position_info['risk_amount'] = round(
+                scaled_qty * (levels['entry_price'] - levels['stop_loss']), 2
+            )
+
+            logger.info(
+                f"[PositionScale] {symbol}: score={score} → "
+                f"{position_tier} ({multiplier}x) → qty={scaled_qty}"
+            )
+
         trade_worthy = self.should_enter_trade(
             score_breakdown, levels, portfolio_state, position_info,
-            symbol=analysis['symbol'], market_context=market_context
+            symbol=symbol, market_context=market_context
         )
 
         return {
-            'symbol': analysis['symbol'],
+            'symbol': symbol,
             'score': score_breakdown['total_score'],
             'confidence': score_breakdown['confidence'],
             'factors': score_breakdown['factors'],
@@ -302,7 +461,7 @@ class TradingBrain:
             'stop_loss': levels['stop_loss'],
             'target_1': levels['target_1'],
             'target_2': levels['target_2'],
-            'target_3': levels['target_3'],       # NOW INCLUDED
+            'target_3': levels['target_3'],
             'rr_ratio': levels['rr_ratio'],
             'quantity': position_info['quantity'],
             'investment': position_info['investment'],
@@ -311,9 +470,11 @@ class TradingBrain:
             'decision': 'ENTER' if trade_worthy else 'PASS',
             'reason': self.get_decision_reason(
                 trade_worthy, score_breakdown, levels,
-                portfolio_state, analysis['symbol'], market_context
+                portfolio_state, symbol, market_context
             ),
-            'patterns': analysis.get('patterns', [])
+            'patterns': analysis.get('patterns', []),
+            'weekly_ema_reason': weekly_ema_reason,  # shown in Discord alert
+            'position_tier': position_tier            # shown in Discord alert
         }
 
     def should_enter_trade(self, score_breakdown: dict, levels: dict,
@@ -340,7 +501,8 @@ class TradingBrain:
                 Trade.status == 'OPEN'
             ).first()
             if existing:
-                logger.debug(f"Duplicate guard: {symbol} already held — skipping")
+                logger.debug(
+                    f"Duplicate guard: {symbol} already held — skipping")
                 return False
 
         if levels['rr_ratio'] < 1.45:
@@ -399,7 +561,7 @@ class TradingBrain:
                               current_data: pd.DataFrame = None) -> dict:
         """
         Determine if position should be exited.
-        Now supports partial exit at T1 — exits 50%, moves SL to breakeven.
+        Supports partial exit at T1 — exits 50%, moves SL to breakeven.
         """
         # --- STOP LOSS ---
         if current_price <= trade.stop_loss:
@@ -410,9 +572,8 @@ class TradingBrain:
                 'urgency': 'immediate'
             }
 
-        # --- PARTIAL EXIT AT TARGET 1 (if not already partially exited) ---
-        # Use target_2 if available, otherwise fall back to original target
-        t1 = trade.target  # target column = T1
+        # --- PARTIAL EXIT AT TARGET 1 ---
+        t1 = trade.target
         t2 = trade.target_2 if trade.target_2 else None
 
         if t2 and not trade.partially_exited and current_price >= t1:
@@ -421,10 +582,10 @@ class TradingBrain:
                 'reason': 'Target 1 achieved — booking 50%, riding to T2',
                 'exit_type': 'partial_exit_t1',
                 'urgency': 'immediate',
-                'new_stop_loss': trade.entry_price  # Move SL to breakeven
+                'new_stop_loss': trade.entry_price
             }
 
-        # --- FULL EXIT AT TARGET 2 (after partial exit) ---
+        # --- FULL EXIT AT TARGET 2 ---
         if t2 and trade.partially_exited and current_price >= t2:
             return {
                 'action': 'EXIT',
@@ -433,7 +594,7 @@ class TradingBrain:
                 'urgency': 'immediate'
             }
 
-        # --- FULL EXIT AT TARGET (no T2 set, or legacy trades) ---
+        # --- FULL EXIT AT TARGET (no T2, legacy) ---
         if current_price >= trade.target:
             return {
                 'action': 'EXIT',
@@ -442,7 +603,7 @@ class TradingBrain:
                 'urgency': 'immediate'
             }
 
-        # --- TRAILING STOP (after 1:1 RR achieved) ---
+        # --- TRAILING STOP ---
         unrealized_pnl = (current_price - trade.entry_price) * trade.quantity
         initial_risk = (trade.entry_price - trade.stop_loss) * trade.quantity
 
@@ -457,9 +618,10 @@ class TradingBrain:
                     'urgency': 'immediate'
                 }
 
-        # --- TIME STOP (stagnant losers) ---
+        # --- TIME STOP ---
         IST = pytz.timezone('Asia/Kolkata')
-        days_held = (datetime.now(IST).replace(tzinfo=None) - trade.entry_date).days if trade.entry_date else 0
+        days_held = (datetime.now(IST).replace(
+            tzinfo=None) - trade.entry_date).days if trade.entry_date else 0
 
         if days_held >= 7 and current_price < trade.entry_price:
             return {
