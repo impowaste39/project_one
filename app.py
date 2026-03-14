@@ -1047,6 +1047,77 @@ def admin_flush_history():
         db.close()
 
 
+@app.route('/api/admin/flush-trades', methods=['DELETE'])
+@require_api_key
+def admin_flush_trades():
+    """
+    Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.
+    The trained ML model, scan history, pattern occurrences, and learning
+    metrics are all left completely untouched.
+
+    Use this when you want a clean trading slate (e.g. switching capital
+    allocation or starting a new strategy cycle) without losing your ML model.
+
+    Postman: DELETE /api/admin/flush-trades
+    Header:  X-API-KEY: <your API_WEBHOOK_KEY>
+    Body:    { "confirm": "FLUSH_TRADES" }   <-- safety check required
+    """
+    db = get_session()
+    try:
+        body = request.get_json(silent=True) or {}
+        if body.get('confirm') != 'FLUSH_TRADES':
+            return jsonify({
+                'status': 'rejected',
+                'message': 'Safety check failed. Send JSON body: {"confirm": "FLUSH_TRADES"} to proceed.'
+            }), 400
+
+        # Delete all trades — both OPEN and CLOSED
+        tr_count = db.query(Trade).delete()
+
+        # Reset portfolio to INITIAL_CAPITAL (wipe deployed/unrealized state)
+        port_count = db.query(Portfolio).delete()
+        db.commit()
+
+        initial_capital = float(os.getenv('INITIAL_CAPITAL', 5000))
+        db.add(Portfolio(
+            total_capital=initial_capital,
+            deployed_capital=0,
+            available_capital=initial_capital,
+            unrealized_pnl=0,
+            realized_pnl=0,
+            open_positions=0,
+            timestamp=datetime.now()
+        ))
+        db.commit()
+
+        logger.warning(
+            f"[ADMIN] flush-trades executed: {tr_count} trade(s) deleted. "
+            f"Portfolio reset to ₹{initial_capital}. ML model preserved."
+        )
+
+        return jsonify({
+            'status': 'success',
+            'message': (
+                f'All trades cleared. Portfolio reset to ₹{initial_capital}. '
+                'ML model, scan history and learning metrics are untouched.'
+            ),
+            'deleted': {
+                'trades': tr_count,
+                'portfolio_snapshots': port_count,
+            },
+            'preserved': ['ml_models', 'learning_metrics', 'scan_reports',
+                          'scan_results', 'pattern_occurrences'],
+            'timestamp': datetime.now(IST).isoformat()
+        })
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"[ADMIN] flush-trades error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+    finally:
+        db.close()
+
+
 @app.route('/api/admin/flush-all', methods=['DELETE'])
 @require_api_key
 def admin_flush_all():
