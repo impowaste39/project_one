@@ -118,55 +118,56 @@ class TradingBrain:
     # so a network hiccup doesn't block the entire scan.
     # =========================================================================
     def check_weekly_ema_filter(self, symbol: str) -> tuple:
-        """
-        Check if stock price is above its 50-week EMA.
+    """
+    Check if stock price is above its 50-week EMA.
 
-        Returns:
-            (passes: bool, reason: str)
-            passes=True  → above 50W EMA, safe to enter
-            passes=False → below 50W EMA, skip this stock
-        """
-        try:
-            import yfinance as yf
+    Returns:
+        (passes: bool, reason: str)
+        passes=True  → above 50W EMA, safe to enter
+        passes=False → below 50W EMA, skip this stock
+    """
+    try:
+        import yfinance as yf
 
-            ticker = yf.Ticker(symbol)
-            weekly_data = ticker.history(period='1y', interval='1wk')
+        ticker = yf.Ticker(symbol)
+        weekly_data = ticker.history(period='1y', interval='1wk')
 
-            if weekly_data is None or weekly_data.empty or len(weekly_data) < 20:
-                logger.debug(
-                    f"[WeeklyEMA] {symbol}: insufficient weekly data, bypassing filter")
-                return True, "Weekly EMA: insufficient data (bypassed)"
+        if weekly_data is None or weekly_data.empty or len(weekly_data) < 20:
+            logger.debug(
+                f"[WeeklyEMA] {symbol}: insufficient weekly data, bypassing filter")
+            return True, "Weekly EMA: insufficient data (bypassed)"
 
-            weekly_data['ema_50w'] = weekly_data['Close'].ewm(
-                span=50, min_periods=10, adjust=False
-            ).mean()
+        weekly_data['ema_50w'] = weekly_data['Close'].ewm(
+            span=50, min_periods=10, adjust=False
+        ).mean()
 
-            current_price = weekly_data['Close'].iloc[-1]
-            ema_50w = weekly_data['ema_50w'].iloc[-1]
+        current_price = weekly_data['Close'].iloc[-1]
+        ema_50w = weekly_data['ema_50w'].iloc[-1]
 
-            if pd.isna(ema_50w):
-                logger.debug(
-                    f"[WeeklyEMA] {symbol}: EMA is NaN, bypassing filter")
-                return True, "Weekly EMA: unavailable (bypassed)"
+        if pd.isna(ema_50w):
+            logger.debug(
+                f"[WeeklyEMA] {symbol}: EMA is NaN, bypassing filter")
+            return True, "Weekly EMA: unavailable (bypassed)"
 
-            distance_pct = ((current_price - ema_50w) / ema_50w) * 100
+        distance_pct = ((current_price - ema_50w) / ema_50w) * 100
+        distance_str = f"{distance_pct:.1f}%" if pd.notna(distance_pct) else "n/a"
 
-            if current_price >= ema_50w:
-                reason = f"Above 50W EMA ₹{ema_50w:.1f} (+{distance_pct:.1f}%)"
-                logger.debug(f"[WeeklyEMA] {symbol}: PASS — {reason}")
-                return True, reason
-            else:
-                reason = (
-                    f"Below 50W EMA ₹{ema_50w:.1f} ({distance_pct:.1f}%) "
-                    f"— long-term downtrend"
-                )
-                logger.info(f"[WeeklyEMA] {symbol}: BLOCKED — {reason}")
-                return False, reason
+        if current_price >= ema_50w:
+            reason = f"Above 50W EMA ₹{ema_50w:.1f} (+{distance_str})"
+            logger.debug(f"[WeeklyEMA] {symbol}: PASS — {reason}")
+            return True, reason
+        else:
+            reason = (
+                f"Below 50W EMA ₹{ema_50w:.1f} ({distance_str}) "
+                f"— long-term downtrend"
+            )
+            logger.info(f"[WeeklyEMA] {symbol}: BLOCKED — {reason}")
+            return False, reason
 
-        except Exception as e:
-            logger.warning(
-                f"[WeeklyEMA] {symbol}: fetch failed ({e}), bypassing filter")
-            return True, "Weekly EMA: fetch error (bypassed)"
+    except Exception as e:
+        logger.warning(
+            f"[WeeklyEMA] {symbol}: fetch failed ({e}), bypassing filter")
+        return True, "Weekly EMA: fetch error (bypassed)"
 
     # =========================================================================
     # NEW: POSITION SCALING BY SCORE
