@@ -28,7 +28,7 @@ class TradingBrain:
         self.risk_manager = risk_manager
         self.ml_model = None
         self.scaler = None
-        self.min_confidence_score = int(os.getenv('MIN_CONFIDENCE_SCORE', 70))
+        self.min_confidence_score = int(os.getenv("MIN_CONFIDENCE_SCORE", 70))
         self.load_or_initialize_model()
 
     def load_or_initialize_model(self):
@@ -36,10 +36,12 @@ class TradingBrain:
         try:
             if self.db:
                 from models.database import MLModel
-                model_record = self.db.query(MLModel).filter_by(
-                    model_name='pattern_classifier',
-                    is_active=True
-                ).first()
+
+                model_record = (
+                    self.db.query(MLModel)
+                    .filter_by(model_name="pattern_classifier", is_active=True)
+                    .first()
+                )
 
                 if model_record:
                     self.ml_model = pickle.loads(model_record.model_data)
@@ -48,9 +50,7 @@ class TradingBrain:
                     return
 
             self.ml_model = RandomForestClassifier(
-                n_estimators=100,
-                max_depth=10,
-                random_state=42
+                n_estimators=100, max_depth=10, random_state=42
             )
             self.scaler = StandardScaler()
             logger.info("New ML model initialized")
@@ -63,22 +63,22 @@ class TradingBrain:
     def extract_features(self, analysis: dict) -> np.ndarray:
         """Extract ML features from stock analysis"""
         features = [
-            analysis.get('rsi', 50),
-            analysis.get('macd', 0),
-            analysis.get('volume_ratio', 1),
-            analysis.get('atr', 0),
-            analysis.get('pattern_count', 0),
-            1 if 'bullish_ma_crossover' in analysis.get('patterns', []) else 0,
-            1 if 'rsi_oversold_bounce' in analysis.get('patterns', []) else 0,
-            1 if 'macd_bullish_crossover' in analysis.get(
-                'patterns', []) else 0,
-            1 if 'breakout_with_volume' in analysis.get('patterns', []) else 0,
-            1 if 'pullback_in_uptrend' in analysis.get('patterns', []) else 0,
+            analysis.get("rsi", 50),
+            analysis.get("macd", 0),
+            analysis.get("volume_ratio", 1),
+            analysis.get("atr", 0),
+            analysis.get("pattern_count", 0),
+            1 if "bullish_ma_crossover" in analysis.get("patterns", []) else 0,
+            1 if "rsi_oversold_bounce" in analysis.get("patterns", []) else 0,
+            1 if "macd_bullish_crossover" in analysis.get("patterns", []) else 0,
+            1 if "breakout_with_volume" in analysis.get("patterns", []) else 0,
+            1 if "pullback_in_uptrend" in analysis.get("patterns", []) else 0,
         ]
         return np.array(features).reshape(1, -1)
 
-    def calculate_net_pnl(self, entry_price: float, exit_price: float,
-                          quantity: int) -> tuple:
+    def calculate_net_pnl(
+        self, entry_price: float, exit_price: float, quantity: int
+    ) -> tuple:
         """
         Calculate real net P&L after Groww equity delivery charges.
         Returns: Tuple of (net_pnl, total_charges)
@@ -94,12 +94,18 @@ class TradingBrain:
         stamp = buy_turnover * 0.00015
         sebi_ipft = (buy_turnover + sell_turnover) * 0.000002
         dp = 23.60
-        gst = (brokerage_buy + brokerage_sell +
-               exchange + sebi_ipft + dp) * 0.18
+        gst = (brokerage_buy + brokerage_sell + exchange + sebi_ipft + dp) * 0.18
 
         total_charges = round(
-            brokerage_buy + brokerage_sell + stt + exchange +
-            stamp + sebi_ipft + dp + gst, 2
+            brokerage_buy
+            + brokerage_sell
+            + stt
+            + exchange
+            + stamp
+            + sebi_ipft
+            + dp
+            + gst,
+            2,
         )
         net_pnl = round(gross_pnl - total_charges, 2)
         return net_pnl, total_charges
@@ -118,56 +124,56 @@ class TradingBrain:
     # so a network hiccup doesn't block the entire scan.
     # =========================================================================
     def check_weekly_ema_filter(self, symbol: str) -> tuple:
-    """
-    Check if stock price is above its 50-week EMA.
+        """
+        Check if stock price is above its 50-week EMA
+        Returns:
+            (passes: bool, reason: str)
+            passes=True  → above 50W EMA, safe to enter
+            passes=False → below 50W EMA, skip this stock
+        """
+        try:
+            import yfinance as yf
 
-    Returns:
-        (passes: bool, reason: str)
-        passes=True  → above 50W EMA, safe to enter
-        passes=False → below 50W EMA, skip this stock
-    """
-    try:
-        import yfinance as yf
+            ticker = yf.Ticker(symbol)
+            weekly_data = ticker.history(period="1y", interval="1wk")
 
-        ticker = yf.Ticker(symbol)
-        weekly_data = ticker.history(period='1y', interval='1wk')
+            if weekly_data is None or weekly_data.empty or len(weekly_data) < 20:
+                logger.debug(
+                    f"[WeeklyEMA] {symbol}: insufficient weekly data, bypassing filter"
+                )
+                return True, "Weekly EMA: insufficient data (bypassed)"
 
-        if weekly_data is None or weekly_data.empty or len(weekly_data) < 20:
-            logger.debug(
-                f"[WeeklyEMA] {symbol}: insufficient weekly data, bypassing filter")
-            return True, "Weekly EMA: insufficient data (bypassed)"
-
-        weekly_data['ema_50w'] = weekly_data['Close'].ewm(
-            span=50, min_periods=10, adjust=False
-        ).mean()
-
-        current_price = weekly_data['Close'].iloc[-1]
-        ema_50w = weekly_data['ema_50w'].iloc[-1]
-
-        if pd.isna(ema_50w):
-            logger.debug(
-                f"[WeeklyEMA] {symbol}: EMA is NaN, bypassing filter")
-            return True, "Weekly EMA: unavailable (bypassed)"
-
-        distance_pct = ((current_price - ema_50w) / ema_50w) * 100
-        distance_str = f"{distance_pct:.1f}%" if pd.notna(distance_pct) else "n/a"
-
-        if current_price >= ema_50w:
-            reason = f"Above 50W EMA ₹{ema_50w:.1f} (+{distance_str})"
-            logger.debug(f"[WeeklyEMA] {symbol}: PASS — {reason}")
-            return True, reason
-        else:
-            reason = (
-                f"Below 50W EMA ₹{ema_50w:.1f} ({distance_str}) "
-                f"— long-term downtrend"
+            weekly_data["ema_50w"] = (
+                weekly_data["Close"].ewm(span=50, min_periods=10, adjust=False).mean()
             )
-            logger.info(f"[WeeklyEMA] {symbol}: BLOCKED — {reason}")
-            return False, reason
 
-    except Exception as e:
-        logger.warning(
-            f"[WeeklyEMA] {symbol}: fetch failed ({e}), bypassing filter")
-        return True, "Weekly EMA: fetch error (bypassed)"
+            current_price = weekly_data["Close"].iloc[-1]
+            ema_50w = weekly_data["ema_50w"].iloc[-1]
+
+            if pd.isna(ema_50w):
+                logger.debug(f"[WeeklyEMA] {symbol}: EMA is NaN, bypassing filter")
+                return True, "Weekly EMA: unavailable (bypassed)"
+
+            distance_pct = ((current_price - ema_50w) / ema_50w) * 100
+            distance_str = f"{distance_pct:.1f}%" if pd.notna(distance_pct) else "n/a"
+
+            if current_price >= ema_50w:
+                reason = f"Above 50W EMA ₹{ema_50w:.1f} (+{distance_str})"
+                logger.debug(f"[WeeklyEMA] {symbol}: PASS — {reason}")
+                return True, reason
+            else:
+                reason = (
+                    f"Below 50W EMA ₹{ema_50w:.1f} ({distance_str}) "
+                    f"— long-term downtrend"
+                )
+                logger.info(f"[WeeklyEMA] {symbol}: BLOCKED — {reason}")
+                return False, reason
+
+        except Exception as e:
+            logger.warning(
+                f"[WeeklyEMA] {symbol}: fetch failed ({e}), bypassing filter"
+            )
+            return True, "Weekly EMA: fetch error (bypassed)"
 
     # =========================================================================
     # NEW: POSITION SCALING BY SCORE
@@ -207,7 +213,7 @@ class TradingBrain:
         # === TECHNICAL INDICATORS SCORE (40 points) ===
         technical_score = 0
 
-        rsi = analysis.get('rsi', 50)
+        rsi = analysis.get("rsi", 50)
         if pd.notna(rsi):
             if 40 <= rsi <= 60:
                 technical_score += 10
@@ -219,14 +225,14 @@ class TradingBrain:
                 technical_score += 5
                 factors.append(f"RSI approaching overbought ({rsi:.1f})")
 
-        if analysis.get('signals', {}).get('macd_cross'):
+        if analysis.get("signals", {}).get("macd_cross"):
             technical_score += 10
             factors.append("MACD bullish crossover")
-        elif analysis.get('macd', 0) > 0:
+        elif analysis.get("macd", 0) > 0:
             technical_score += 5
             factors.append("MACD positive")
 
-        volume_ratio = analysis.get('volume_ratio', 1)
+        volume_ratio = analysis.get("volume_ratio", 1)
         if pd.notna(volume_ratio):
             if volume_ratio >= 1.5:
                 technical_score += 10
@@ -235,20 +241,21 @@ class TradingBrain:
                 technical_score += 7
                 factors.append(f"Good volume ({volume_ratio:.2f}x)")
 
-        if 'stochastic_oversold' in analysis.get('patterns', []):
-            rsi_val = analysis.get('rsi', 50)
+        if "stochastic_oversold" in analysis.get("patterns", []):
+            rsi_val = analysis.get("rsi", 50)
             if pd.notna(rsi_val) and rsi_val < 45:
                 technical_score += 8
                 factors.append(
-                    f"Stochastic oversold + RSI confirmation ({rsi_val:.1f})")
+                    f"Stochastic oversold + RSI confirmation ({rsi_val:.1f})"
+                )
             else:
                 technical_score += 4
                 factors.append("Stochastic oversold (weak RSI confirmation)")
 
-        if analysis.get('signals', {}).get('ma_crossover'):
+        if analysis.get("signals", {}).get("ma_crossover"):
             technical_score += 10
             factors.append("Bullish MA crossover")
-        elif analysis.get('signals', {}).get('trend_strength'):
+        elif analysis.get("signals", {}).get("trend_strength"):
             technical_score += 7
             factors.append("Strong trend structure")
 
@@ -256,41 +263,40 @@ class TradingBrain:
 
         # === CONTEXT BONUS (capped at 5 pts) ===
         context_bonus = 0
-        if analysis.get('signals', {}).get('strong_uptrend_context'):
+        if analysis.get("signals", {}).get("strong_uptrend_context"):
             context_bonus += 3
             factors.append("Confirmed uptrend structure (HH+HL)")
-        if analysis.get('signals', {}).get('above_all_mas_context'):
+        if analysis.get("signals", {}).get("above_all_mas_context"):
             context_bonus += 2
             factors.append("Price above SMA20 & SMA50")
         score += min(5, context_bonus)
 
         # === PATTERN SCORE (45 points) ===
-        pattern_score = min(45, analysis.get('pattern_count', 0) * 15)
+        pattern_score = min(45, analysis.get("pattern_count", 0) * 15)
         score += pattern_score
-        if analysis.get('patterns'):
-            factors.append(
-                f"{analysis['pattern_count']} bullish patterns detected")
+        if analysis.get("patterns"):
+            factors.append(f"{analysis['pattern_count']} bullish patterns detected")
 
         # === MARKET CONTEXT SCORE (20 points) ===
         market_score = 0
-        if market_context.get('trend') == 'bullish':
+        if market_context.get("trend") == "bullish":
             market_score += 10
             factors.append("Market in uptrend")
-        elif market_context.get('trend') == 'sideways':
+        elif market_context.get("trend") == "sideways":
             market_score += 5
-        elif market_context.get('trend') == 'bearish':
+        elif market_context.get("trend") == "bearish":
             market_score -= 5
             factors.append("Market in downtrend (penalty applied)")
 
-        if market_context.get('market_breadth') == 'positive':
+        if market_context.get("market_breadth") == "positive":
             market_score += 10
             factors.append("Positive market breadth")
 
-        vix_vol = market_context.get('market_volatility', 'normal')
-        if vix_vol == 'extreme':
+        vix_vol = market_context.get("market_volatility", "normal")
+        if vix_vol == "extreme":
             market_score -= 10
             factors.append("India VIX extreme (war regime penalty)")
-        elif vix_vol == 'high':
+        elif vix_vol == "high":
             market_score -= 5
             factors.append("India VIX elevated (volatility penalty)")
 
@@ -299,28 +305,24 @@ class TradingBrain:
         # === ML PREDICTION SCORE (10 points) ===
         ml_score = 0
         try:
-            if self.ml_model and hasattr(self.ml_model, 'classes_'):
+            if self.ml_model and hasattr(self.ml_model, "classes_"):
                 features = self.extract_features(analysis)
-                if hasattr(self.scaler, 'mean_'):
+                if hasattr(self.scaler, "mean_"):
                     features_scaled = self.scaler.transform(features)
-                    probability = self.ml_model.predict_proba(
-                        features_scaled)[0][1]
+                    probability = self.ml_model.predict_proba(features_scaled)[0][1]
                     ml_score = probability * 10
-                    factors.append(
-                        f"ML success probability: {probability:.1%}")
+                    factors.append(f"ML success probability: {probability:.1%}")
             else:
                 # Heuristic fallback — ML model not yet trained (needs 20+ closed trades)
-                rsi = analysis.get('rsi', 50)
-                vol = analysis.get('volume_ratio', 1.0)
+                rsi = analysis.get("rsi", 50)
+                vol = analysis.get("volume_ratio", 1.0)
                 if pd.notna(rsi) and pd.notna(vol):
                     if 38 <= rsi <= 62 and vol >= 1.3:
                         ml_score = 7
-                        factors.append(
-                            "Heuristic: RSI in range + strong volume")
+                        factors.append("Heuristic: RSI in range + strong volume")
                     elif 35 <= rsi <= 65 and vol >= 1.1:
                         ml_score = 4
-                        factors.append(
-                            "Heuristic: RSI acceptable + moderate volume")
+                        factors.append("Heuristic: RSI acceptable + moderate volume")
                     elif 30 <= rsi <= 70:
                         ml_score = 2
                         factors.append("Heuristic: RSI in broad range")
@@ -330,19 +332,19 @@ class TradingBrain:
         score += ml_score
 
         return {
-            'total_score': min(100, score),
-            'technical_score': technical_score,
-            'pattern_score': pattern_score,
-            'market_score': market_score,
-            'ml_score': ml_score,
-            'factors': factors,
-            'confidence': min(100, score) / 100
+            "total_score": min(100, score),
+            "technical_score": technical_score,
+            "pattern_score": pattern_score,
+            "market_score": market_score,
+            "ml_score": ml_score,
+            "factors": factors,
+            "confidence": min(100, score) / 100,
         }
 
     def calculate_entry_exit_levels(self, analysis: dict) -> dict:
         """Calculate entry price, stop loss, and target levels"""
-        current_price = analysis['current_price']
-        atr = analysis.get('atr', current_price * 0.02)
+        current_price = analysis["current_price"]
+        atr = analysis.get("atr", current_price * 0.02)
 
         if pd.isna(atr) or atr == 0:
             atr = current_price * 0.02
@@ -361,18 +363,21 @@ class TradingBrain:
         reward_1_percent = ((target_1 - entry_price) / entry_price) * 100
 
         return {
-            'entry_price': round(entry_price, 2),
-            'stop_loss': round(stop_loss, 2),
-            'target_1': round(target_1, 2),
-            'target_2': round(target_2, 2),
-            'target_3': round(target_3, 2),
-            'risk_percent': round(risk_percent, 2),
-            'reward_percent': round(reward_1_percent, 2),
-            'rr_ratio': round(reward_1_percent / risk_percent, 2) if risk_percent > 0 else 0
+            "entry_price": round(entry_price, 2),
+            "stop_loss": round(stop_loss, 2),
+            "target_1": round(target_1, 2),
+            "target_2": round(target_2, 2),
+            "target_3": round(target_3, 2),
+            "risk_percent": round(risk_percent, 2),
+            "reward_percent": round(reward_1_percent, 2),
+            "rr_ratio": round(reward_1_percent / risk_percent, 2)
+            if risk_percent > 0
+            else 0,
         }
 
-    def evaluate_opportunity(self, analysis: dict, market_context: dict,
-                             portfolio_state: dict) -> dict:
+    def evaluate_opportunity(
+        self, analysis: dict, market_context: dict, portfolio_state: dict
+    ) -> dict:
         """
         Complete evaluation of a trading opportunity.
         Now includes:
@@ -381,66 +386,63 @@ class TradingBrain:
         """
         score_breakdown = self.calculate_setup_score(analysis, market_context)
         levels = self.calculate_entry_exit_levels(analysis)
-        symbol = analysis['symbol']
+        symbol = analysis["symbol"]
 
         # --- WEEKLY EMA FILTER ---
         # Check long-term trend first — no point sizing if trend is against us
-        weekly_ema_passes, weekly_ema_reason = self.check_weekly_ema_filter(
-            symbol)
+        weekly_ema_passes, weekly_ema_reason = self.check_weekly_ema_filter(symbol)
 
         if not weekly_ema_passes:
-            logger.info(
-                f"[WeeklyEMA] {symbol} blocked — {weekly_ema_reason}")
+            logger.info(f"[WeeklyEMA] {symbol} blocked — {weekly_ema_reason}")
             return {
-                'symbol': symbol,
-                'score': score_breakdown['total_score'],
-                'confidence': score_breakdown['confidence'],
-                'factors': score_breakdown['factors'],
-                'entry_price': levels['entry_price'],
-                'stop_loss': levels['stop_loss'],
-                'target_1': levels['target_1'],
-                'target_2': levels['target_2'],
-                'target_3': levels['target_3'],
-                'rr_ratio': levels['rr_ratio'],
-                'quantity': 0,
-                'investment': 0,
-                'risk_amount': 0,
-                'trade_worthy': False,
-                'decision': 'PASS',
-                'reason': f"Weekly EMA filter: {weekly_ema_reason}",
-                'patterns': analysis.get('patterns', []),
-                'weekly_ema_reason': weekly_ema_reason,
-                'position_tier': 'N/A'
+                "symbol": symbol,
+                "score": score_breakdown["total_score"],
+                "confidence": score_breakdown["confidence"],
+                "factors": score_breakdown["factors"],
+                "entry_price": levels["entry_price"],
+                "stop_loss": levels["stop_loss"],
+                "target_1": levels["target_1"],
+                "target_2": levels["target_2"],
+                "target_3": levels["target_3"],
+                "rr_ratio": levels["rr_ratio"],
+                "quantity": 0,
+                "investment": 0,
+                "risk_amount": 0,
+                "trade_worthy": False,
+                "decision": "PASS",
+                "reason": f"Weekly EMA filter: {weekly_ema_reason}",
+                "patterns": analysis.get("patterns", []),
+                "weekly_ema_reason": weekly_ema_reason,
+                "position_tier": "N/A",
             }
 
         # --- BASE POSITION SIZING ---
-        position_info = {'quantity': 0, 'investment': 0, 'risk_amount': 0}
+        position_info = {"quantity": 0, "investment": 0, "risk_amount": 0}
         if self.risk_manager:
             position_info = self.risk_manager.calculate_position_size(
-                capital=portfolio_state['available_capital'],
-                entry_price=levels['entry_price'],
-                stop_loss=levels['stop_loss']
+                capital=portfolio_state["available_capital"],
+                entry_price=levels["entry_price"],
+                stop_loss=levels["stop_loss"],
             )
 
         # --- POSITION SCALING BY SCORE ---
-        score = score_breakdown['total_score']
+        score = score_breakdown["total_score"]
         multiplier, position_tier = self.get_position_size_multiplier(score)
 
-        if position_info['quantity'] > 0 and multiplier != 1.0:
-            scaled_qty = max(1, round(position_info['quantity'] * multiplier))
-            scaled_investment = scaled_qty * levels['entry_price']
+        if position_info["quantity"] > 0 and multiplier != 1.0:
+            scaled_qty = max(1, round(position_info["quantity"] * multiplier))
+            scaled_investment = scaled_qty * levels["entry_price"]
 
             # Hard cap: never exceed 30% of available capital
-            max_investment = portfolio_state['available_capital'] * 0.30
+            max_investment = portfolio_state["available_capital"] * 0.30
             if scaled_investment > max_investment:
-                scaled_qty = max(
-                    1, int(max_investment / levels['entry_price']))
-                scaled_investment = scaled_qty * levels['entry_price']
+                scaled_qty = max(1, int(max_investment / levels["entry_price"]))
+                scaled_investment = scaled_qty * levels["entry_price"]
 
-            position_info['quantity'] = scaled_qty
-            position_info['investment'] = round(scaled_investment, 2)
-            position_info['risk_amount'] = round(
-                scaled_qty * (levels['entry_price'] - levels['stop_loss']), 2
+            position_info["quantity"] = scaled_qty
+            position_info["investment"] = round(scaled_investment, 2)
+            position_info["risk_amount"] = round(
+                scaled_qty * (levels["entry_price"] - levels["stop_loss"]), 2
             )
 
             logger.info(
@@ -449,117 +451,141 @@ class TradingBrain:
             )
 
         trade_worthy = self.should_enter_trade(
-            score_breakdown, levels, portfolio_state, position_info,
-            symbol=symbol, market_context=market_context
+            score_breakdown,
+            levels,
+            portfolio_state,
+            position_info,
+            symbol=symbol,
+            market_context=market_context,
         )
 
         return {
-            'symbol': symbol,
-            'score': score_breakdown['total_score'],
-            'confidence': score_breakdown['confidence'],
-            'factors': score_breakdown['factors'],
-            'entry_price': levels['entry_price'],
-            'stop_loss': levels['stop_loss'],
-            'target_1': levels['target_1'],
-            'target_2': levels['target_2'],
-            'target_3': levels['target_3'],
-            'rr_ratio': levels['rr_ratio'],
-            'quantity': position_info['quantity'],
-            'investment': position_info['investment'],
-            'risk_amount': position_info['risk_amount'],
-            'trade_worthy': trade_worthy,
-            'decision': 'ENTER' if trade_worthy else 'PASS',
-            'reason': self.get_decision_reason(
-                trade_worthy, score_breakdown, levels,
-                portfolio_state, symbol, market_context
+            "symbol": symbol,
+            "score": score_breakdown["total_score"],
+            "confidence": score_breakdown["confidence"],
+            "factors": score_breakdown["factors"],
+            "entry_price": levels["entry_price"],
+            "stop_loss": levels["stop_loss"],
+            "target_1": levels["target_1"],
+            "target_2": levels["target_2"],
+            "target_3": levels["target_3"],
+            "rr_ratio": levels["rr_ratio"],
+            "quantity": position_info["quantity"],
+            "investment": position_info["investment"],
+            "risk_amount": position_info["risk_amount"],
+            "trade_worthy": trade_worthy,
+            "decision": "ENTER" if trade_worthy else "PASS",
+            "reason": self.get_decision_reason(
+                trade_worthy,
+                score_breakdown,
+                levels,
+                portfolio_state,
+                symbol,
+                market_context,
             ),
-            'patterns': analysis.get('patterns', []),
-            'weekly_ema_reason': weekly_ema_reason,  # shown in Discord alert
-            'position_tier': position_tier            # shown in Discord alert
+            "patterns": analysis.get("patterns", []),
+            "weekly_ema_reason": weekly_ema_reason,  # shown in Discord alert
+            "position_tier": position_tier,  # shown in Discord alert
         }
 
-    def should_enter_trade(self, score_breakdown: dict, levels: dict,
-                           portfolio_state: dict, position_info: dict,
-                           symbol: str = None,
-                           market_context: dict = None) -> bool:
+    def should_enter_trade(
+        self,
+        score_breakdown: dict,
+        levels: dict,
+        portfolio_state: dict,
+        position_info: dict,
+        symbol: str = None,
+        market_context: dict = None,
+    ) -> bool:
         """Final decision gate with multiple checks"""
         market_context = market_context or {}
-        trend = market_context.get('trend', 'sideways')
-        market_strength = market_context.get('strength', 50)
+        trend = market_context.get("trend", "sideways")
+        market_strength = market_context.get("strength", 50)
 
-        if trend == 'bearish':
+        if trend == "bearish":
             effective_threshold = 80 if market_strength > 5 else 75
         else:
             effective_threshold = self.min_confidence_score
 
-        if score_breakdown['total_score'] < effective_threshold:
+        if score_breakdown["total_score"] < effective_threshold:
             return False
 
         if symbol and self.db:
             from models.database import Trade
-            existing = self.db.query(Trade).filter(
-                Trade.symbol == symbol,
-                Trade.status == 'OPEN'
-            ).first()
+
+            existing = (
+                self.db.query(Trade)
+                .filter(Trade.symbol == symbol, Trade.status == "OPEN")
+                .first()
+            )
             if existing:
-                logger.debug(
-                    f"Duplicate guard: {symbol} already held — skipping")
+                logger.debug(f"Duplicate guard: {symbol} already held — skipping")
                 return False
 
-        if levels['rr_ratio'] < 1.45:
+        if levels["rr_ratio"] < 1.45:
             return False
 
-        max_pos = int(os.getenv('MAX_POSITIONS', 7))
-        if portfolio_state['positions_count'] >= max_pos:
+        max_pos = int(os.getenv("MAX_POSITIONS", 7))
+        if portfolio_state["positions_count"] >= max_pos:
             return False
 
-        if portfolio_state['available_capital'] < 1000:
+        if portfolio_state["available_capital"] < 1000:
             return False
 
-        if position_info['quantity'] <= 0:
+        if position_info["quantity"] <= 0:
             return False
 
-        if position_info['investment'] > portfolio_state['available_capital'] * 0.30:
+        if position_info["investment"] > portfolio_state["available_capital"] * 0.30:
             return False
 
         return True
 
-    def get_decision_reason(self, trade_worthy: bool, score_breakdown: dict,
-                            levels: dict, portfolio_state: dict,
-                            symbol: str = None,
-                            market_context: dict = None) -> str:
+    def get_decision_reason(
+        self,
+        trade_worthy: bool,
+        score_breakdown: dict,
+        levels: dict,
+        portfolio_state: dict,
+        symbol: str = None,
+        market_context: dict = None,
+    ) -> str:
         """Generate human-readable decision reason"""
         market_context = market_context or {}
-        trend = market_context.get('trend', 'sideways')
-        market_strength = market_context.get('strength', 50)
+        trend = market_context.get("trend", "sideways")
+        market_strength = market_context.get("strength", 50)
 
         if trade_worthy:
-            return (f"Strong setup (score: {score_breakdown['total_score']}/100) "
-                    f"with {levels['rr_ratio']}:1 risk-reward")
+            return (
+                f"Strong setup (score: {score_breakdown['total_score']}/100) "
+                f"with {levels['rr_ratio']}:1 risk-reward"
+            )
 
-        if trend == 'bearish':
+        if trend == "bearish":
             effective_threshold = 80 if market_strength > 5 else 75
-            if score_breakdown['total_score'] < effective_threshold:
-                return (f"Bearish market — score {score_breakdown['total_score']}/100 "
-                        f"below elevated threshold ({effective_threshold})")
+            if score_breakdown["total_score"] < effective_threshold:
+                return (
+                    f"Bearish market — score {score_breakdown['total_score']}/100 "
+                    f"below elevated threshold ({effective_threshold})"
+                )
 
-        if score_breakdown['total_score'] < self.min_confidence_score:
+        if score_breakdown["total_score"] < self.min_confidence_score:
             return f"Setup quality insufficient (score: {score_breakdown['total_score']}/100)"
 
-        if levels['rr_ratio'] < 1.45:
+        if levels["rr_ratio"] < 1.45:
             return f"Risk-reward too low ({levels['rr_ratio']}:1)"
 
-        max_pos = int(os.getenv('MAX_POSITIONS', 7))
-        if portfolio_state['positions_count'] >= max_pos:
+        max_pos = int(os.getenv("MAX_POSITIONS", 7))
+        if portfolio_state["positions_count"] >= max_pos:
             return f"Maximum positions reached ({max_pos}/{max_pos})"
 
-        if portfolio_state['available_capital'] < 1000:
+        if portfolio_state["available_capital"] < 1000:
             return "Insufficient capital"
 
         return "General constraints not met"
 
-    def check_exit_conditions(self, trade, current_price: float,
-                              current_data: pd.DataFrame = None) -> dict:
+    def check_exit_conditions(
+        self, trade, current_price: float, current_data: pd.DataFrame = None
+    ) -> dict:
         """
         Determine if position should be exited.
         Supports partial exit at T1 — exits 50%, moves SL to breakeven.
@@ -567,10 +593,10 @@ class TradingBrain:
         # --- STOP LOSS ---
         if current_price <= trade.stop_loss:
             return {
-                'action': 'EXIT',
-                'reason': 'Stop loss hit',
-                'exit_type': 'stop_loss',
-                'urgency': 'immediate'
+                "action": "EXIT",
+                "reason": "Stop loss hit",
+                "exit_type": "stop_loss",
+                "urgency": "immediate",
             }
 
         # --- PARTIAL EXIT AT TARGET 1 ---
@@ -579,29 +605,29 @@ class TradingBrain:
 
         if t2 and not trade.partially_exited and current_price >= t1:
             return {
-                'action': 'PARTIAL_EXIT',
-                'reason': 'Target 1 achieved — booking 50%, riding to T2',
-                'exit_type': 'partial_exit_t1',
-                'urgency': 'immediate',
-                'new_stop_loss': trade.entry_price
+                "action": "PARTIAL_EXIT",
+                "reason": "Target 1 achieved — booking 50%, riding to T2",
+                "exit_type": "partial_exit_t1",
+                "urgency": "immediate",
+                "new_stop_loss": trade.entry_price,
             }
 
         # --- FULL EXIT AT TARGET 2 ---
         if t2 and trade.partially_exited and current_price >= t2:
             return {
-                'action': 'EXIT',
-                'reason': 'Target 2 achieved — full exit',
-                'exit_type': 'target_2',
-                'urgency': 'immediate'
+                "action": "EXIT",
+                "reason": "Target 2 achieved — full exit",
+                "exit_type": "target_2",
+                "urgency": "immediate",
             }
 
         # --- FULL EXIT AT TARGET (no T2, legacy) ---
         if current_price >= trade.target:
             return {
-                'action': 'EXIT',
-                'reason': 'Target achieved',
-                'exit_type': 'target',
-                'urgency': 'immediate'
+                "action": "EXIT",
+                "reason": "Target achieved",
+                "exit_type": "target",
+                "urgency": "immediate",
             }
 
         # --- TRAILING STOP ---
@@ -609,40 +635,42 @@ class TradingBrain:
         initial_risk = (trade.entry_price - trade.stop_loss) * trade.quantity
 
         if unrealized_pnl >= initial_risk:
-            trailing_stop = trade.entry_price + \
-                (initial_risk / trade.quantity * 0.5)
+            trailing_stop = trade.entry_price + (initial_risk / trade.quantity * 0.5)
             if current_price <= trailing_stop:
                 return {
-                    'action': 'EXIT',
-                    'reason': 'Trailing stop hit (profit protected)',
-                    'exit_type': 'trailing_stop',
-                    'urgency': 'immediate'
+                    "action": "EXIT",
+                    "reason": "Trailing stop hit (profit protected)",
+                    "exit_type": "trailing_stop",
+                    "urgency": "immediate",
                 }
 
         # --- TIME STOP ---
-        IST = pytz.timezone('Asia/Kolkata')
-        days_held = (datetime.now(IST).replace(
-            tzinfo=None) - trade.entry_date).days if trade.entry_date else 0
+        IST = pytz.timezone("Asia/Kolkata")
+        days_held = (
+            (datetime.now(IST).replace(tzinfo=None) - trade.entry_date).days
+            if trade.entry_date
+            else 0
+        )
 
         if days_held >= 7 and current_price < trade.entry_price:
             return {
-                'action': 'EXIT',
-                'reason': f'Time decay ({days_held} days with loss)',
-                'exit_type': 'time_stop',
-                'urgency': 'normal'
+                "action": "EXIT",
+                "reason": f"Time decay ({days_held} days with loss)",
+                "exit_type": "time_stop",
+                "urgency": "normal",
             }
 
         if days_held >= 12:
             return {
-                'action': 'EXIT',
-                'reason': f'Maximum holding period reached ({days_held} days)',
-                'exit_type': 'max_duration',
-                'urgency': 'normal'
+                "action": "EXIT",
+                "reason": f"Maximum holding period reached ({days_held} days)",
+                "exit_type": "max_duration",
+                "urgency": "normal",
             }
 
         return {
-            'action': 'HOLD',
-            'reason': 'All criteria within acceptable range',
-            'exit_type': None,
-            'urgency': None
+            "action": "HOLD",
+            "reason": "All criteria within acceptable range",
+            "exit_type": None,
+            "urgency": None,
         }
