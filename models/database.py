@@ -233,7 +233,14 @@ def init_database():
         database_url = database_url.replace(
             'postgresql://', 'postgresql+psycopg://', 1)
 
-    _engine = create_engine(database_url, echo=False)
+    _engine = create_engine(
+        database_url,
+        echo=False,
+        pool_pre_ping=True,        # tests connection before using it
+        pool_recycle=300,          # recycles connections every 5 mins
+        pool_timeout=30,           # waits max 30s for a connection
+        connect_args={"connect_timeout": 10}
+    )
     Base.metadata.create_all(_engine)
 
     _SessionLocal = sessionmaker(bind=_engine)
