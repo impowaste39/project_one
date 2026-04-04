@@ -1218,6 +1218,14 @@ def admin_system_status():
             'ml_models_active': db.query(MLModel).filter_by(is_active=True).count(),
         }
 
+        # ML Cold Start Status — shows if bonus is active
+        ml_model_active = db.query(MLModel).filter_by(
+            model_name='pattern_classifier',
+            is_active=True
+        ).first() is not None
+        trades_needed_for_ml = max(0, 20 - db_counts['trades_closed'])
+        cold_start_active = not ml_model_active and trades_needed_for_ml > 0
+
         # Portfolio state
         portfolio = db.query(Portfolio).order_by(
             Portfolio.timestamp.desc()).first()
@@ -1283,6 +1291,18 @@ def admin_system_status():
             'database_counts': db_counts,
             'portfolio': portfolio_state,
             'config': config,
+            'ml_cold_start': {
+                'active': cold_start_active,
+                'ml_model_trained': ml_model_active,
+                'trades_completed': db_counts['trades_closed'],
+                'trades_needed_for_ml': trades_needed_for_ml,
+                'bonus_applied': '+10 score bonus' if cold_start_active else 'N/A',
+            },
+            'effective_thresholds': {
+                'min_confidence_score': int(os.getenv('MIN_CONFIDENCE_SCORE', 58)),
+                'bearish_market_formula': '70 + (strength * 2), capped at 80',
+                'weekly_ema': 'penalty (-10 pts) not binary block',
+            }
         })
 
     except Exception as e:

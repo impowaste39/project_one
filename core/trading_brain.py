@@ -380,41 +380,56 @@ class TradingBrain:
     ) -> dict:
         """
         Complete evaluation of a trading opportunity.
-        Now includes:
-        - Weekly EMA filter (long-term trend check before any sizing)
+
+        Features:
+        - Weekly EMA penalty (not binary block — allows strong setups in downtrends)
+        - ML Cold Start Bonus (+10 pts until model trained — breaks catch-22)
         - Position scaling by score (bet bigger on high-conviction setups)
         """
         score_breakdown = self.calculate_setup_score(analysis, market_context)
         levels = self.calculate_entry_exit_levels(analysis)
         symbol = analysis["symbol"]
 
-        # --- WEEKLY EMA FILTER ---
-        # Check long-term trend first — no point sizing if trend is against us
+        # --- COLD START BONUS: +10 pts until ML model is trained ---
+        # We need 20 trades to train ML, but ML adds 10 pts to score.
+        # Without this bonus, we can't reach thresholds to get those 20 trades.
+        # This is temporary and auto-disables once model is trained.
+        ml_model_active = (
+            self.ml_model and
+            hasattr(self.ml_model, 'classes_') and
+            len(self.ml_model.classes_) > 0
+        )
+        if not ml_model_active:
+            old_score = score_breakdown["total_score"]
+            score_breakdown["total_score"] = min(100, score_breakdown["total_score"] + 10)
+            score_breakdown["factors"].append(f"ML cold start bonus (+10): {old_score} → {score_breakdown['total_score']}")
+            logger.info(
+                f"[ColdStart] {symbol}: score boosted {old_score} → {score_breakdown['total_score']} "
+                f"(ML model not yet trained — need 20 trades)"
+            )
+
+        # --- WEEKLY EMA: Apply -10 pt penalty instead of binary block ---
+        # Being below 50W EMA is a warning sign, not an automatic reject.
+        # Strong daily setups (score 70+) can still be valid in long-term downtrends.
         weekly_ema_passes, weekly_ema_reason = self.check_weekly_ema_filter(symbol)
+        ema_penalty_applied = False
 
         if not weekly_ema_passes:
-            logger.info(f"[WeeklyEMA] {symbol} blocked — {weekly_ema_reason}")
-            return {
-                "symbol": symbol,
-                "score": score_breakdown["total_score"],
-                "confidence": score_breakdown["confidence"],
-                "factors": score_breakdown["factors"],
-                "entry_price": levels["entry_price"],
-                "stop_loss": levels["stop_loss"],
-                "target_1": levels["target_1"],
-                "target_2": levels["target_2"],
-                "target_3": levels["target_3"],
-                "rr_ratio": levels["rr_ratio"],
-                "quantity": 0,
-                "investment": 0,
-                "risk_amount": 0,
-                "trade_worthy": False,
-                "decision": "PASS",
-                "reason": f"Weekly EMA filter: {weekly_ema_reason}",
-                "patterns": analysis.get("patterns", []),
-                "weekly_ema_reason": weekly_ema_reason,
-                "position_tier": "N/A",
-            }
+            ema_penalty_applied = True
+            ema_penalty = 10
+            old_score = score_breakdown["total_score"]
+            score_breakdown["total_score"] = max(0, score_breakdown["total_score"] - ema_penalty)
+            score_breakdown["factors"].append(f"Weekly EMA penalty (-{ema_penalty}): {weekly_ema_reason}")
+            logger.info(
+                f"[WeeklyEMA] {symbol}: Below 50W EMA — applying -{ema_penalty} penalty "
+                f"(not blocking). Score: {old_score} → {score_breakdown['total_score']}"
+            )
+        else:
+            # Bonus for being ABOVE 50W EMA — confirms long-term uptrend
+            score_breakdown["factors"].append(f"Weekly EMA confirmation: {weekly_ema_reason}")
+
+        # Store EMA info for Discord alerts
+        weekly_ema_status = "above" if weekly_ema_passes else "below"
 
         # --- BASE POSITION SIZING ---
         position_info = {"quantity": 0, "investment": 0, "risk_amount": 0}
@@ -484,8 +499,11 @@ class TradingBrain:
                 market_context,
             ),
             "patterns": analysis.get("patterns", []),
-            "weekly_ema_reason": weekly_ema_reason,  # shown in Discord alert
-            "position_tier": position_tier,  # shown in Discord alert
+            "weekly_ema_status": weekly_ema_status,  # above/below (for Discord)
+            "weekly_ema_reason": weekly_ema_reason,  # detailed reason (for Discord)
+            "ema_penalty_applied": ema_penalty_applied,
+            "position_tier": position_tier,
+            "ml_model_active": ml_model_active,
         }
 
     def should_enter_trade(
@@ -497,13 +515,30 @@ class TradingBrain:
         symbol: str = None,
         market_context: dict = None,
     ) -> bool:
-        """Final decision gate with multiple checks"""
+        """Final decision gate with multiple checks
+
+        Bearish threshold is now scaled proportionally to market strength:
+        - Strength 0-2: threshold = 70 (capitulation = opportunity)
+        - Strength 3-5: threshold = 73-75 (weak bearish)
+        - Strength 6-8: threshold = 76-78 (moderate bearish)
+        - Strength 9-10: threshold = 79-80 (strong bearish/crash)
+
+        This avoids the 80-point hard ceiling that was blocking all trades
+        in moderately bearish markets (strength 5-8).
+        """
         market_context = market_context or {}
         trend = market_context.get("trend", "sideways")
         market_strength = market_context.get("strength", 50)
 
         if trend == "bearish":
-            effective_threshold = 80 if market_strength > 5 else 75
+            # Scaled threshold: 70 + (strength * 2), capped at 80
+            # Strength 7.95 → threshold ~76 (was 80)
+            # Strength 3 → threshold ~73 (was 75)
+            effective_threshold = 70 + min(10, market_strength * 2)
+            logger.debug(
+                f"[BearishThreshold] Market strength={market_strength:.1f} → "
+                f"threshold={effective_threshold:.0f} (was hard-coded 80)"
+            )
         else:
             effective_threshold = self.min_confidence_score
 

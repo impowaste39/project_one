@@ -109,11 +109,16 @@ class DiscordService:
         ) if patterns else '• No specific pattern'
 
         factors_text = '\n'.join(
-            [f"• {f}" for f in factors[:3]]
+            [f"• {f}" for f in factors[:4]]  # Increased from 3 to 4 to show ML bonus
         ) if factors else '• Score-based entry'
 
         tier_badge = TIER_DISPLAY.get(position_tier, f'⚪ {position_tier}')
         chart_url = self._get_tradingview_url(symbol)
+
+        # Weekly EMA status — shows if we're above/below long-term trend
+        weekly_ema_status = evaluation.get('weekly_ema_status', 'above')
+        ema_icon = "✅" if weekly_ema_status == "above" else "⚠️"
+        ema_label = "Above 50W EMA (uptrend)" if weekly_ema_status == "above" else "Below 50W EMA (downtrend, penalty applied)"
 
         fields = [
             {
@@ -171,14 +176,12 @@ class DiscordService:
                 "value": factors_text,
                 "inline": False
             },
-        ]
-
-        if weekly_ema_reason:
-            fields.append({
+            {
                 "name": "📅 Long-Term Trend",
-                "value": f"✅ {weekly_ema_reason}",
+                "value": f"{ema_icon} {ema_label}",
                 "inline": False
-            })
+            },
+        ]
 
         fields.append({
             "name": "📉 Review Chart",

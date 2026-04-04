@@ -18,7 +18,7 @@ services:
       - key: RISK_PER_TRADE
         value: 0.015
       - key: MIN_CONFIDENCE_SCORE
-        value: 65                         # Raised from 60 — volatile/war market selectivity
+        value: 58                         # Lowered from 65 — temporary during ML cold start phase (need 20 trades to train)
       - key: VOLATILE_MARKET_MODE
         value: true                       # Enables 1.5% risk, 20% max position, tighter exits
       - key: ADAPTIVE_SCORING
