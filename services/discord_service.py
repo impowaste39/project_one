@@ -491,3 +491,95 @@ class DiscordService:
             }]
         }
         return self._send(payload)
+
+    def send_premarket_watchlist(self, candidates: list, market_context: dict) -> bool:
+        """
+        Send pre-market watchlist to Discord at 8:45 AM IST.
+        Shows top ranked setups to watch today — bot will auto-enter if they trigger.
+
+        Args:
+            candidates: Ranked list of analysis dicts from scan_market_preopen()
+            market_context: Today's market context dict
+        """
+        trend = market_context.get('trend', 'unknown').upper()
+        nifty = market_context.get('nifty_price')
+        vix = market_context.get('india_vix')
+        nifty_str = f"₹{nifty:,.0f}" if isinstance(nifty, (int, float)) else "—"
+        vix_str = f"{vix:.1f}" if isinstance(vix, (int, float)) else "—"
+
+        trend_color = {
+            'BULLISH': 3066993,
+            'BEARISH': 15158332,
+            'SIDEWAYS': 10181046,
+        }.get(trend, 10181046)
+
+        if not candidates:
+            payload = {
+                "embeds": [{
+                    "title": f"🌅 Pre-Market Scan — {datetime.now(IST).strftime('%d %b %Y')}",
+                    "description": (
+                        f"**Nifty:** {nifty_str}  |  **Trend:** {trend}  |  **VIX:** {vix_str}\n\n"
+                        "No actionable setups found — market may be quiet today."
+                    ),
+                    "color": trend_color,
+                    "footer": {"text": f"Bot will scan every 5 min from 9:15 AM • {self._get_ist_time()}"}
+                }]
+            }
+            return self._send(payload)
+
+        # Build fields for top 8 setups
+        fields = [
+            {
+                "name": "📊 Market Snapshot",
+                "value": (
+                    f"**Nifty:** {nifty_str}  **Trend:** {trend}  **VIX:** {vix_str}\n"
+                    f"*{len(candidates)} setup(s) detected*"
+                ),
+                "inline": False
+            }
+        ]
+
+        tier_icons = {'HIGH CONVICTION': '🔴', 'NORMAL': '🟠', 'CAUTIOUS': '🟡'}
+
+        for i, opp in enumerate(candidates[:8], 1):
+            sym = opp.get('symbol', '')
+            patterns = opp.get('patterns', [])
+            pattern_str = ', '.join(p.replace('_', ' ').title() for p in patterns[:2]) or 'n/a'
+            vol_ratio = opp.get('volume_ratio', 1)
+            rsi = opp.get('rsi')
+            rs = opp.get('rs_positive')
+            rs_str = ' 📈 Outperforming Nifty' if rs is True else (' 📉 Underperforming' if rs is False else '')
+            rsi_str = f"RSI {rsi:.0f}" if rsi else ""
+            chart_url = self._get_tradingview_url(sym)
+
+            fields.append({
+                "name": f"{i}. {self._clean(sym)}",
+                "value": (
+                    f"{pattern_str}\n"
+                    f"{rsi_str}  Vol {vol_ratio:.1f}x{rs_str}\n"
+                    f"[Chart]({chart_url})"
+                ),
+                "inline": True
+            })
+
+        fields.append({
+            "name": "⚡ How it works",
+            "value": "Bot will auto-enter high-scoring setups during market hours (9:15–3:30 PM).",
+            "inline": False
+        })
+
+        payload = {
+            "embeds": [{
+                "title": f"🌅 Pre-Market Watchlist — {datetime.now(IST).strftime('%d %b %Y')}",
+                "color": trend_color,
+                "fields": fields,
+                "footer": {
+                    "text": f"Scan complete at {self._get_ist_time()} • Market opens 9:15 AM IST"
+                }
+            }]
+        }
+
+        success = self._send(payload)
+        if success:
+            logger.info(f"Discord pre-market watchlist sent ({len(candidates)} candidates)")
+        return success

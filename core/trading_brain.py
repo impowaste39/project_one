@@ -331,28 +331,83 @@ class TradingBrain:
 
         score += ml_score
 
+        # === RELATIVE STRENGTH vs NIFTY (+5 / -5) ===
+        # Outperforming Nifty over 20 days = institutional money flowing IN.
+        # This is one of the strongest selection criteria used by professional desks.
+        rs_positive = analysis.get('rs_positive')  # True/False/None
+        if rs_positive is True:
+            score += 5
+            stock_ret = analysis.get('stock_return_20d', 0) or 0
+            nifty_ret = analysis.get('nifty_return_20d', 0) or 0
+            factors.append(f"RS outperforms Nifty ({stock_ret:.1f}% vs {nifty_ret:.1f}%)")
+        elif rs_positive is False:
+            score -= 5
+            stock_ret = analysis.get('stock_return_20d', 0) or 0
+            nifty_ret = analysis.get('nifty_return_20d', 0) or 0
+            factors.append(f"RS underperforms Nifty ({stock_ret:.1f}% vs {nifty_ret:.1f}%) — penalty")
+
+        # === RESISTANCE PROXIMITY PENALTY (-8) ===
+        # Entering within 3% of a 90-day swing high means very limited upside before
+        # resistance pushes price back. Historical high = where sellers waiting.
+        if analysis.get('near_resistance'):
+            score -= 8
+            resistance_level = analysis.get('signals', {}).get('resistance_level', '?')
+            dist_pct = analysis.get('signals', {}).get('resistance_dist_pct', '?')
+            factors.append(
+                f"Near 90d resistance ₹{resistance_level} ({dist_pct}% away) — upside limited (-8)"
+            )
+
         return {
-            "total_score": min(100, score),
+            "total_score": min(100, max(0, score)),
             "technical_score": technical_score,
             "pattern_score": pattern_score,
             "market_score": market_score,
             "ml_score": ml_score,
             "factors": factors,
-            "confidence": min(100, score) / 100,
+            "confidence": min(100, max(0, score)) / 100,
         }
+
 
     def calculate_entry_exit_levels(self, analysis: dict) -> dict:
         """Calculate entry price, stop loss, and target levels"""
-        current_price = analysis["current_price"]
-        atr = analysis.get("atr", current_price * 0.02)
+        current_price = analysis['current_price']
+        atr = analysis.get('atr', current_price * 0.02)
 
         if pd.isna(atr) or atr == 0:
             atr = current_price * 0.02
 
         entry_price = current_price
+
+        # ── Three stop loss candidates ────────────────────────────────────────
+        # 1. ATR-based (2x ATR below entry) — volatility-aware
         atr_stop = current_price - (2 * atr)
+
+        # 2. Percent-based (8% from entry) — absolute floor
         percent_stop = current_price * 0.92
-        stop_loss = max(atr_stop, percent_stop)
+
+        # 3. Swing-low (lowest Low of last 5 bars) — most structurally meaningful.
+        #    A break below the last swing low invalidates the immediate setup.
+        #    Only used when SWING_LOW_SL_ENABLED=true (default: true).
+        swing_low_stop = None
+        try:
+            data = analysis.get('data')
+            if (
+                data is not None
+                and len(data) >= 5
+                and os.getenv('SWING_LOW_SL_ENABLED', 'true').lower() == 'true'
+            ):
+                recent_swing_low = data['Low'].tail(5).min()
+                if pd.notna(recent_swing_low) and recent_swing_low < current_price:
+                    swing_low_stop = recent_swing_low
+        except Exception:
+            pass
+
+        # Take the highest (tightest toward entry) of all valid candidates.
+        # Never let SL be above entry.
+        candidates = [c for c in [atr_stop, percent_stop, swing_low_stop]
+                      if c is not None and c < entry_price]
+        stop_loss = max(candidates) if candidates else percent_stop
+        # ─────────────────────────────────────────────────────────────────────
 
         risk = entry_price - stop_loss
         target_1 = entry_price + (risk * 1.5)
@@ -363,14 +418,14 @@ class TradingBrain:
         reward_1_percent = ((target_1 - entry_price) / entry_price) * 100
 
         return {
-            "entry_price": round(entry_price, 2),
-            "stop_loss": round(stop_loss, 2),
-            "target_1": round(target_1, 2),
-            "target_2": round(target_2, 2),
-            "target_3": round(target_3, 2),
-            "risk_percent": round(risk_percent, 2),
-            "reward_percent": round(reward_1_percent, 2),
-            "rr_ratio": round(reward_1_percent / risk_percent, 2)
+            'entry_price': round(entry_price, 2),
+            'stop_loss': round(stop_loss, 2),
+            'target_1': round(target_1, 2),
+            'target_2': round(target_2, 2),
+            'target_3': round(target_3, 2),
+            'risk_percent': round(risk_percent, 2),
+            'reward_percent': round(reward_1_percent, 2),
+            'rr_ratio': round(reward_1_percent / risk_percent, 2)
             if risk_percent > 0
             else 0,
         }
@@ -572,6 +627,28 @@ class TradingBrain:
 
         if position_info["investment"] > portfolio_state["available_capital"] * 0.30:
             return False
+
+        # === EARNINGS BLACKOUT ===
+        # Skip stocks within EARNINGS_BLACKOUT_DAYS of their earnings date.
+        # Earnings cause unpredictable gap moves that invalidate technical setups.
+        if symbol and os.getenv('EARNINGS_BLACKOUT_DAYS', '5') != '0':
+            try:
+                from services.data_service import DataService
+                from datetime import date
+                blackout_days = int(os.getenv('EARNINGS_BLACKOUT_DAYS', '5'))
+                ds = DataService()
+                earnings_dates = ds.fetch_earnings_dates(symbol)
+                today = date.today()
+                for ed in earnings_dates:
+                    days_diff = abs((ed - today).days)
+                    if days_diff <= blackout_days:
+                        logger.info(
+                            f"[EarningsBlackout] {symbol}: earnings on {ed} "
+                            f"({days_diff}d away) — entry blocked"
+                        )
+                        return False
+            except Exception as e:
+                logger.debug(f"[EarningsBlackout] {symbol}: check skipped ({e})")
 
         return True
 

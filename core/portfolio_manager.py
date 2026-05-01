@@ -386,18 +386,12 @@ class PortfolioManager:
             ).first()
 
             if portfolio:
-                new_portfolio = Portfolio(
-                    total_capital=portfolio.total_capital,
-                    deployed_capital=portfolio.deployed_capital +
-                    evaluation['investment'],
-                    available_capital=portfolio.available_capital -
-                    evaluation['investment'],
-                    unrealized_pnl=portfolio.unrealized_pnl,
-                    realized_pnl=portfolio.realized_pnl,
-                    open_positions=portfolio.open_positions + 1,
-                    timestamp=datetime.now()
-                )
-                self.db.add(new_portfolio)
+                # UPDATE existing row in-place instead of INSERT a new one.
+                # Prevents unbounded portfolio table growth (was adding a row per trade).
+                portfolio.deployed_capital = portfolio.deployed_capital + evaluation['investment']
+                portfolio.available_capital = portfolio.available_capital - evaluation['investment']
+                portfolio.open_positions = portfolio.open_positions + 1
+                portfolio.timestamp = datetime.now()
 
             self.db.commit()
 
@@ -466,16 +460,13 @@ class PortfolioManager:
             if portfolio:
                 investment = trade.entry_price * trade.quantity
 
-                new_portfolio = Portfolio(
-                    total_capital=portfolio.total_capital + net_pnl,
-                    deployed_capital=portfolio.deployed_capital - investment,
-                    available_capital=portfolio.available_capital + investment + net_pnl,
-                    unrealized_pnl=portfolio.unrealized_pnl,
-                    realized_pnl=portfolio.realized_pnl + net_pnl,
-                    open_positions=max(0, portfolio.open_positions - 1),
-                    timestamp=datetime.now()
-                )
-                self.db.add(new_portfolio)
+                # UPDATE existing row in-place — no new row inserted.
+                portfolio.total_capital = portfolio.total_capital + net_pnl
+                portfolio.deployed_capital = portfolio.deployed_capital - investment
+                portfolio.available_capital = portfolio.available_capital + investment + net_pnl
+                portfolio.realized_pnl = portfolio.realized_pnl + net_pnl
+                portfolio.open_positions = max(0, portfolio.open_positions - 1)
+                portfolio.timestamp = datetime.now()
 
             self.db.commit()
 

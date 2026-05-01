@@ -402,7 +402,149 @@ class EmailService:
 
         return self.send_email(subject, html_content)
 
+    def send_missed_setups_email(self, missed_stocks: list, date: str = None) -> bool:
+        """
+        Send end-of-day email listing stocks that were evaluated but rejected today.
+
+        Each item in missed_stocks should be a dict with:
+            symbol, score, rejection_reason, rsi, volume_ratio, patterns_detected, rr_ratio
+
+        Args:
+            missed_stocks: List of evaluated-but-rejected stock dicts
+            date: Optional date string (defaults to today)
+
+        Returns:
+            True if sent successfully
+        """
+        if not missed_stocks:
+            logger.info("No missed setups to report today — skipping missed setups email")
+            return True
+
+        date = date or datetime.now().strftime('%d %b %Y')
+        count = len(missed_stocks)
+        subject = f"🔍 Missed Setups Today ({count} stocks) — {date}"
+
+        def score_color(score):
+            if score >= 75:
+                return "#f0c040"   # amber — close call
+            elif score >= 60:
+                return "#6ec6ff"   # blue — moderate
+            else:
+                return "#aaaaaa"   # grey — weak
+
+        rows_html = ""
+        for s in missed_stocks:
+            sym = s.get('symbol', '').replace('.NS', '')
+            score = s.get('score', 0) or 0
+            reason = s.get('rejection_reason') or 'N/A'
+            rsi = s.get('rsi')
+            vol = s.get('volume_ratio')
+            rr = s.get('rr_ratio')
+            patterns = s.get('patterns_detected') or ''
+
+            rsi_str = f"{rsi:.1f}" if rsi else "—"
+            vol_str = f"{vol:.2f}x" if vol else "—"
+            rr_str = f"{rr:.2f}:1" if rr else "—"
+
+            rows_html += f"""
+            <tr>
+                <td style="padding:10px 12px; font-weight:bold; font-size:15px; color:#fff;">{sym}</td>
+                <td style="padding:10px 12px; text-align:center;">
+                    <span style="background:{score_color(score)}; color:#111; padding:3px 10px;
+                                 border-radius:12px; font-weight:bold; font-size:13px;">{score}/100</span>
+                </td>
+                <td style="padding:10px 12px; color:#ccc; font-size:12px;">{reason}</td>
+                <td style="padding:10px 12px; color:#aaa; font-size:12px; text-align:center;">{rsi_str}</td>
+                <td style="padding:10px 12px; color:#aaa; font-size:12px; text-align:center;">{vol_str}</td>
+                <td style="padding:10px 12px; color:#aaa; font-size:12px; text-align:center;">{rr_str}</td>
+            </tr>
+            <tr>
+                <td colspan="6" style="padding:2px 12px 10px; color:#555; font-size:11px; border-bottom:1px solid #1a2744;">
+                    🔖 {patterns if patterns else 'No patterns detected'}
+                </td>
+            </tr>"""
+
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: 'Segoe UI', Arial, sans-serif; background: #1a1a2e; color: #eee; padding: 20px; margin: 0; }}
+                .container {{ max-width: 700px; margin: 0 auto; background: #16213e; border-radius: 12px; padding: 24px; }}
+                .header {{ background: linear-gradient(135deg, #764ba2, #667eea); padding: 20px; border-radius: 8px;
+                           text-align: center; margin-bottom: 20px; }}
+                .header h1 {{ margin: 0; color: #fff; font-size: 22px; }}
+                .header p {{ margin: 6px 0 0 0; color: #ddd; font-size: 13px; }}
+                .summary-bar {{ display: flex; gap: 12px; margin-bottom: 20px; }}
+                .stat {{ flex: 1; background: #0f3460; border-radius: 8px; padding: 14px; text-align: center; }}
+                .stat-val {{ font-size: 26px; font-weight: bold; color: #fff; }}
+                .stat-lbl {{ font-size: 11px; color: #888; text-transform: uppercase; margin-top: 4px; }}
+                table {{ width: 100%; border-collapse: collapse; }}
+                thead th {{ background: #0f3460; color: #00d4aa; font-size: 11px; text-transform: uppercase;
+                             padding: 10px 12px; text-align: left; letter-spacing: 0.05em; }}
+                tbody tr:nth-child(4n+1) {{ background: #111d3c; }}
+                tbody tr:nth-child(4n+3) {{ background: #101935; }}
+                .note {{ background: #0f3460; border-radius: 8px; padding: 14px; margin-top: 16px;
+                         font-size: 12px; color: #aaa; line-height: 1.6; }}
+                .footer {{ text-align: center; color: #555; font-size: 11px; margin-top: 20px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🔍 Missed Setups — {date}</h1>
+                    <p>Stocks evaluated by the bot today that didn't meet our entry criteria</p>
+                </div>
+
+                <div class="summary-bar">
+                    <div class="stat">
+                        <div class="stat-val">{count}</div>
+                        <div class="stat-lbl">Stocks Evaluated</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-val">{sum(1 for s in missed_stocks if (s.get('score') or 0) >= 60)}</div>
+                        <div class="stat-lbl">Score ≥ 60</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-val">{sum(1 for s in missed_stocks if (s.get('score') or 0) >= 75)}</div>
+                        <div class="stat-lbl">Near Miss (≥75)</div>
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Score</th>
+                            <th>Rejection Reason</th>
+                            <th>RSI</th>
+                            <th>Volume</th>
+                            <th>R:R</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows_html}
+                    </tbody>
+                </table>
+
+                <div class="note">
+                    💡 <strong>How to use this:</strong> Near-miss stocks (Score ≥ 75) are the closest to our setup.
+                    Review them manually — if the rejection reason was capital or position limits rather than
+                    signal quality, these would have been great trades.
+                </div>
+
+                <div class="footer">
+                    <p>AI Trading Bot • Missed Setups Report • {datetime.now().strftime('%d %b %Y, %I:%M %p IST')}</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+
+        return self.send_email(subject, html_content)
+
     def send_health_alert(self, subject: str, body: str) -> bool:
+
         """
         Send a system health alert email.
         Called by the daily health digest job when critical issues are detected

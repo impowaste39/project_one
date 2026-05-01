@@ -133,10 +133,10 @@ class MarketMonitor:
             signals['macd_cross'] = True
 
         # Pattern 4: Breakout with Volume
-        # Threshold raised 1.5x → 2.0x: war markets produce many fake breakouts;
-        # genuine institutional moves need stronger volume confirmation.
+        # Threshold: 1.5x volume confirms genuine institutional interest.
+        # 2.0x was too strict for normal market conditions — very few breakouts qualified.
         if (latest['Close'] > latest['BB_Upper'] and
-                latest['Volume_Ratio'] > 2.0):
+                latest['Volume_Ratio'] > 1.5):
             patterns.append('breakout_with_volume')
             signals['breakout'] = True
 
@@ -149,12 +149,14 @@ class MarketMonitor:
             signals['pullback'] = True
 
         # Pattern 6: Higher Highs & Higher Lows (Trend Strength)
-        # DEMOTED: moved to context{} — fires on ~23k stocks, too common to count as a signal
+        # RE-INSTATED as a counted pattern — this is a swing trader's core setup signal.
+        # Combined with other indicators it reliably confirms a healthy uptrend.
+        # Previously demoted during extreme market conditions; now restored for normal markets.
         recent_highs = data['High'].tail(5)
         recent_lows = data['Low'].tail(5)
         if recent_highs.is_monotonic_increasing and recent_lows.is_monotonic_increasing:
+            patterns.append('trend_strength')
             signals['trend_strength'] = True
-            # Context flag, not a tradeable signal
             signals['strong_uptrend_context'] = True
 
         # Pattern 7: Stochastic Oversold
@@ -162,25 +164,46 @@ class MarketMonitor:
             patterns.append('stochastic_oversold')
             signals['stoch_oversold'] = True
 
-        # Pattern 8: Price above all MAs
-        # DEMOTED: moved to context{} — fires on ~17k stocks, structural condition not a signal
+        # Pattern 8: Price above all MAs (Strong Momentum)
+        # RE-INSTATED — price above SMA20 > SMA50 confirms momentum alignment with trend.
         if (latest['Close'] > latest['SMA_20'] > latest['SMA_50']):
+            patterns.append('strong_momentum')
             signals['strong_momentum'] = True
-            # Context flag, not a tradeable signal
             signals['above_all_mas_context'] = True
+
+        # Pattern 9: Near Resistance (90-day swing high)
+        # If price is within RESISTANCE_BUFFER_PCT of the 90-day high,
+        # we flag it — entering near resistance means limited upside before a pullback.
+        # The scoring engine will apply a penalty but won't hard-block.
+        try:
+            import os
+            resistance_buffer_pct = float(os.getenv('RESISTANCE_BUFFER_PCT', '3.0'))
+            swing_high_90d = data['High'].tail(90).max() if len(data) >= 90 else data['High'].max()
+            if pd.notna(swing_high_90d) and swing_high_90d > 0:
+                dist_to_resistance_pct = ((swing_high_90d - latest['Close']) / swing_high_90d) * 100
+                if 0 <= dist_to_resistance_pct <= resistance_buffer_pct:
+                    signals['near_resistance'] = True
+                    signals['resistance_level'] = round(swing_high_90d, 2)
+                    signals['resistance_dist_pct'] = round(dist_to_resistance_pct, 2)
+        except Exception:
+            pass  # Resistance check failing never blocks a scan
+
 
         return {
             'patterns': patterns,
             'signals': signals,
-            'pattern_count': len(patterns)
+            'pattern_count': len(patterns),
+            'near_resistance': signals.get('near_resistance', False)
         }
 
-    def scan_stock(self, symbol: str) -> dict:
+    def scan_stock(self, symbol: str, nifty_return_20d: float = None) -> dict:
         """
-        Complete analysis of a single stock
+        Complete analysis of a single stock.
 
         Args:
             symbol: Stock symbol
+            nifty_return_20d: Pre-fetched Nifty 20d return for RS comparison (optional).
+                              If None, RS calculation is skipped.
 
         Returns:
             dict: Analysis results or None
@@ -201,7 +224,31 @@ class MarketMonitor:
 
             latest = data.iloc[-1]
 
-            # Return analysis package
+            # ── Relative Strength vs Nifty ─────────────────────────────────
+            # Stock that moves UP more than Nifty = outperforming = strong candidate.
+            # Stock that underperforms Nifty = money is rotating elsewhere.
+            rs_positive = None
+            stock_return_20d = None
+            try:
+                import os
+                if os.getenv('RS_FILTER_ENABLED', 'true').lower() == 'true' and nifty_return_20d is not None:
+                    lookback = int(os.getenv('RS_LOOKBACK_DAYS', '20'))
+                    # Compute stock's own N-day return
+                    price_series = data['Close'].tail(lookback + 5)
+                    if len(price_series) >= 2:
+                        start_p = price_series.iloc[0]
+                        end_p = price_series.iloc[-1]
+                        stock_return_20d = round(((end_p - start_p) / start_p) * 100, 4) if start_p > 0 else None
+                    if stock_return_20d is not None:
+                        rs_positive = stock_return_20d > nifty_return_20d
+                        logger.debug(
+                            f"[RS] {symbol}: stock={stock_return_20d:.2f}% nifty={nifty_return_20d:.2f}% "
+                            f"-> {'OUTPERFORM' if rs_positive else 'UNDERPERFORM'}"
+                        )
+            except Exception as rs_err:
+                logger.debug(f"[RS] {symbol}: RS calc skipped ({rs_err})")
+            # ───────────────────────────────────────────────────
+
             return {
                 'symbol': symbol,
                 'current_price': latest['Close'],
@@ -214,6 +261,10 @@ class MarketMonitor:
                 'patterns': pattern_analysis['patterns'],
                 'signals': pattern_analysis['signals'],
                 'pattern_count': pattern_analysis['pattern_count'],
+                'near_resistance': pattern_analysis.get('near_resistance', False),
+                'rs_positive': rs_positive,
+                'stock_return_20d': stock_return_20d,
+                'nifty_return_20d': nifty_return_20d,
                 'data': data
             }
 
@@ -221,27 +272,40 @@ class MarketMonitor:
             logger.error(f"Error scanning {symbol}: {e}")
             return None
 
-    def scan_market(self) -> list:
+    def scan_market(self, nifty_return_20d: float = None) -> list:
         """
-        Scan entire watchlist for opportunities
+        Scan entire watchlist for opportunities.
+
+        Pre-fetches Nifty 20d return once and passes it to each scan_stock call
+        so relative strength is computed without an extra API call per stock.
 
         Returns:
-            list: Stocks with potential trading setups
+            list: Stocks with potential trading setups (pattern_count > 0)
         """
         logger.info("=" * 50)
         logger.info("MARKET SCAN STARTED")
         logger.info("=" * 50)
 
+        # Fetch Nifty return once for all RS comparisons
+        if nifty_return_20d is None:
+            try:
+                lookback = int(__import__('os').getenv('RS_LOOKBACK_DAYS', '20'))
+                nifty_return_20d = self.data_service.fetch_nifty_return(lookback)
+                logger.info(f"[RS] Nifty {lookback}d return: {nifty_return_20d:.2f}%" if nifty_return_20d is not None else "[RS] Nifty return unavailable")
+            except Exception as e:
+                logger.warning(f"[RS] Nifty return fetch skipped: {e}")
+
         opportunities = []
 
         for symbol in self.watchlist:
             try:
-                analysis = self.scan_stock(symbol)
+                analysis = self.scan_stock(symbol, nifty_return_20d=nifty_return_20d)
 
                 if analysis and analysis['pattern_count'] > 0:
                     opportunities.append(analysis)
                     logger.info(
-                        f"✅ Opportunity: {symbol} - {analysis['patterns']}")
+                        f"✅ Opportunity: {symbol} - {analysis['patterns']} "
+                        f"RS={'outperform' if analysis.get('rs_positive') else ('underperform' if analysis.get('rs_positive') is False else 'n/a')}")
 
             except Exception as e:
                 logger.error(f"Error scanning {symbol}: {e}")
@@ -250,6 +314,44 @@ class MarketMonitor:
         logger.info(
             f"Market scan complete. Found {len(opportunities)} opportunities")
         return opportunities
+
+    def scan_market_preopen(self) -> list:
+        """
+        Pre-market scan (8:45 AM IST) — runs BEFORE the market opens.
+
+        Identical to scan_market() but returns ALL stocks with pattern_count > 0
+        sorted by potential score (heuristic: pattern_count + volume_ratio).
+        Does NOT trigger any trade entries — purely informational.
+
+        Returns:
+            list: Ranked analysis dicts for the pre-market Telegram/Discord summary
+        """
+        logger.info("PRE-MARKET SCAN STARTED")
+
+        try:
+            lookback = int(__import__('os').getenv('RS_LOOKBACK_DAYS', '20'))
+            nifty_return_20d = self.data_service.fetch_nifty_return(lookback)
+        except Exception:
+            nifty_return_20d = None
+
+        candidates = []
+        for symbol in self.watchlist:
+            try:
+                analysis = self.scan_stock(symbol, nifty_return_20d=nifty_return_20d)
+                if analysis and analysis['pattern_count'] > 0:
+                    candidates.append(analysis)
+            except Exception as e:
+                logger.debug(f"Pre-open scan error for {symbol}: {e}")
+                continue
+
+        # Sort by pattern count (desc), then volume ratio (desc)
+        candidates.sort(
+            key=lambda a: (a.get('pattern_count', 0), a.get('volume_ratio', 1)),
+            reverse=True
+        )
+
+        logger.info(f"Pre-market scan complete. {len(candidates)} candidates found.")
+        return candidates
 
     def get_market_context(self) -> dict:
         """

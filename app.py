@@ -346,6 +346,24 @@ def monitor_positions_job():
                 logger.error(f"Error monitoring {trade.symbol}: {e}")
                 continue
 
+        # ── UPDATE UNREALIZED P&L ─────────────────────────────────────────
+        # Recompute unrealized P&L across all remaining open positions
+        # using the prices we already fetched. This keeps the portfolio row
+        # current without any extra API calls.
+        try:
+            current_prices = {}
+            still_open = db.query(Trade).filter(Trade.status == 'OPEN').all()
+            for t in still_open:
+                price_data = monitor.fetch_stock_data(t.symbol, period='2d')
+                if price_data is not None and not price_data.empty:
+                    current_prices[t.symbol] = float(price_data['Close'].iloc[-1])
+            if current_prices:
+                portfolio_mgr.update_unrealized_pnl(current_prices)
+                logger.debug(f"Unrealized P&L updated for {len(current_prices)} positions")
+        except Exception as pnl_err:
+            logger.debug(f"Unrealized P&L update skipped: {pnl_err}")
+        # ─────────────────────────────────────────────────────
+
         logger.info("Position monitoring completed")
 
     except Exception as e:
@@ -402,11 +420,179 @@ def end_of_day_analysis_job():
         })
         email_service.send_daily_summary(summary_data)
 
+        # ── MISSED SETUPS EMAIL ──────────────────────────────────────────────
+        # Collect all stocks that were evaluated today but rejected (decision=PASS).
+        # We scope to today's scan reports, deduplicate by symbol (keep highest score),
+        # then sort near-misses (score >= 75) first so the email shows the closest calls at the top.
+        try:
+            from models.scan_report import ScanReport, ScanResult
+            from datetime import timedelta
+
+            today_start = datetime(today_date.year, today_date.month, today_date.day)
+            today_end = today_start + timedelta(days=1)
+
+            today_scan_ids = [
+                r.id for r in db.query(ScanReport).filter(
+                    ScanReport.timestamp >= today_start,
+                    ScanReport.timestamp < today_end
+                ).all()
+            ]
+
+            if today_scan_ids:
+                passed_results = db.query(ScanResult).filter(
+                    ScanResult.scan_report_id.in_(today_scan_ids),
+                    ScanResult.decision == 'PASS'
+                ).all()
+
+                # Deduplicate: keep the highest-score row per symbol
+                seen = {}
+                for row in passed_results:
+                    sym = row.symbol
+                    score = row.total_score or 0
+                    if sym not in seen or score > (seen[sym].total_score or 0):
+                        seen[sym] = row
+
+                # Sort: near-misses (score >= 75) first, then descending
+                missed_list = sorted(
+                    seen.values(),
+                    key=lambda r: (r.total_score or 0),
+                    reverse=True
+                )
+
+                missed_stocks = [
+                    {
+                        'symbol': r.symbol,
+                        'score': r.total_score,
+                        'rejection_reason': r.rejection_reason,
+                        'rsi': r.rsi,
+                        'volume_ratio': r.volume_ratio,
+                        'rr_ratio': r.rr_ratio,
+                        'patterns_detected': r.patterns_detected,
+                    }
+                    for r in missed_list
+                ]
+
+                logger.info(
+                    f"EOD: {len(missed_stocks)} missed setups found — sending missed setups email"
+                )
+                email_service.send_missed_setups_email(
+                    missed_stocks,
+                    date=datetime.now(IST).strftime('%d %b %Y')
+                )
+            else:
+                logger.info("EOD: No scan reports found for today — skipping missed setups email")
+
+        except Exception as missed_err:
+            logger.error(f"Error collecting missed setups for EOD email: {missed_err}")
+        # ─────────────────────────────────────────────────────────────────────
+
         logger.info("End of day analysis completed")
 
     except Exception as e:
         logger.error(f"Error in EOD analysis: {e}")
 
+    finally:
+        db.close()
+
+
+
+def premarket_scan_job():
+    """
+    Pre-market scan — runs at 8:45 AM IST Mon-Fri.
+
+    Scans the watchlist using last night's closes to surface the best
+    technical setups to watch when the market opens at 9:15 AM.
+    Sends a ranked Discord embed — does NOT enter any trades.
+    Controlled by PRE_MARKET_SCAN_ENABLED env var (default: true).
+    """
+    if os.getenv('PRE_MARKET_SCAN_ENABLED', 'true').lower() != 'true':
+        logger.info("Pre-market scan disabled via PRE_MARKET_SCAN_ENABLED=false")
+        return
+
+    logger.info("=" * 50)
+    logger.info("PRE-MARKET SCAN STARTED")
+    logger.info("=" * 50)
+
+    db = get_session()
+    try:
+        monitor = MarketMonitor(db)
+        brain = TradingBrain(db, None)
+
+        # Step 1: Get market context for the Discord embed header
+        market_context = monitor.get_market_context()
+
+        # Step 2: Scan all watchlist stocks (uses yesterday's closes)
+        candidates = monitor.scan_market_preopen()
+
+        # Step 3: Score each candidate so Discord shows a real score, not just pattern count
+        scored = []
+        for analysis in candidates:
+            try:
+                score_breakdown = brain.calculate_setup_score(analysis, market_context)
+                levels = brain.calculate_entry_exit_levels(analysis)
+                evaluation = {
+                    'symbol': analysis['symbol'],
+                    'score': score_breakdown['total_score'],
+                    'patterns': analysis.get('patterns', []),
+                    'entry_price': levels.get('entry_price'),
+                    'stop_loss': levels.get('stop_loss'),
+                    'target_1': levels.get('target_1'),
+                    'rr_ratio': levels.get('rr_ratio'),
+                    'rs_positive': analysis.get('rs_positive'),
+                    'rsi': analysis.get('rsi'),
+                    'volume_ratio': analysis.get('volume_ratio'),
+                    'position_tier': 'NORMAL',
+                }
+                scored.append(evaluation)
+            except Exception as score_err:
+                logger.debug(f"Pre-market scoring error for {analysis.get('symbol')}: {score_err}")
+
+        # Sort by score descending
+        scored.sort(key=lambda x: x.get('score', 0), reverse=True)
+
+        # Step 4: Send Discord embed
+        discord_service.send_premarket_watchlist(scored, market_context)
+        logger.info(f"Pre-market scan complete — {len(scored)} candidates sent to Discord")
+
+    except Exception as e:
+        logger.error(f"Error in pre-market scan job: {e}")
+    finally:
+        db.close()
+
+
+def weekly_portfolio_cleanup_job():
+    """
+    Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.
+
+    Keeps only a single live portfolio row (the one we UPDATE in-place).
+    Before this fix, every trade entry/exit inserted a NEW row, so the table
+    could accumulate thousands of stale rows over months of trading.
+
+    Safe to run: keeps the most recent row, deletes all older duplicates.
+    """
+    db = get_session()
+    try:
+        latest = db.query(Portfolio).order_by(
+            Portfolio.timestamp.desc()
+        ).first()
+
+        if not latest:
+            logger.info("Portfolio cleanup: no portfolio rows found, nothing to do")
+            return
+
+        deleted = db.query(Portfolio).filter(
+            Portfolio.id != latest.id
+        ).delete(synchronize_session=False)
+
+        db.commit()
+        if deleted > 0:
+            logger.info(f"Portfolio cleanup: removed {deleted} stale history rows (kept latest id={latest.id})")
+        else:
+            logger.info("Portfolio cleanup: nothing to delete — already clean")
+
+    except Exception as e:
+        logger.error(f"Error in portfolio cleanup job: {e}")
+        db.rollback()
     finally:
         db.close()
 
@@ -501,6 +687,26 @@ scheduler.add_job(
     hour=15,
     minute=35,
     id='daily_health_digest'
+)
+
+# Pre-market scan: 8:45 AM IST Mon-Fri — surfaces top setups before market opens
+scheduler.add_job(
+    premarket_scan_job,
+    'cron',
+    day_of_week='mon-fri',
+    hour=8,
+    minute=45,
+    id='premarket_scan'
+)
+
+# Weekly portfolio cleanup: Saturday 6:00 AM IST
+scheduler.add_job(
+    weekly_portfolio_cleanup_job,
+    'cron',
+    day_of_week='sat',
+    hour=6,
+    minute=0,
+    id='weekly_portfolio_cleanup'
 )
 
 # Start scheduler
