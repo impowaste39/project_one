@@ -60,6 +60,17 @@ class TradingBrain:
             self.ml_model = RandomForestClassifier(n_estimators=100)
             self.scaler = StandardScaler()
 
+    def is_model_trained(self) -> bool:
+        """Safely check if the ML model is trained without triggering NotFittedError crashes"""
+        try:
+            if not self.ml_model:
+                return False
+            from sklearn.utils.validation import check_is_fitted
+            check_is_fitted(self.ml_model)
+            return True
+        except Exception:
+            return False
+
     def extract_features(self, analysis: dict) -> np.ndarray:
         """Extract ML features from stock analysis"""
         features = [
@@ -305,7 +316,7 @@ class TradingBrain:
         # === ML PREDICTION SCORE (10 points) ===
         ml_score = 0
         try:
-            if self.ml_model and hasattr(self.ml_model, "classes_"):
+            if self.is_model_trained():
                 features = self.extract_features(analysis)
                 if hasattr(self.scaler, "mean_"):
                     features_scaled = self.scaler.transform(features)
@@ -449,11 +460,8 @@ class TradingBrain:
         # We need 20 trades to train ML, but ML adds 10 pts to score.
         # Without this bonus, we can't reach thresholds to get those 20 trades.
         # This is temporary and auto-disables once model is trained.
-        ml_model_active = (
-            self.ml_model and
-            hasattr(self.ml_model, 'classes_') and
-            len(self.ml_model.classes_) > 0
-        )
+        ml_model_active = self.is_model_trained()
+        
         if not ml_model_active:
             old_score = score_breakdown["total_score"]
             score_breakdown["total_score"] = min(100, score_breakdown["total_score"] + 10)
