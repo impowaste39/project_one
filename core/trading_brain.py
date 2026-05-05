@@ -560,6 +560,7 @@ class TradingBrain:
                 portfolio_state,
                 symbol,
                 market_context,
+                position_info,
             ),
             "patterns": analysis.get("patterns", []),
             "weekly_ema_status": weekly_ema_status,  # above/below (for Discord)
@@ -591,7 +592,7 @@ class TradingBrain:
         """
         market_context = market_context or {}
         trend = market_context.get("trend", "sideways")
-        market_strength = market_context.get("strength", 50)
+        market_strength = market_context.get("strength", 5.0)
 
         if trend == "bearish":
             # Scaled threshold: 70 + (strength * 2), capped at 80
@@ -600,7 +601,7 @@ class TradingBrain:
             effective_threshold = 70 + min(10, market_strength * 2)
             logger.debug(
                 f"[BearishThreshold] Market strength={market_strength:.1f} → "
-                f"threshold={effective_threshold:.0f} (was hard-coded 80)"
+                f"threshold={effective_threshold:.1f} (was hard-coded 80)"
             )
         else:
             effective_threshold = self.min_confidence_score
@@ -668,11 +669,12 @@ class TradingBrain:
         portfolio_state: dict,
         symbol: str = None,
         market_context: dict = None,
+        position_info: dict = None,
     ) -> str:
         """Generate human-readable decision reason"""
         market_context = market_context or {}
         trend = market_context.get("trend", "sideways")
-        market_strength = market_context.get("strength", 50)
+        market_strength = market_context.get("strength", 5.0)
 
         if trade_worthy:
             return (
@@ -680,28 +682,69 @@ class TradingBrain:
                 f"with {levels['rr_ratio']}:1 risk-reward"
             )
 
+        # 1. Bearish Market Threshold check
         if trend == "bearish":
-            effective_threshold = 80 if market_strength > 5 else 75
+            # Dynamically scaled threshold: 70 + (strength * 2), capped at 80
+            effective_threshold = 70 + min(10, market_strength * 2)
             if score_breakdown["total_score"] < effective_threshold:
                 return (
                     f"Bearish market — score {score_breakdown['total_score']}/100 "
-                    f"below elevated threshold ({effective_threshold})"
+                    f"below elevated threshold ({effective_threshold:.1f})"
                 )
 
+        # 2. Base Score check
         if score_breakdown["total_score"] < self.min_confidence_score:
             return f"Setup quality insufficient (score: {score_breakdown['total_score']}/100)"
 
+        # 3. Duplicate Guard
+        if symbol and self.db:
+            from models.database import Trade
+            existing = (
+                self.db.query(Trade)
+                .filter(Trade.symbol == symbol, Trade.status == "OPEN")
+                .first()
+            )
+            if existing:
+                return f"Duplicate guard: {symbol} already held in portfolio"
+
+        # 4. Risk-Reward check
         if levels["rr_ratio"] < 1.45:
             return f"Risk-reward too low ({levels['rr_ratio']}:1)"
 
+        # 5. Position Limits
         max_pos = int(os.getenv("MAX_POSITIONS", 7))
         if portfolio_state["positions_count"] >= max_pos:
             return f"Maximum positions reached ({max_pos}/{max_pos})"
 
+        # 6. Capital availability
         if portfolio_state["available_capital"] < 1000:
-            return "Insufficient capital"
+            return "Insufficient capital (min ₹1000 required)"
 
-        return "General constraints not met"
+        # 7. Position Sizing constraints
+        if position_info:
+            if position_info["quantity"] <= 0:
+                return "Position size too small (Risk management resulted in 0 shares)"
+            
+            if position_info["investment"] > portfolio_state["available_capital"] * 0.30:
+                return "Investment exceeds 30% single-position capital limit"
+
+        # 8. Earnings Blackout
+        if symbol and os.getenv('EARNINGS_BLACKOUT_DAYS', '5') != '0':
+            try:
+                from services.data_service import DataService
+                from datetime import date
+                blackout_days = int(os.getenv('EARNINGS_BLACKOUT_DAYS', '5'))
+                ds = DataService()
+                earnings_dates = ds.fetch_earnings_dates(symbol)
+                today = date.today()
+                for ed in earnings_dates:
+                    days_diff = abs((ed - today).days)
+                    if days_diff <= blackout_days:
+                        return f"Earnings blackout active (Earnings on {ed} is within {blackout_days}d)"
+            except Exception:
+                pass
+
+        return "General constraints not met (Risk/Margin/Blackout)"
 
     def check_exit_conditions(
         self, trade, current_price: float, current_data: pd.DataFrame = None
