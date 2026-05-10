@@ -12,6 +12,7 @@ import os
 import logging
 import atexit
 import pytz
+import traceback
 
 # Import core modules
 from models.database import init_database, get_session, Portfolio, Trade
@@ -53,6 +54,69 @@ IST = pytz.timezone('Asia/Kolkata')
 _APP_START_TIME = datetime.now(IST)
 # Skip scans for 60s after startup (Render cold start takes 30-60s)
 _WARMUP_SECONDS = 60
+
+# ---------------------------------------------------------------------------
+# Error alert rate-limiter: prevents a flapping job from spamming Discord.
+# We track the last alert time per job name and suppress duplicates within
+# ERROR_ALERT_COOLDOWN_SECONDS (default 10 min).
+# ---------------------------------------------------------------------------
+import time as _time
+_last_error_alert: dict = {}
+_ERROR_ALERT_COOLDOWN_SECONDS = 600  # 10 minutes
+
+
+def _send_error_alert_guarded(job_name: str, exc: Exception) -> None:
+    """Send a Discord error alert at most once per cooldown window per job."""
+    now = _time.monotonic()
+    last = _last_error_alert.get(job_name, 0)
+    if now - last < _ERROR_ALERT_COOLDOWN_SECONDS:
+        logger.debug(
+            f"Error alert for '{job_name}' suppressed (cooldown active, "            f"{int(_ERROR_ALERT_COOLDOWN_SECONDS - (now - last))}s remaining)"
+        )
+        return
+    _last_error_alert[job_name] = now
+    try:
+        discord_service.send_error_alert(
+            job_name=job_name,
+            error=exc,
+            traceback_str=traceback.format_exc()
+        )
+    except Exception as alert_err:
+        logger.warning(f"Could not send Discord error alert: {alert_err}")
+
+# ---------------------------------------------------------------------------
+# Singletons: TradingBrain and LearningEngine are expensive to construct
+# (DB query + RandomForestClassifier init on every call).  We create each
+# once and reuse them across all scheduler jobs, re-attaching a fresh DB
+# session before each use so there is no stale-connection risk.
+# ---------------------------------------------------------------------------
+_brain_singleton: TradingBrain = None
+_learning_engine_singleton: LearningEngine = None
+
+
+def _get_brain(db_session, risk_manager=None) -> TradingBrain:
+    """Return the shared TradingBrain, binding it to the current DB session."""
+    global _brain_singleton
+    if _brain_singleton is None:
+        _brain_singleton = TradingBrain(db_session, risk_manager)
+        logger.info("TradingBrain singleton created")
+    else:
+        # Re-attach a fresh session for this job's transaction scope
+        _brain_singleton.db = db_session
+        if risk_manager is not None:
+            _brain_singleton.risk_manager = risk_manager
+    return _brain_singleton
+
+
+def _get_learning_engine(db_session) -> LearningEngine:
+    """Return the shared LearningEngine, binding it to the current DB session."""
+    global _learning_engine_singleton
+    if _learning_engine_singleton is None:
+        _learning_engine_singleton = LearningEngine(db_session)
+        logger.info("LearningEngine singleton created")
+    else:
+        _learning_engine_singleton.db = db_session
+    return _learning_engine_singleton
 
 # API Security
 
@@ -151,7 +215,7 @@ def scan_market_job():
 
         monitor = MarketMonitor(db)
         risk_manager = RiskManager()
-        brain = TradingBrain(db, risk_manager)
+        brain = _get_brain(db, risk_manager)          # reused singleton
         portfolio_mgr = PortfolioManager(db, risk_manager, email_service)
         reporting_service = ReportingService(db)
 
@@ -188,9 +252,42 @@ def scan_market_job():
 
         logger.info(f"Found {len(opportunities)} potential opportunities")
 
+        # Pre-filter: build set of currently held symbols once before the loop.
+        # Tickers already in the portfolio will always hit the duplicate guard
+        # inside trading_brain.should_enter_trade(), so there is no point running
+        # them through the full pipeline (ColdStart boost + yfinance EMA fetch).
+        # The duplicate guard in trading_brain remains as a hard backstop.
+        held_symbols = {
+            t.symbol
+            for t in db.query(Trade).filter(Trade.status == 'OPEN').all()
+        }
+
         # Evaluate each opportunity
         for opp in opportunities:
             try:
+                symbol = opp['symbol']
+
+                # Skip full evaluation for already-held positions
+                if symbol in held_symbols:
+                    logger.info(f"⏭️  SKIPPED (already held): {symbol}")
+                    # Still record the pattern occurrence for the learning engine
+                    if scan_report_id and opp.get('patterns'):
+                        skip_eval = {
+                            'score': 0,
+                            'decision': 'PASS',
+                            'reason': f'Duplicate guard: {symbol} already held in portfolio',
+                            'patterns': opp.get('patterns', []),
+                            'weekly_ema_status': 'unknown',
+                            'weekly_ema_reason': '',
+                            'ema_penalty_applied': False,
+                            'position_tier': 'CAUTIOUS',
+                            'ml_model_active': False,
+                        }
+                        reporting_service._save_pattern_occurrences(
+                            opp, skip_eval, scan_report_id
+                        )
+                    continue
+
                 evaluation = brain.evaluate_opportunity(
                     opp, market_context, portfolio_state)
 
@@ -222,6 +319,9 @@ def scan_market_job():
                             f"✅ TRADE EXECUTED: {evaluation['symbol']} @ ₹{evaluation['entry_price']}")
                         scan_stats['trades_entered'] += 1
                         portfolio_state = portfolio_mgr.get_portfolio_state()
+                        # Refresh held_symbols so the same ticker is not
+                        # re-evaluated if it appears again in this scan cycle
+                        held_symbols.add(symbol)
                 else:
                     logger.info(
                         f"⏭️  PASSED: {opp['symbol']} - {evaluation['reason']}")
@@ -240,6 +340,7 @@ def scan_market_job():
 
     except Exception as e:
         logger.error(f"Error in market scan job: {e}")
+        _send_error_alert_guarded("Market Scan", e)
 
     finally:
         db.close()
@@ -257,9 +358,9 @@ def monitor_positions_job():
 
         # Initialize components
         monitor = MarketMonitor(db)
-        brain = TradingBrain(db, None)
+        brain = _get_brain(db)                        # reused singleton
         portfolio_mgr = PortfolioManager(db, None, email_service)
-        learning_engine = LearningEngine(db)
+        learning_engine = _get_learning_engine(db)   # reused singleton
 
         # Get open positions
         open_trades = db.query(Trade).filter(Trade.status == 'OPEN').all()
@@ -368,6 +469,7 @@ def monitor_positions_job():
 
     except Exception as e:
         logger.error(f"Error in position monitoring job: {e}")
+        _send_error_alert_guarded("Position Monitor", e)
 
     finally:
         db.close()
@@ -490,6 +592,7 @@ def end_of_day_analysis_job():
 
     except Exception as e:
         logger.error(f"Error in EOD analysis: {e}")
+        _send_error_alert_guarded("EOD Analysis", e)
 
     finally:
         db.close()

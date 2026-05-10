@@ -583,3 +583,58 @@ class DiscordService:
         if success:
             logger.info(f"Discord pre-market watchlist sent ({len(candidates)} candidates)")
         return success
+
+    def send_error_alert(self, job_name: str, error: Exception,
+                         traceback_str: str = None) -> bool:
+        """
+        Send a red alert to Discord when a scheduler job raises an unhandled exception.
+
+        Args:
+            job_name:      Human-readable name of the failing job, e.g. 'Market Scan'
+            error:         The caught exception
+            traceback_str: Optional traceback string (from traceback.format_exc())
+        """
+        short_error = str(error)[:300]  # cap so embed stays readable
+
+        fields = [
+            {
+                "name": "⚙️ Job",
+                "value": job_name,
+                "inline": True
+            },
+            {
+                "name": "🕐 Time",
+                "value": self._get_ist_time(),
+                "inline": True
+            },
+            {
+                "name": "❌ Error",
+                "value": f"```{short_error}```",
+                "inline": False
+            },
+        ]
+
+        if traceback_str:
+            # Keep only the last 800 chars of traceback — enough for the root cause
+            tb_snippet = traceback_str.strip()[-800:]
+            fields.append({
+                "name": "🔍 Traceback (tail)",
+                "value": f"```{tb_snippet}```",
+                "inline": False
+            })
+
+        payload = {
+            "embeds": [{
+                "title": f"🚨 BOT ERROR — {job_name}",
+                "color": 15158332,  # red
+                "fields": fields,
+                "footer": {
+                    "text": "Check Render logs for full trace • Bot continues running"
+                }
+            }]
+        }
+
+        success = self._send(payload)
+        if success:
+            logger.info(f"Discord error alert sent for job: {job_name}")
+        return success
