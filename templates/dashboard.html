@@ -368,11 +368,35 @@
                                 <tbody>
                                     {% for trade in open_trades %}
                                     <tr>
-                                        <td><span class="symbol-badge">{{ trade.symbol.replace('.NS', '') }}</span></td>
+                                        <td>
+                                            <span class="symbol-badge">{{ trade.symbol.replace('.NS', '') }}</span>
+                                            {% if trade.partially_exited %}
+                                                <br><span class="badge badge-profit" style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">🎯 T1 BOOKED</span>
+                                            {% endif %}
+                                        </td>
                                         <td>₹{{ "%.2f"|format(trade.entry_price) }}</td>
-                                        <td>{{ trade.quantity }}</td>
-                                        <td class="text-danger">₹{{ "%.2f"|format(trade.stop_loss) }}</td>
-                                        <td class="text-success">₹{{ "%.2f"|format(trade.target) }}</td>
+                                        <td>
+                                            {% if trade.partially_exited %}
+                                                {{ trade.quantity - (trade.partial_exit_qty or 0) }}
+                                                <small class="text-secondary">(of {{ trade.quantity }})</small>
+                                            {% else %}
+                                                {{ trade.quantity }}
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-danger">
+                                            ₹{{ "%.2f"|format(trade.stop_loss) }}
+                                            {% if trade.partially_exited %}
+                                                <br><small class="text-secondary" style="font-size: 0.7rem;">(Breakeven)</small>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-success">
+                                            {% if trade.partially_exited and trade.target_2 %}
+                                                ₹{{ "%.2f"|format(trade.target_2) }}
+                                                <br><small class="text-secondary" style="font-size: 0.7rem;">(Target 2)</small>
+                                            {% else %}
+                                                ₹{{ "%.2f"|format(trade.target) }}
+                                            {% endif %}
+                                        </td>
                                         <td><span class="badge badge-open">{{ trade.entry_score or 'N/A' }}</span></td>
                                     </tr>
                                     {% endfor %}

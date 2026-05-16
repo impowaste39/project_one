@@ -970,9 +970,26 @@ def health():
     """Health check endpoint for UptimeRobot"""
     db_status = "unknown"
     db = get_session()
+    ml_health = {
+        'is_trained': False,
+        'closed_trades_count': 0,
+        'trades_needed_for_training': 20
+    }
+    
     try:
         db.query(Portfolio).first()
         db_status = "connected"
+        
+        # Check ML model status
+        brain = _get_brain(db)
+        is_trained = brain.is_model_trained()
+        closed_count = db.query(Trade).filter(Trade.status == 'CLOSED').count()
+        ml_health = {
+            'is_trained': is_trained,
+            'closed_trades_count': closed_count,
+            'trades_needed_for_training': max(0, 20 - closed_count) if not is_trained else 0
+        }
+        
     except Exception as e:
         logger.error(f"Database health check failed: {e}")
         db_status = f"error: {str(e)}"
@@ -995,6 +1012,7 @@ def health():
     return jsonify({
         'status': 'healthy' if overall_healthy else 'unhealthy',
         'database': db_status,
+        'ml_health': ml_health,
         'market_context_working': context_working,
         'consecutive_zero_trade_days': zero_trade_days,
         'timestamp': datetime.now(IST).isoformat(),
