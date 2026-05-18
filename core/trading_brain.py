@@ -540,6 +540,7 @@ class TradingBrain:
             position_info,
             symbol=symbol,
             market_context=market_context,
+            patterns=analysis.get("patterns", []),
         )
 
         return {
@@ -583,6 +584,7 @@ class TradingBrain:
         position_info: dict,
         symbol: str = None,
         market_context: dict = None,
+        patterns: list = None,
     ) -> bool:
         """Final decision gate with multiple checks
 
@@ -598,21 +600,59 @@ class TradingBrain:
         market_context = market_context or {}
         trend = market_context.get("trend", "sideways")
         market_strength = market_context.get("strength", 5.0)
+        patterns = patterns or []
+
+        # --- STRUCT-02: Per-Pattern Score Thresholds ---
+        pattern_thresholds = {
+            'bullish_ma_crossover':  65,
+            'macd_bullish_crossover': 68,
+            'pullback_in_uptrend':   72,
+            'breakout_with_volume':  70,
+            'trend_strength':        72,
+            'rsi_oversold_bounce':   68,
+            'stochastic_oversold':   68,
+            'strong_momentum':       68,
+        }
+        
+        # Determine base threshold based on patterns detected
+        custom_thresholds = [pattern_thresholds[p] for p in patterns if p in pattern_thresholds]
+        base_threshold = max(custom_thresholds) if custom_thresholds else self.min_confidence_score
 
         if trend == "bearish":
             # Scaled threshold: 70 + (strength * 2), capped at 80
             # Strength 7.95 → threshold ~76 (was 80)
             # Strength 3 → threshold ~73 (was 75)
-            effective_threshold = 70 + min(10, market_strength * 2)
+            effective_threshold = base_threshold + min(10, market_strength * 2)
             logger.debug(
                 f"[BearishThreshold] Market strength={market_strength:.1f} → "
-                f"threshold={effective_threshold:.1f} (was hard-coded 80)"
+                f"threshold={effective_threshold:.1f} (base={base_threshold})"
             )
         else:
-            effective_threshold = self.min_confidence_score
+            effective_threshold = base_threshold
 
         if score_breakdown["total_score"] < effective_threshold:
+            logger.debug(
+                f"[ScoreGuard] {symbol}: score {score_breakdown['total_score']} "
+                f"< threshold {effective_threshold:.1f} (base={base_threshold}) — skipping"
+            )
             return False
+
+        # --- FEAT-03: Market Regime Guard per Pattern ---
+        pattern_market_requirements = {
+            'pullback_in_uptrend': ['bullish'],          # Only in uptrends
+            'breakout_with_volume': ['bullish'],          # Breakouts need trend
+            'bullish_ma_crossover': ['bullish', 'sideways'],
+            'macd_bullish_crossover': ['bullish', 'sideways'],
+        }
+
+        for pattern in patterns:
+            allowed_trends = pattern_market_requirements.get(pattern)
+            if allowed_trends is not None and trend not in allowed_trends:
+                logger.info(
+                    f"[RegimeGuard] {symbol}: pattern '{pattern}' not allowed in "
+                    f"'{trend}' market (requires {allowed_trends}) — skipping"
+                )
+                return False
 
         if symbol and self.db:
             from models.database import Trade
@@ -823,15 +863,19 @@ class TradingBrain:
             }
 
         # --- TRAILING STOP ---
+        # BUG-02 / FEAT-02: Use initial_stop_loss to avoid break-even division-by-zero or zero risk calculation
+        initial_sl = trade.initial_stop_loss if trade.initial_stop_loss else trade.stop_loss
+        initial_risk = (trade.entry_price - initial_sl) * trade.quantity
         unrealized_pnl = (current_price - trade.entry_price) * trade.quantity
-        initial_risk = (trade.entry_price - trade.stop_loss) * trade.quantity
 
-        if unrealized_pnl >= initial_risk:
-            trailing_stop = trade.entry_price + (initial_risk / trade.quantity * 0.5)
+        if initial_risk > 0 and unrealized_pnl >= initial_risk:
+            # Lock in 0.5R profit (which is entry + 0.5 * initial_risk_per_share)
+            risk_per_share = trade.entry_price - initial_sl
+            trailing_stop = trade.entry_price + (risk_per_share * 0.5)
             if current_price <= trailing_stop:
                 return {
                     "action": "EXIT",
-                    "reason": "Trailing stop hit (profit protected)",
+                    "reason": "Trailing stop hit (0.5R profit protected)",
                     "exit_type": "trailing_stop",
                     "urgency": "immediate",
                 }
