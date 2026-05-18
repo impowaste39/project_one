@@ -135,10 +135,42 @@ class MarketMonitor:
         # Pattern 4: Breakout with Volume
         # Threshold: 1.5x volume confirms genuine institutional interest.
         # 2.0x was too strict for normal market conditions — very few breakouts qualified.
-        if (latest['Close'] > latest['BB_Upper'] and
-                latest['Volume_Ratio'] > 1.5):
+        # REFINED in Sprint 4 (FEAT-06):
+        is_breakout = (latest['Close'] > latest['BB_Upper'] and latest['Volume_Ratio'] > 1.5)
+        if is_breakout:
             patterns.append('breakout_with_volume')
             signals['breakout'] = True
+            
+            # Check for high-quality breakout filters
+            if len(data) >= 21:
+                high_20d = data['High'].iloc[-21:-1].max()
+                if pd.notna(high_20d) and latest['Close'] > high_20d:
+                    signals['breakout_20d_high'] = True
+            
+            if latest['Volume_Ratio'] > 2.0:
+                signals['breakout_volume_2x'] = True
+                
+            # Time check: first 2 hours of market (9:15 - 11:15 AM IST)
+            # Default to True if market is closed (e.g. testing or EOD/pre-market run)
+            import pytz
+            ist = pytz.timezone('Asia/Kolkata')
+            now_ist = datetime.now(ist)
+            
+            # If it's a weekday and within market hours, check if it's first 2h
+            if now_ist.weekday() < 5:
+                market_open = now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
+                limit_time = now_ist.replace(hour=11, minute=15, second=0, microsecond=0)
+                if market_open <= now_ist <= limit_time:
+                    signals['breakout_first_2h'] = True
+                elif now_ist > limit_time:
+                    # After 11:15 AM
+                    signals['breakout_first_2h'] = False
+                else:
+                    # Pre-market
+                    signals['breakout_first_2h'] = True
+            else:
+                # Weekend / Testing
+                signals['breakout_first_2h'] = True
 
         # Pattern 5: Pullback in Uptrend
         if (latest['SMA_20'] > latest['SMA_50'] and
@@ -272,6 +304,90 @@ class MarketMonitor:
             logger.error(f"Error scanning {symbol}: {e}")
             return None
 
+    def pre_rank_watchlist(self, limit: int = 30) -> list:
+        """
+        Rank the watchlist by relative strength, momentum, and volume trend.
+        Returns the top `limit` ranked symbols.
+        """
+        logger.info(f"[PreRank] Pre-ranking watchlist ({len(self.watchlist)} symbols)...")
+        try:
+            import yfinance as yf
+            import os
+            # Fetch Nifty 20d return
+            lookback = int(os.getenv('RS_LOOKBACK_DAYS', '20'))
+            nifty_return_20d = self.data_service.fetch_nifty_return(lookback)
+            if nifty_return_20d is None:
+                nifty_return_20d = 0.0
+
+            # Batch download 3-month daily data for all symbols
+            # This is extremely fast (1 HTTP request instead of 50!)
+            symbols = self.watchlist
+            data = yf.download(
+                symbols,
+                period='3mo',
+                interval='1d',
+                progress=False,
+                group_by='ticker',
+                auto_adjust=True
+            )
+
+            ranked_candidates = []
+            for symbol in symbols:
+                try:
+                    # Get symbol data from multi-index DataFrame
+                    if len(symbols) == 1:
+                        sym_data = data
+                    else:
+                        sym_data = data[symbol].dropna()
+
+                    if sym_data.empty or len(sym_data) < 20:
+                        continue
+
+                    # 1. 20-day Return
+                    price_series = sym_data['Close'].tail(lookback)
+                    start_p = price_series.iloc[0]
+                    end_p = price_series.iloc[-1]
+                    stock_return = ((end_p - start_p) / start_p) * 100 if start_p > 0 else 0.0
+
+                    # Relative strength vs Nifty
+                    rs_score = stock_return - nifty_return_20d
+
+                    # 2. Proximity to 3-month High
+                    high_3m = sym_data['High'].max()
+                    current_price = sym_data['Close'].iloc[-1]
+                    proximity = (current_price / high_3m) if high_3m > 0 else 0.0
+
+                    # 3. Volume Trend (last 5 days vs preceding 15 days)
+                    vol_5d = sym_data['Volume'].tail(5).mean()
+                    vol_prev = sym_data['Volume'].iloc[-20:-5].mean()
+                    vol_ratio = (vol_5d / vol_prev) if vol_prev > 0 else 1.0
+
+                    # Calculate a composite ranking score
+                    # RS (weight 50%) + Proximity (weight 30%) + Volume Trend (weight 20%)
+                    rank_score = (rs_score * 0.5) + (proximity * 30.0) + (vol_ratio * 20.0)
+
+                    ranked_candidates.append({
+                        'symbol': symbol,
+                        'rank_score': rank_score,
+                        'rs_score': rs_score,
+                        'proximity': proximity,
+                        'vol_ratio': vol_ratio
+                    })
+                except Exception as sym_err:
+                    logger.debug(f"[PreRank] Error processing {symbol}: {sym_err}")
+
+            # Sort by composite rank score descending
+            ranked_candidates.sort(key=lambda x: x['rank_score'], reverse=True)
+            
+            # Extract top N symbols
+            top_symbols = [c['symbol'] for c in ranked_candidates[:limit]]
+            logger.info(f"[PreRank] Watchlist ranked. Top 5: {top_symbols[:5]}")
+            return top_symbols
+
+        except Exception as e:
+            logger.warning(f"[PreRank] Watchlist pre-ranking failed ({e}) — using default watchlist order")
+            return self.watchlist[:limit]
+
     def scan_market(self, nifty_return_20d: float = None) -> list:
         """
         Scan entire watchlist for opportunities.
@@ -295,9 +411,15 @@ class MarketMonitor:
             except Exception as e:
                 logger.warning(f"[RS] Nifty return fetch skipped: {e}")
 
+        # Pre-rank watchlist to focus compute on top-performing setups (FEAT-04)
+        watchlist_to_scan = self.watchlist
+        if __import__('os').getenv('WATCHLIST_PRE_RANK_ENABLED', 'true').lower() == 'true':
+            limit = int(__import__('os').getenv('WATCHLIST_PRE_RANK_LIMIT', '30'))
+            watchlist_to_scan = self.pre_rank_watchlist(limit=limit)
+
         opportunities = []
 
-        for symbol in self.watchlist:
+        for symbol in watchlist_to_scan:
             try:
                 analysis = self.scan_stock(symbol, nifty_return_20d=nifty_return_20d)
 
@@ -334,8 +456,14 @@ class MarketMonitor:
         except Exception:
             nifty_return_20d = None
 
+        # Pre-rank watchlist to focus compute on top-performing setups (FEAT-04)
+        watchlist_to_scan = self.watchlist
+        if __import__('os').getenv('WATCHLIST_PRE_RANK_ENABLED', 'true').lower() == 'true':
+            limit = int(__import__('os').getenv('WATCHLIST_PRE_RANK_LIMIT', '30'))
+            watchlist_to_scan = self.pre_rank_watchlist(limit=limit)
+
         candidates = []
-        for symbol in self.watchlist:
+        for symbol in watchlist_to_scan:
             try:
                 analysis = self.scan_stock(symbol, nifty_return_20d=nifty_return_20d)
                 if analysis and analysis['pattern_count'] > 0:

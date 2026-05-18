@@ -312,6 +312,13 @@ class TradingBrain:
         if analysis.get("patterns"):
             factors.append(f"{analysis['pattern_count']} bullish patterns detected")
 
+        # === HIGH-QUALITY BREAKOUT BONUS (FEAT-06) (+15 pts) ===
+        if "breakout_with_volume" in analysis.get("patterns", []):
+            sig = analysis.get("signals", {})
+            if sig.get("breakout_20d_high") and sig.get("breakout_volume_2x") and sig.get("breakout_first_2h"):
+                score += 15
+                factors.append("Institutional Volume Breakout (20d high + 2x Vol + First 2h) (+15)")
+
         # === MARKET CONTEXT SCORE (20 points) ===
         market_score = 0
         if market_context.get("trend") == "bullish":
@@ -637,6 +644,49 @@ class TradingBrain:
             'stochastic_oversold':   68,
             'strong_momentum':       68,
         }
+
+        # --- FEAT-09: Adaptive Confidence Thresholds ---
+        if self.db:
+            try:
+                from models.database import Trade
+                # Count total closed trades
+                total_closed = self.db.query(Trade).filter(Trade.status == 'CLOSED').count()
+                if total_closed >= 10:
+                    # Query all closed trades
+                    closed_trades = self.db.query(Trade).filter(Trade.status == 'CLOSED').all()
+                    
+                    # Group by pattern to calculate win rates
+                    pattern_stats = {}
+                    for t in closed_trades:
+                        if not t.pattern:
+                            continue
+                        if t.pattern not in pattern_stats:
+                            pattern_stats[t.pattern] = {'win': 0, 'total': 0}
+                        pattern_stats[t.pattern]['total'] += 1
+                        # A win is defined as profit_loss > 0
+                        if t.profit_loss and t.profit_loss > 0:
+                            pattern_stats[t.pattern]['win'] += 1
+                    
+                    # Adjust pattern thresholds based on performance
+                    for pat, stats in pattern_stats.items():
+                        if stats['total'] >= 3:  # Need at least 3 trades to adjust specifically
+                            win_rate = stats['win'] / stats['total']
+                            if pat in pattern_thresholds:
+                                base = pattern_thresholds[pat]
+                                if win_rate > 0.65:
+                                    pattern_thresholds[pat] = max(60, base - 3)
+                                    logger.info(
+                                        f"[AdaptiveThreshold] Adjusted {pat} threshold: {base} -> "
+                                        f"{pattern_thresholds[pat]} (Win Rate: {win_rate:.1%})"
+                                    )
+                                elif win_rate < 0.45:
+                                    pattern_thresholds[pat] = min(85, base + 5)
+                                    logger.info(
+                                        f"[AdaptiveThreshold] Adjusted {pat} threshold: {base} -> "
+                                        f"{pattern_thresholds[pat]} (Win Rate: {win_rate:.1%})"
+                                    )
+            except Exception as adapt_err:
+                logger.warning(f"[AdaptiveThreshold] Adaptive threshold calculation skipped: {adapt_err}")
         
         # Determine base threshold based on patterns detected
         custom_thresholds = [pattern_thresholds[p] for p in patterns if p in pattern_thresholds]
