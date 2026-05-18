@@ -100,8 +100,10 @@ class RiskManager:
             return False, "Insufficient capital"
 
         # Check minimum investment
-        if position_info['investment'] < 500:
-            return False, "Investment too small (min ₹500)"
+        # ₹3,000 minimum: brokerage overhead drops to ~1.7% at this level.
+        # At ₹500, round-trip brokerage alone was ~10% of capital — structurally losing.
+        if position_info['investment'] < 3000:
+            return False, "Investment too small (min ₹3,000)"
 
         # Check risk amount
         if position_info['risk_amount'] > portfolio_state['available_capital'] * self.max_risk_per_trade:

@@ -28,6 +28,7 @@ class Trade(Base):
     entry_score = Column(Integer)  # Setup quality score (0-100)
 
     # Risk management
+    initial_stop_loss = Column(Float, nullable=True)
     stop_loss = Column(Float, nullable=False)
     target = Column(Float, nullable=False)       # Target 1 (primary)
     target_2 = Column(Float, nullable=True)      # Target 2 (stretch) — NEW
@@ -74,6 +75,7 @@ class Trade(Base):
             'entry_price': self.entry_price,
             'quantity': self.quantity,
             'entry_score': self.entry_score,
+            'initial_stop_loss': self.initial_stop_loss,
             'stop_loss': self.stop_loss,
             'target': self.target,
             'target_2': self.target_2,       # NEW
@@ -265,6 +267,7 @@ def _migrate_database(engine):
         new_columns = [
             ('gross_profit_loss', 'FLOAT'),
             ('brokerage_charges', 'FLOAT'),
+            ('initial_stop_loss', 'FLOAT'),      # NEW — original stop loss
             ('target_2', 'FLOAT'),               # NEW — stretch target
             ('target_3', 'FLOAT'),               # NEW — aggressive target
             ('partially_exited', 'BOOLEAN'),     # NEW — partial exit flag

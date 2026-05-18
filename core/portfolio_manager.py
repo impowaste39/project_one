@@ -368,6 +368,7 @@ class PortfolioManager:
                 entry_price=evaluation['entry_price'],
                 quantity=evaluation['quantity'],
                 entry_score=evaluation['score'],
+                initial_stop_loss=evaluation['stop_loss'],
                 stop_loss=evaluation['stop_loss'],
                 target=evaluation['target_1'],
                 target_2=evaluation.get('target_2'),
@@ -438,8 +439,8 @@ class PortfolioManager:
                 trade.entry_price, exit_price, trade.quantity
             )
 
-            initial_risk = (trade.entry_price -
-                            trade.stop_loss) * trade.quantity
+            initial_sl = trade.initial_stop_loss if trade.initial_stop_loss else trade.stop_loss
+            initial_risk = (trade.entry_price - initial_sl) * trade.quantity
             r_multiple = net_pnl / initial_risk if initial_risk > 0 else 0
 
             trade.exit_date = datetime.now()
@@ -467,6 +468,11 @@ class PortfolioManager:
                 portfolio.realized_pnl = portfolio.realized_pnl + net_pnl
                 portfolio.open_positions = max(0, portfolio.open_positions - 1)
                 portfolio.timestamp = datetime.now()
+                # BUG-04: total_return_pct was always 0 — now calculated on every exit
+                _initial_capital = float(os.getenv('INITIAL_CAPITAL', 10000))
+                portfolio.total_return_pct = round(
+                    ((portfolio.total_capital - _initial_capital) / _initial_capital) * 100, 4
+                )
 
             self.db.commit()
 

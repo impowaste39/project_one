@@ -418,6 +418,11 @@ class TradingBrain:
         candidates = [c for c in [atr_stop, percent_stop, swing_low_stop]
                       if c is not None and c < entry_price]
         stop_loss = max(candidates) if candidates else percent_stop
+        
+        # Enforce minimum 1.5% distance to prevent position sizing explosions
+        min_sl_distance = entry_price * 0.985
+        if stop_loss > min_sl_distance:
+            stop_loss = min_sl_distance
         # ─────────────────────────────────────────────────────────────────────
 
         risk = entry_price - stop_loss
@@ -611,6 +616,7 @@ class TradingBrain:
 
         if symbol and self.db:
             from models.database import Trade
+            from datetime import datetime, timedelta
 
             existing = (
                 self.db.query(Trade)
@@ -621,7 +627,30 @@ class TradingBrain:
                 logger.debug(f"Duplicate guard: {symbol} already held — skipping")
                 return False
 
+            # 24h cooldown for same-symbol re-entry
+            recent_closed = (
+                self.db.query(Trade)
+                .filter(Trade.symbol == symbol, Trade.status == "CLOSED")
+                .order_by(Trade.exit_date.desc())
+                .first()
+            )
+            if recent_closed and recent_closed.exit_date:
+                if (datetime.now() - recent_closed.exit_date) < timedelta(hours=24):
+                    logger.debug(f"Cooldown guard: {symbol} exited recently (less than 24h) — skipping")
+                    return False
+
         if levels["rr_ratio"] < 1.45:
+            return False
+
+        # Brokerage validity check: ensure T1 profit > 2x estimated brokerage
+        net_t1_pnl, est_charges = self.calculate_net_pnl(
+            levels["entry_price"], levels["target_1"], position_info["quantity"]
+        )
+        if est_charges > 0 and net_t1_pnl < (est_charges * 2):
+            logger.debug(
+                f"[BrokerageGuard] {symbol} blocked: Target1 net profit (₹{net_t1_pnl:.2f}) "
+                f"< 2x charges (₹{est_charges:.2f})"
+            )
             return False
 
         max_pos = int(os.getenv("MAX_POSITIONS", 7))
