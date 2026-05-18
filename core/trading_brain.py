@@ -88,23 +88,47 @@ class TradingBrain:
         return np.array(features).reshape(1, -1)
 
     def calculate_net_pnl(
-        self, entry_price: float, exit_price: float, quantity: int
+        self,
+        entry_price: float,
+        exit_price: float,
+        quantity: int,
+        partially_exited: bool = False,
+        partial_exit_price: float = None,
+        partial_exit_qty: int = None,
     ) -> tuple:
         """
         Calculate real net P&L after Groww equity delivery charges.
+        Supports dual-leg partial exits.
         Returns: Tuple of (net_pnl, total_charges)
         """
-        buy_turnover = entry_price * quantity
-        sell_turnover = exit_price * quantity
-        gross_pnl = (exit_price - entry_price) * quantity
+        if partially_exited and partial_exit_price is not None and partial_exit_qty is not None:
+            buy_turnover = entry_price * quantity
+            sell_turnover_1 = partial_exit_price * partial_exit_qty
+            sell_turnover_2 = exit_price * (quantity - partial_exit_qty)
+            sell_turnover = sell_turnover_1 + sell_turnover_2
+            gross_pnl = (
+                (partial_exit_price - entry_price) * partial_exit_qty
+                + (exit_price - entry_price) * (quantity - partial_exit_qty)
+            )
 
-        brokerage_buy = min(20.0, buy_turnover * 0.001)
-        brokerage_sell = min(20.0, sell_turnover * 0.001)
+            brokerage_buy = min(20.0, buy_turnover * 0.001)
+            brokerage_sell_1 = min(20.0, sell_turnover_1 * 0.001)
+            brokerage_sell_2 = min(20.0, sell_turnover_2 * 0.001)
+            brokerage_sell = brokerage_sell_1 + brokerage_sell_2
+            dp = 23.60 * 2  # Two sell transactions on different days
+        else:
+            buy_turnover = entry_price * quantity
+            sell_turnover = exit_price * quantity
+            gross_pnl = (exit_price - entry_price) * quantity
+
+            brokerage_buy = min(20.0, buy_turnover * 0.001)
+            brokerage_sell = min(20.0, sell_turnover * 0.001)
+            dp = 23.60  # Single sell transaction
+
         stt = (buy_turnover + sell_turnover) * 0.001
         exchange = (buy_turnover + sell_turnover) * 0.0000297
         stamp = buy_turnover * 0.00015
         sebi_ipft = (buy_turnover + sell_turnover) * 0.000002
-        dp = 23.60
         gst = (brokerage_buy + brokerage_sell + exchange + sebi_ipft + dp) * 0.18
 
         total_charges = round(
@@ -682,17 +706,6 @@ class TradingBrain:
         if levels["rr_ratio"] < 1.45:
             return False
 
-        # Brokerage validity check: ensure T1 profit > 2x estimated brokerage
-        net_t1_pnl, est_charges = self.calculate_net_pnl(
-            levels["entry_price"], levels["target_1"], position_info["quantity"]
-        )
-        if est_charges > 0 and net_t1_pnl < (est_charges * 2):
-            logger.debug(
-                f"[BrokerageGuard] {symbol} blocked: Target1 net profit (₹{net_t1_pnl:.2f}) "
-                f"< 2x charges (₹{est_charges:.2f})"
-            )
-            return False
-
         max_pos = int(os.getenv("MAX_POSITIONS", 7))
         if portfolio_state["positions_count"] >= max_pos:
             return False
@@ -701,6 +714,31 @@ class TradingBrain:
             return False
 
         if position_info["quantity"] <= 0:
+            return False
+
+        # --- FEAT-01: Brokerage-Adjusted R:R Gating ---
+        net_t1_pnl, t1_charges = self.calculate_net_pnl(
+            levels["entry_price"], levels["target_1"], position_info["quantity"]
+        )
+        net_sl_pnl, sl_charges = self.calculate_net_pnl(
+            levels["entry_price"], levels["stop_loss"], position_info["quantity"]
+        )
+        abs_net_sl = abs(net_sl_pnl)
+        if abs_net_sl > 0:
+            net_rr = net_t1_pnl / abs_net_sl
+            if net_rr < 1.2:
+                logger.info(
+                    f"[NetRRGuard] {symbol} blocked: Brokerage-adjusted R:R ({net_rr:.2f}) < 1.2 "
+                    f"(Net T1: ₹{net_t1_pnl:.2f}, Net SL: ₹{net_sl_pnl:.2f})"
+                )
+                return False
+
+        # Brokerage validity check: ensure T1 profit > 2x estimated brokerage
+        if t1_charges > 0 and net_t1_pnl < (t1_charges * 2):
+            logger.debug(
+                f"[BrokerageGuard] {symbol} blocked: Target1 net profit (₹{net_t1_pnl:.2f}) "
+                f"< 2x charges (₹{t1_charges:.2f})"
+            )
             return False
 
         if position_info["investment"] > portfolio_state["available_capital"] * 0.30:
@@ -794,6 +832,19 @@ class TradingBrain:
             if position_info["quantity"] <= 0:
                 return "Position size too small (Risk management resulted in 0 shares)"
             
+            # --- FEAT-01: Brokerage-Adjusted R:R Check ---
+            net_t1_pnl, _ = self.calculate_net_pnl(
+                levels["entry_price"], levels["target_1"], position_info["quantity"]
+            )
+            net_sl_pnl, _ = self.calculate_net_pnl(
+                levels["entry_price"], levels["stop_loss"], position_info["quantity"]
+            )
+            abs_net_sl = abs(net_sl_pnl)
+            if abs_net_sl > 0:
+                net_rr = net_t1_pnl / abs_net_sl
+                if net_rr < 1.2:
+                    return f"Brokerage-adjusted R:R too low ({net_rr:.2f}:1)"
+
             if position_info["investment"] > portfolio_state["available_capital"] * 0.30:
                 return "Investment exceeds 30% single-position capital limit"
 

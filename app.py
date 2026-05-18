@@ -509,17 +509,68 @@ def end_of_day_analysis_job():
         # FIX: compute open_positions and today_trades separately — not returned by generate_performance_report()
         open_positions_count = db.query(Trade).filter(Trade.status == 'OPEN').count()
         today_date = datetime.now(IST).date()
+        today_start_dt = datetime(today_date.year, today_date.month, today_date.day)
         today_trades_count = db.query(Trade).filter(
-            Trade.entry_date >= datetime(today_date.year, today_date.month, today_date.day)
+            Trade.entry_date >= today_start_dt
         ).count()
 
-        discord_service.send_daily_summary({
+        # FEAT-08: Gather daily gross P&L vs charges, rolling 20-trade win rate, and daily rejected setups count
+        today_closed_trades = db.query(Trade).filter(
+            Trade.status == 'CLOSED',
+            Trade.exit_date >= today_start_dt
+        ).all()
+
+        today_gross_pnl = sum(t.gross_profit_loss for t in today_closed_trades if t.gross_profit_loss is not None)
+        today_charges = sum(t.brokerage_charges for t in today_closed_trades if t.brokerage_charges is not None)
+        today_net_pnl = sum(t.profit_loss for t in today_closed_trades if t.profit_loss is not None)
+
+        last_20_trades = db.query(Trade).filter(Trade.status == 'CLOSED').order_by(Trade.exit_date.desc()).limit(20).all()
+        if last_20_trades:
+            wins_20 = sum(1 for t in last_20_trades if t.profit_loss and t.profit_loss > 0)
+            rolling_win_rate = (wins_20 / len(last_20_trades)) * 100
+        else:
+            rolling_win_rate = 0.0
+
+        rejected_setups_count = 0
+        try:
+            from models.scan_report import ScanReport, ScanResult
+            from datetime import timedelta
+            today_scan_ids = [
+                r.id for r in db.query(ScanReport).filter(
+                    ScanReport.timestamp >= today_start_dt,
+                    ScanReport.timestamp < today_start_dt + timedelta(days=1)
+                ).all()
+            ]
+            if today_scan_ids:
+                rejected_results = db.query(ScanResult).filter(
+                    ScanResult.scan_report_id.in_(today_scan_ids),
+                    ScanResult.decision == 'PASS'
+                ).all()
+                rejected_symbols = {r.symbol for r in rejected_results}
+                rejected_setups_count = len(rejected_symbols)
+        except Exception as scan_count_err:
+            logger.error(f"Error counting rejected setups for EOD: {scan_count_err}")
+
+        # Fetch weekly summary and merge into discord summary dict
+        discord_data = {
             'total_trades': performance.get('total_trades', 0),
             'win_rate': performance.get('win_rate', 0),
             'total_pnl': performance.get('total_pnl', 0),
             'open_positions': open_positions_count,
             'today_trades': today_trades_count,
-        })
+            'today_closed_count': len(today_closed_trades),
+            'today_gross_pnl': today_gross_pnl,
+            'today_charges': today_charges,
+            'today_net_pnl': today_net_pnl,
+            'rolling_win_rate': rolling_win_rate,
+            'rejected_setups_count': rejected_setups_count,
+        }
+
+        weekly_summary = portfolio_mgr.get_weekly_pnl_summary()
+        if weekly_summary:
+            discord_data.update(weekly_summary)
+
+        discord_service.send_daily_summary(discord_data)
         email_service.send_daily_summary(summary_data)
 
         # ── MISSED SETUPS EMAIL ──────────────────────────────────────────────

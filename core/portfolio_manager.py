@@ -332,6 +332,73 @@ class PortfolioManager:
                 f"[CircuitBreaker] Error checking weekly loss: {e}")
             return True, f"Circuit breaker check error ({e}) — proceeding"
 
+    # =========================================================================
+    # NEW: DAILY CIRCUIT BREAKER (FEAT-05)
+    # 1. Blocks new entries if we have already taken 4 trades today.
+    # 2. Blocks new entries if closed daily losses exceed 2% of total capital.
+    # =========================================================================
+    def check_daily_circuit_breaker(self) -> tuple:
+        """
+        Check if daily entries or closed losses exceed daily limits.
+
+        Returns:
+            (allowed: bool, reason: str)
+            allowed=True  → within limits, safe to enter
+            allowed=False → daily limit breached, no new entries today
+        """
+        try:
+            daily_loss_limit_pct = float(os.getenv('DAILY_LOSS_LIMIT_PCT', '2.0'))
+            max_daily_trades = int(os.getenv('MAX_DAILY_TRADES', '4'))
+
+            # Start of today (00:00 IST)
+            now_ist = datetime.now(IST).replace(tzinfo=None)
+            today_start = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            # Query all trades entered today
+            today_entered = self.db.query(Trade).filter(
+                Trade.entry_date >= today_start
+            ).all()
+
+            if len(today_entered) >= max_daily_trades:
+                reason = (
+                    f"⚠️ Daily Circuit Breaker ACTIVE — maximum daily trades reached ({len(today_entered)}/{max_daily_trades})"
+                )
+                logger.warning(f"[CircuitBreaker] {reason}")
+                return False, reason
+
+            # Query trades closed today
+            today_closed = self.db.query(Trade).filter(
+                Trade.status == 'CLOSED',
+                Trade.exit_date >= today_start
+            ).all()
+
+            today_pnl = sum(
+                t.profit_loss for t in today_closed
+                if t.profit_loss is not None
+            )
+
+            # Only trigger on net loss today
+            if today_pnl < 0:
+                portfolio = self.db.query(Portfolio).order_by(
+                    Portfolio.timestamp.desc()
+                ).first()
+
+                if portfolio and portfolio.total_capital > 0:
+                    loss_pct = abs(today_pnl) / portfolio.total_capital * 100
+                    if loss_pct >= daily_loss_limit_pct:
+                        reason = (
+                            f"⚠️ Daily Circuit Breaker ACTIVE — daily closed loss ₹{abs(today_pnl):.2f} "
+                            f"({loss_pct:.2f}% of ₹{portfolio.total_capital:.0f}) exceeds {daily_loss_limit_pct}% limit."
+                        )
+                        logger.warning(f"[CircuitBreaker] {reason}")
+                        return False, reason
+
+            return True, "Daily constraints satisfied"
+
+        except Exception as e:
+            logger.error(f"[CircuitBreaker] Error checking daily circuit breaker: {e}")
+            return True, f"Daily circuit breaker check error ({e}) — proceeding"
+
     def enter_trade(self, evaluation: dict) -> bool:
         """
         Execute trade entry.
@@ -359,6 +426,13 @@ class PortfolioManager:
         if not circuit_allowed:
             logger.warning(
                 f"[CircuitBreaker] {symbol} entry blocked: {circuit_reason}")
+            return False
+
+        # --- GUARD 3: DAILY CIRCUIT BREAKER ---
+        daily_allowed, daily_reason = self.check_daily_circuit_breaker()
+        if not daily_allowed:
+            logger.warning(
+                f"[CircuitBreaker] {symbol} entry blocked: {daily_reason}")
             return False
 
         try:
@@ -428,15 +502,35 @@ class PortfolioManager:
         try:
             from core.trading_brain import TradingBrain
 
-            gross_pnl = (exit_price - trade.entry_price) * trade.quantity
-            profit_loss_pct = (
-                (exit_price - trade.entry_price) / trade.entry_price) * 100
+            brain = TradingBrain()
+
+            if trade.partially_exited:
+                partial_qty = trade.partial_exit_qty if trade.partial_exit_qty else (trade.quantity // 2)
+                remaining_qty = trade.quantity - partial_qty
+                
+                # Correct Gross P&L
+                gross_pnl_1 = (trade.partial_exit_price - trade.entry_price) * partial_qty
+                gross_pnl_2 = (exit_price - trade.entry_price) * remaining_qty
+                gross_pnl = gross_pnl_1 + gross_pnl_2
+                
+                # Weighted P&L %
+                profit_loss_pct_1 = ((trade.partial_exit_price - trade.entry_price) / trade.entry_price) * 100
+                profit_loss_pct_2 = ((exit_price - trade.entry_price) / trade.entry_price) * 100
+                profit_loss_pct = (profit_loss_pct_1 * partial_qty + profit_loss_pct_2 * remaining_qty) / trade.quantity
+            else:
+                gross_pnl = (exit_price - trade.entry_price) * trade.quantity
+                profit_loss_pct = ((exit_price - trade.entry_price) / trade.entry_price) * 100
+
             hold_duration = (datetime.now() -
                              trade.entry_date).days if trade.entry_date else 0
 
-            brain = TradingBrain()
             net_pnl, charges = brain.calculate_net_pnl(
-                trade.entry_price, exit_price, trade.quantity
+                trade.entry_price,
+                exit_price,
+                trade.quantity,
+                partially_exited=trade.partially_exited,
+                partial_exit_price=trade.partial_exit_price,
+                partial_exit_qty=trade.partial_exit_qty
             )
 
             initial_sl = trade.initial_stop_loss if trade.initial_stop_loss else trade.stop_loss

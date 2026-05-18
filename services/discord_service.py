@@ -137,8 +137,8 @@ class DiscordService:
                 "inline": False
             },
             {
-                "name": "‎",
-                "value": "‎",
+                "name": "\u200b",
+                "value": "\u200b",
                 "inline": False
             },
             {
@@ -152,8 +152,8 @@ class DiscordService:
                 "inline": True
             },
             {
-                "name": "‎",
-                "value": "‎",
+                "name": "\u200b",
+                "value": "\u200b",
                 "inline": False
             },
             {
@@ -357,6 +357,13 @@ class DiscordService:
         open_positions = performance.get('open_positions', 0)
         today_trades = performance.get('today_trades', 0)
 
+        today_closed_count = performance.get('today_closed_count', 0)
+        today_gross_pnl = performance.get('today_gross_pnl', 0)
+        today_charges = performance.get('today_charges', 0)
+        today_net_pnl = performance.get('today_net_pnl', 0)
+        rolling_win_rate = performance.get('rolling_win_rate', 0)
+        rejected_setups_count = performance.get('rejected_setups_count', 0)
+
         week_pnl = performance.get('week_pnl', None)
         week_trades = performance.get('week_trades', None)
         week_wins = performance.get('week_wins', None)
@@ -368,10 +375,15 @@ class DiscordService:
         color = 3066993 if is_profit else 15158332
         pnl_emoji = "📈" if is_profit else "📉"
 
+        # Today's Trades value formats nicely with closed count
+        today_trades_value = f"Entered: {today_trades}"
+        if today_closed_count > 0:
+            today_trades_value += f" | Closed: {today_closed_count}"
+
         fields = [
             {
                 "name": "🔄 Today's Trades",
-                "value": str(today_trades),
+                "value": today_trades_value,
                 "inline": True
             },
             {
@@ -386,7 +398,7 @@ class DiscordService:
             },
             {
                 "name": "🏆 Win Rate",
-                "value": f"{win_rate:.1f}%",
+                "value": f"{win_rate:.1f}% (Rolling 20: {rolling_win_rate:.1f}%)",
                 "inline": True
             },
             {
@@ -394,7 +406,24 @@ class DiscordService:
                 "value": str(total_trades),
                 "inline": True
             },
+            {
+                "name": "🚫 Rejected Setups",
+                "value": f"**{rejected_setups_count}** today",
+                "inline": True
+            }
         ]
+
+        if today_closed_count > 0:
+            fields.append({"name": "\u200b", "value": "\u200b", "inline": False})
+            fields.append({
+                "name": "💸 Today's Brokerage Drag",
+                "value": (
+                    f"Gross P&L: **₹{today_gross_pnl:.2f}**\n"
+                    f"Charges: **₹{today_charges:.2f}**\n"
+                    f"Net P&L: **₹{today_net_pnl:.2f}**"
+                ),
+                "inline": False
+            })
 
         if week_pnl is not None:
             week_pnl_emoji = "📈" if week_pnl >= 0 else "📉"
@@ -402,7 +431,7 @@ class DiscordService:
                 round(week_wins / week_trades * 100, 1)
                 if week_trades and week_trades > 0 else 0
             )
-            fields.append({"name": "‎", "value": "‎", "inline": False})
+            fields.append({"name": "\u200b", "value": "\u200b", "inline": False})
             fields.append({
                 "name": f"{week_pnl_emoji} This Week P&L",
                 "value": (
