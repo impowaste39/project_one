@@ -486,6 +486,7 @@ def end_of_day_analysis_job():
 
         learning_engine = LearningEngine(db)
         brain = TradingBrain(db, None)
+        portfolio_mgr = PortfolioManager(db, None, email_service)
 
         # Generate performance report
         performance = learning_engine.generate_performance_report()
