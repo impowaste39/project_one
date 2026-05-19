@@ -1,16 +1,16 @@
 # Graph Report - personal-work  (2026-05-19)
 
 ## Corpus Check
-- 29 files · ~69,196 words
+- 29 files · ~69,735 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 510 nodes · 868 edges · 26 communities (22 shown, 4 thin omitted)
+- 512 nodes · 871 edges · 36 communities (32 shown, 4 thin omitted)
 - Extraction: 80% EXTRACTED · 20% INFERRED · 0% AMBIGUOUS · INFERRED: 172 edges (avg confidence: 0.71)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `55ff5f73`
+- Built from commit: `604ea018`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -34,11 +34,21 @@
 - [[_COMMUNITY_Community 21|Community 21]]
 - [[_COMMUNITY_Community 22|Community 22]]
 - [[_COMMUNITY_Community 23|Community 23]]
+- [[_COMMUNITY_Community 24|Community 24]]
 - [[_COMMUNITY_Community 25|Community 25]]
 - [[_COMMUNITY_Community 26|Community 26]]
+- [[_COMMUNITY_Community 27|Community 27]]
+- [[_COMMUNITY_Community 28|Community 28]]
+- [[_COMMUNITY_Community 29|Community 29]]
+- [[_COMMUNITY_Community 30|Community 30]]
+- [[_COMMUNITY_Community 31|Community 31]]
+- [[_COMMUNITY_Community 32|Community 32]]
+- [[_COMMUNITY_Community 33|Community 33]]
+- [[_COMMUNITY_Community 34|Community 34]]
+- [[_COMMUNITY_Community 35|Community 35]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `get_session()` - 35 edges
+1. `get_session()` - 36 edges
 2. `TradingBrain` - 25 edges
 3. `LearningEngine` - 22 edges
 4. `MarketMonitor` - 22 edges
@@ -50,26 +60,26 @@
 10. `PatternOccurrence` - 17 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `api_trades()` --calls--> `get_session()`  [INFERRED]
+  app.py → models/database.py
 - `test_database_setup()` --calls--> `init_database()`  [INFERRED]
+  test_implementation.py → models/database.py
+- `test_database_setup()` --calls--> `get_session()`  [INFERRED]
+  test_implementation.py → models/database.py
+- `test_reporting_service()` --calls--> `get_session()`  [INFERRED]
   test_implementation.py → models/database.py
 - `test_reporting_service()` --calls--> `ReportingService`  [INFERRED]
   test_implementation.py → services/reporting_service.py
-- `test_learning_engine()` --calls--> `LearningEngine`  [INFERRED]
-  test_implementation.py → core/learning_engine.py
-- `test_sprint4_features()` --calls--> `get_session()`  [INFERRED]
-  test_sprint4.py → models/database.py
-- `test_sprint4_features()` --calls--> `MarketMonitor`  [INFERRED]
-  test_sprint4.py → core/market_monitor.py
 
-## Communities (26 total, 4 thin omitted)
+## Communities (36 total, 4 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.05
-Nodes (49): get_session(), Get a new database session, Get a new database session, Get a new database session, admin_flush_all(), admin_flush_history(), admin_flush_trades(), admin_top_up_capital() (+41 more)
+Cohesion: 0.18
+Nodes (10): admin_top_up_capital(), api_trades(), api_trades_summary(), AI Trading Bot - Main Flask Application Autonomous swing trading bot for Indian, Get pattern performance statistics, Comprehensive trade summary with real P&L (after Groww charges).     No auth req, Decorator to require a secret API key for sensitive endpoints, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t (+2 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.06
-Nodes (40): Base, EmailLog, LearningMetrics, MarketDataCache, MLModel, Portfolio, Database models for AI Trading Bot Using SQLAlchemy ORM with PostgreSQL, Portfolio snapshot at each point in time (+32 more)
+Cohesion: 0.10
+Nodes (22): Base, EmailLog, LearningMetrics, MarketDataCache, MLModel, Portfolio, Database models for AI Trading Bot Using SQLAlchemy ORM with PostgreSQL, Portfolio snapshot at each point in time (+14 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.07
@@ -89,15 +99,15 @@ Nodes (12): DataService, Data Service Fetches market data from Yahoo Finance and
 
 ### Community 6 - "Community 6"
 Cohesion: 0.09
-Nodes (20): PortfolioManager, Portfolio Manager Handles trade execution and portfolio management  Improvements, Portfolio and trade management, Get current portfolio state, Check if adding this symbol would breach the sector concentration limit., Check if weekly losses have exceeded the circuit breaker threshold.          Ret, Execute trade entry.         Runs two guards before entering:         1. Sector, Check if daily entries or closed losses exceed daily limits.          Returns: (+12 more)
+Nodes (22): PortfolioManager, Portfolio Manager Handles trade execution and portfolio management  Improvements, Portfolio and trade management, Get current portfolio state, Check if adding this symbol would breach the sector concentration limit., Check if weekly losses have exceeded the circuit breaker threshold.          Ret, Execute trade entry.         Runs two guards before entering:         1. Sector, Check if daily entries or closed losses exceed daily limits.          Returns: (+14 more)
 
 ### Community 7 - "Community 7"
-Cohesion: 0.14
+Cohesion: 0.13
 Nodes (12): IndicatorService, Technical Indicator Service Calculates various technical indicators for stock an, Calculate Stochastic Oscillator          Args:             data: DataFrame with, Calculate Average Directional Index (ADX)          Args:             data: DataF, Calculate technical indicators for stock data, Calculate Relative Strength Index (RSI)          Args:             prices: Serie, Calculate Volume Weighted Average Price (VWAP)          Args:             data:, Calculate On-Balance Volume (OBV)          Args:             data: DataFrame wit (+4 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.10
-Nodes (21): LearningEngine, Learning Engine Self-improvement through trade analysis and ML optimization, Update running statistics for a pattern, Persist pattern statistics to database, Retrain ML model with latest trade data.         Requires minimum 20 closed trad, Self-improvement and trade analysis engine, Save trained ML model to database, Load historical pattern performance from database (+13 more)
+Nodes (23): LearningEngine, Learning Engine Self-improvement through trade analysis and ML optimization, Update running statistics for a pattern, Persist pattern statistics to database, Retrain ML model with latest trade data.         Requires minimum 20 closed trad, Self-improvement and trade analysis engine, Save trained ML model to database, Load historical pattern performance from database (+15 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.09
@@ -123,13 +133,53 @@ Nodes (14): API Endpoints (selected), `app.py` — Flask App + Scheduler Hub (~6
 Cohesion: 0.11
 Nodes (18): Scan entire watchlist for opportunities.          Pre-fetches Nifty 20d return o, Risk Manager Handles position sizing and risk calculations, Calculate total portfolio risk from open positions          Args:             op, Calculate total portfolio risk from open positions          Args:             op, Risk management and position sizing, Calculate position size based on risk          Args:             capital: Availa, Validate if trade meets risk criteria          Args:             portfolio_state, RiskManager (+10 more)
 
+### Community 24 - "Community 24"
+Cohesion: 0.09
+Nodes (22): api_pattern_performance(), api_rejection_analysis(), api_scan_details(), api_scan_history(), Get recent scan history, Get detailed results for a specific scan, Get pattern performance statistics, Get recent scan history (+14 more)
+
 ### Community 25 - "Community 25"
 Cohesion: 0.16
 Nodes (14): dashboard(), format_currency(), format_percentage(), get_ist_now(), get_market_status_message(), is_market_hours(), is_trading_hours(), Utility helper functions (+6 more)
 
 ### Community 26 - "Community 26"
-Cohesion: 0.15
-Nodes (12): get_engine(), init_database(), _migrate_database(), Initialize database connection and create tables, Initialize database connection and create tables, Idempotent schema migrations.     Safely adds missing columns on every startup., Idempotent schema migrations.     Safely adds missing columns on every startup., Idempotent schema migrations.     Safely adds missing columns on every startup. (+4 more)
+Cohesion: 0.20
+Nodes (9): get_engine(), init_database(), Initialize database connection and create tables, Initialize database connection and create tables, Get the database engine, Get the database engine, Get a new database session, Get the database engine (+1 more)
+
+### Community 27 - "Community 27"
+Cohesion: 0.43
+Nodes (7): main(), Test that Flask app can start, Test database initialization, Test reporting service, test_api_endpoints(), test_database_setup(), test_reporting_service()
+
+### Community 28 - "Community 28"
+Cohesion: 0.33
+Nodes (6): get_session(), Get a new database session, Get a new database session, Get a new database session, initialize_portfolio(), Initialize portfolio with starting capital if not exists
+
+### Community 29 - "Community 29"
+Cohesion: 0.40
+Nodes (5): _migrate_database(), Idempotent schema migrations.     Safely adds missing columns on every startup., Idempotent schema migrations.     Safely adds missing columns on every startup., Idempotent schema migrations.     Safely adds missing columns on every startup., Idempotent schema migrations.     Safely adds missing columns on every startup.
+
+### Community 30 - "Community 30"
+Cohesion: 0.67
+Nodes (3): admin_flush_all(), Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio.
+
+### Community 31 - "Community 31"
+Cohesion: 0.67
+Nodes (3): admin_flush_history(), Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after
+
+### Community 32 - "Community 32"
+Cohesion: 0.67
+Nodes (3): admin_flush_trades(), Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T
+
+### Community 33 - "Community 33"
+Cohesion: 0.67
+Nodes (3): api_open_positions(), Open positions API endpoint, Open positions API endpoint
+
+### Community 34 - "Community 34"
+Cohesion: 0.67
+Nodes (3): api_portfolio(), Portfolio API endpoint, Portfolio API endpoint
+
+### Community 35 - "Community 35"
+Cohesion: 0.67
+Nodes (3): Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.      Keeps on, Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.      Keeps on, weekly_portfolio_cleanup_job()
 
 ## Knowledge Gaps
 - **51 isolated node(s):** `allow`, `Problem Analysis`, `code:python (# Before: score = 53 (rejected at 80 threshold))`, `code:python (if trend == "bearish":)`, `code:python (# Scaled: 70 + (strength * 2), capped at 80)` (+46 more)
@@ -139,8 +189,8 @@ Nodes (12): get_engine(), init_database(), _migrate_database(), Initialize datab
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `get_session()` connect `Community 0` to `Community 1`, `Community 2`, `Community 8`, `Community 23`, `Community 25`, `Community 26`?**
-  _High betweenness centrality (0.090) - this node is a cross-community bridge._
+- **Why does `get_session()` connect `Community 28` to `Community 0`, `Community 1`, `Community 2`, `Community 35`, `Community 34`, `Community 33`, `Community 32`, `Community 8`, `Community 23`, `Community 24`, `Community 25`, `Community 26`, `Community 27`, `Community 30`, `Community 31`?**
+  _High betweenness centrality (0.093) - this node is a cross-community bridge._
 - **Why does `TradingBrain` connect `Community 3` to `Community 1`, `Community 2`, `Community 5`, `Community 6`, `Community 8`, `Community 23`, `Community 26`?**
   _High betweenness centrality (0.078) - this node is a cross-community bridge._
 - **Why does `MarketMonitor` connect `Community 2` to `Community 26`, `Community 23`, `Community 5`, `Community 7`?**

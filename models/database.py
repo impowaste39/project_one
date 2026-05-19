@@ -237,14 +237,22 @@ def init_database():
 
     connect_args = {}
     if database_url.startswith('postgres') or database_url.startswith('postgresql'):
-        connect_args = {"connect_timeout": 10}
+        connect_args = {
+            "connect_timeout": 5,        # Fast timeout to prevent thread pile-ups
+            "keepalives": 1,             # Enable TCP keepalives
+            "keepalives_idle": 30,       # Send keepalive after 30 seconds of inactivity
+            "keepalives_interval": 5,    # Probe every 5 seconds if unanswered
+            "keepalives_count": 3        # Drop connection after 3 probe failures
+        }
 
     _engine = create_engine(
         database_url,
         echo=False,
         pool_pre_ping=True,        # tests connection before using it
-        pool_recycle=300,          # recycles connections every 5 mins
-        pool_timeout=30,           # waits max 30s for a connection
+        pool_recycle=120,          # aggressively recycle connections to avoid Render firewall drops (idle > 2 mins)
+        pool_timeout=15,           # wait max 15s to check out a connection from pool
+        pool_size=5,               # safe pool size for Aiven Free Tier (max 25 connections limit)
+        max_overflow=5,            # safe overflow limit (5 + 5 = 10 connections max per instance)
         connect_args=connect_args
     )
     Base.metadata.create_all(_engine)
