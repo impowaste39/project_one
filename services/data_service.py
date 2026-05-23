@@ -42,38 +42,65 @@ class DataService:
         ]
 
         self.custom = [
-            # BANKING & FINANCE
-            "YESBANK.NS", "PNB.NS", "BANKBARODA.NS", "FEDERALBNK.NS",
-            "IDFCFIRSTB.NS", "IRFC.NS", "RECLTD.NS", "PFC.NS",
-            "MANAPPURAM.NS", "LTF.NS", "CHOLAFIN.NS", "SBIN.NS",
-            "UCOBANK.NS", "CENTRALBK.NS",
+            # PSU BANKS & FINANCE
+            "SBIN.NS",
+            "PNB.NS",
+            "BANKBARODA.NS",
+            "CANBK.NS",
+            "UNIONBANK.NS",
+            "MAHABANK.NS",
+            "IDFCFIRSTB.NS",
+            "IRFC.NS",
+            "RECLTD.NS",
+            "PFC.NS",
 
-            # ENERGY & POWER
-            "SUZLON.NS", "SJVN.NS", "NTPC.NS", "ONGC.NS", "IOC.NS",
-            "GAIL.NS", "TATAPOWER.NS", "ADANIPOWER.NS", "NHPC.NS",
-            "IEX.NS", "PTC.NS",
+            # POWER / ENERGY
+            "SUZLON.NS",
+            "NTPC.NS",
+            "NHPC.NS",
+            "TATAPOWER.NS",
+            "ADANIPOWER.NS",
+            "BHEL.NS",
+            "IOC.NS",
+            "ONGC.NS",
+            "GAIL.NS",
+            "IEX.NS",
+
+            # RAILWAYS / INFRA
+            "RVNL.NS",
+            "RITES.NS",
+            "IRB.NS",
+            "NCC.NS",
 
             # METALS & MATERIALS
-            "SAIL.NS", "NMDC.NS", "NATIONALUM.NS", "VEDL.NS",
-            "HINDZINC.NS", "TATASTEEL.NS", "JINDALSTEL.NS",
+            "SAIL.NS",
+            "NMDC.NS",
+            "HINDCOPPER.NS",
+            "VEDL.NS",
+            "JINDALSTEL.NS",
+            "NATIONALUM.NS",
 
-            # IT & DIGITAL
-            "WIPRO.NS", "ROUTE.NS", "REDINGTON.NS",
+            # IT & TECH
+            "WIPRO.NS",
+            "REDINGTON.NS",
+            "ROUTE.NS",
 
             # AUTO & INDUSTRIAL
-            "ASHOKLEY.NS", "MOTHERSON.NS",
+            "ASHOKLEY.NS",
+            "MOTHERSON.NS",
 
-            # CONSUMER
-            "ITC.NS", "NYKAA.NS", "EMAMILTD.NS", "DABUR.NS",
+            # FMCG / CONSUMER
+            "ITC.NS",
+            "DABUR.NS",
 
             # PHARMA
-            "BIOCON.NS", "AUROPHARMA.NS", "GLENMARK.NS", "ZYDUSLIFE.NS",
+            "AUROPHARMA.NS",
+            "ZYDUSLIFE.NS",
 
-            # INFRA & SERVICES
-            "RVNL.NS", "NBCC.NS", "RITES.NS", "SCI.NS",
-
-            # MID & SMALL CAPS
-            "BALRAMCHIN.NS", "CASTROLIND.NS", "GRAPHITE.NS"
+            # HIGH BETA / MOMENTUM
+            "IDEA.NS",
+            "JPPOWER.NS",
+            "BEL.NS"
         ]
 
     def get_watchlist(self, category: str = 'nifty50') -> list:
