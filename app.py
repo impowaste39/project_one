@@ -496,11 +496,6 @@ def end_of_day_analysis_job():
         logger.info(f"  Win Rate: {performance.get('win_rate', 0):.2f}%")
         logger.info(f"  Total P&L: ₹{performance.get('total_pnl', 0):.2f}")
 
-        # Retrain ML model if enough data
-        if performance.get('total_trades', 0) >= 20:  # FIX: match learning_engine threshold (was 50)
-            logger.info("Retraining ML model...")
-            learning_engine.retrain_ml_model(brain)
-
         # Send daily summary email
         summary_data = {
             'date': datetime.now(IST).strftime('%d %b %Y'),
@@ -1790,6 +1785,17 @@ def admin_force_scan():
     finally:
         db.close()
 
+@app.route('/admin/reload-model', methods=['POST'])
+@require_api_key
+def admin_reload_model():
+    try:
+        brain = _get_brain(get_session())
+        brain.reload_ml_model()
+        logger.info("ML model reloaded successfully")
+        return jsonify({'status': 'success', 'message': 'ML model reloaded.'})
+    except Exception as e:
+        logger.error(f"Error reloading ML model: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))

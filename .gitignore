@@ -32,3 +32,12 @@ backup_*.csv
 raw_response.txt
 IMPROVEMENT_PLAN.md
 UPGRADE_PLAN.md
+analyze.py
+diagnose_db.py
+data.txt
+opencode.jsonc
+retrain.ipynb
+test_sprint4.py
+Thursday_logs.txt
+.ipynb_checkpoints/retrain-checkpoint.ipynb
+.gitignore

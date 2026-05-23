@@ -29,10 +29,10 @@ class TradingBrain:
         self.ml_model = None
         self.scaler = None
         self.min_confidence_score = int(os.getenv("MIN_CONFIDENCE_SCORE", 70))
-        self.load_or_initialize_model()
+        self.reload_ml_model()
 
-    def load_or_initialize_model(self):
-        """Load existing ML model or create new one"""
+    def reload_ml_model(self):
+        """Reload existing ML model from database or initialize a new one."""
         try:
             if self.db:
                 from models.database import MLModel

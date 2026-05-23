@@ -319,62 +319,66 @@ class MarketMonitor:
             if nifty_return_20d is None:
                 nifty_return_20d = 0.0
 
-            # Batch download 3-month daily data for all symbols
-            # This is extremely fast (1 HTTP request instead of 50!)
             symbols = self.watchlist
-            data = yf.download(
-                symbols,
-                period='3mo',
-                interval='1d',
-                progress=False,
-                group_by='ticker',
-                auto_adjust=True
-            )
-
             ranked_candidates = []
-            for symbol in symbols:
-                try:
-                    # Get symbol data from multi-index DataFrame
-                    if len(symbols) == 1:
-                        sym_data = data
-                    else:
-                        sym_data = data[symbol].dropna()
+            chunk_size = 10
+            
+            for i in range(0, len(symbols), chunk_size):
+                chunk = symbols[i:i + chunk_size]
+                
+                # Batch download data for this chunk
+                data = yf.download(
+                    chunk,
+                    period='3mo',
+                    interval='1d',
+                    progress=False,
+                    group_by='ticker',
+                    auto_adjust=True
+                )
+                
+                for symbol in chunk:
+                    try:
+                        # Get symbol data from multi-index DataFrame
+                        if len(chunk) == 1:
+                            sym_data = data
+                        else:
+                            sym_data = data[symbol].dropna()
 
-                    if sym_data.empty or len(sym_data) < 20:
-                        continue
+                        if sym_data.empty or len(sym_data) < 20:
+                            continue
 
-                    # 1. 20-day Return
-                    price_series = sym_data['Close'].tail(lookback)
-                    start_p = price_series.iloc[0]
-                    end_p = price_series.iloc[-1]
-                    stock_return = ((end_p - start_p) / start_p) * 100 if start_p > 0 else 0.0
+                        # 1. 20-day Return
+                        price_series = sym_data['Close'].tail(lookback)
+                        start_p = price_series.iloc[0]
+                        end_p = price_series.iloc[-1]
+                        stock_return = ((end_p - start_p) / start_p) * 100 if start_p > 0 else 0.0
 
-                    # Relative strength vs Nifty
-                    rs_score = stock_return - nifty_return_20d
+                        # Relative strength vs Nifty
+                        rs_score = stock_return - nifty_return_20d
 
-                    # 2. Proximity to 3-month High
-                    high_3m = sym_data['High'].max()
-                    current_price = sym_data['Close'].iloc[-1]
-                    proximity = (current_price / high_3m) if high_3m > 0 else 0.0
+                        # 2. Proximity to 3-month High
+                        high_3m = sym_data['High'].max()
+                        current_price = sym_data['Close'].iloc[-1]
+                        proximity = (current_price / high_3m) if high_3m > 0 else 0.0
 
-                    # 3. Volume Trend (last 5 days vs preceding 15 days)
-                    vol_5d = sym_data['Volume'].tail(5).mean()
-                    vol_prev = sym_data['Volume'].iloc[-20:-5].mean()
-                    vol_ratio = (vol_5d / vol_prev) if vol_prev > 0 else 1.0
+                        # 3. Volume Trend (last 5 days vs preceding 15 days)
+                        vol_5d = sym_data['Volume'].tail(5).mean()
+                        vol_prev = sym_data['Volume'].iloc[-20:-5].mean()
+                        vol_ratio = (vol_5d / vol_prev) if vol_prev > 0 else 1.0
 
-                    # Calculate a composite ranking score
-                    # RS (weight 50%) + Proximity (weight 30%) + Volume Trend (weight 20%)
-                    rank_score = (rs_score * 0.5) + (proximity * 30.0) + (vol_ratio * 20.0)
+                        # Calculate a composite ranking score
+                        # RS (weight 50%) + Proximity (weight 30%) + Volume Trend (weight 20%)
+                        rank_score = (rs_score * 0.5) + (proximity * 30.0) + (vol_ratio * 20.0)
 
-                    ranked_candidates.append({
-                        'symbol': symbol,
-                        'rank_score': rank_score,
-                        'rs_score': rs_score,
-                        'proximity': proximity,
-                        'vol_ratio': vol_ratio
-                    })
-                except Exception as sym_err:
-                    logger.debug(f"[PreRank] Error processing {symbol}: {sym_err}")
+                        ranked_candidates.append({
+                            'symbol': symbol,
+                            'rank_score': rank_score,
+                            'rs_score': rs_score,
+                            'proximity': proximity,
+                            'vol_ratio': vol_ratio
+                        })
+                    except Exception as sym_err:
+                        logger.debug(f"[PreRank] Error processing {symbol}: {sym_err}")
 
             # Sort by composite rank score descending
             ranked_candidates.sort(key=lambda x: x['rank_score'], reverse=True)
