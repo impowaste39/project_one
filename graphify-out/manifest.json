@@ -35,8 +35,8 @@
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/core/market_monitor.py": {
-    "mtime": 1779135165.8268473,
-    "ast_hash": "6608531c5e810ce9ef647e7f408dd4f1",
+    "mtime": 1779305748.1968806,
+    "ast_hash": "a3c7e745faa3739635892787eb3bc42a",
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/core/trading_brain.py": {
@@ -150,8 +150,8 @@
     "semantic_hash": "c285640c07508b13d9db3993bf3c7883"
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/data.txt": {
-    "mtime": 1779136007.7493942,
-    "ast_hash": "6f2f598cde3a09003093fa762ae5994f",
+    "mtime": 1779296598.62209,
+    "ast_hash": "34ebae2ada1a7838385988a7e26d0988",
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/workflows/graphify.md": {
@@ -177,6 +177,146 @@
   "/Users/karthikeyan/Documents/learning/sw/personal-work/test_sprint4.py": {
     "mtime": 1779170879.7744856,
     "ast_hash": "9d597c6731a3406694362e45c1652ff9",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/skills-lock.json": {
+    "mtime": 1779386773.1731088,
+    "ast_hash": "9acf3fd721ad2351cd20d92a3a63c509",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/condition-based-waiting-example.ts": {
+    "mtime": 1779386662.682381,
+    "ast_hash": "8e502a8c1e9c7de15967202615d241d5",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/find-polluter.sh": {
+    "mtime": 1779386662.682425,
+    "ast_hash": "2ae1144fa5a66aa26c13d644a12ad0bf",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/diagnose/scripts/hitl-loop.template.sh": {
+    "mtime": 1779386734.2172863,
+    "ast_hash": "46a2a00761be2785e59661f0e3c11471",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/code_flow.md": {
+    "mtime": 1779300744.724597,
+    "ast_hash": "01427c85e8ad7e1eecd9b096920fa32c",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/implementation_plan_final.md": {
+    "mtime": 1779305494.9301262,
+    "ast_hash": "7b39252d490d39019e42729f3b754941",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/colab_getting_started.md": {
+    "mtime": 1779305127.816005,
+    "ast_hash": "cb79c0d54591ebb2f6bf57aa51803722",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/oom_analysis_report.md": {
+    "mtime": 1779297307.2354724,
+    "ast_hash": "b6e7502061cca6b761879f0f4955e271",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/test-pressure-1.md": {
+    "mtime": 1779386662.682678,
+    "ast_hash": "3d8805e8946e3889d4de0e906af66c47",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/condition-based-waiting.md": {
+    "mtime": 1779386662.682212,
+    "ast_hash": "c64d669f2490aa489c514304c9ad46d3",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/test-pressure-2.md": {
+    "mtime": 1779386662.682785,
+    "ast_hash": "237f40dfd0b48af48d239ab3af499f7b",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/CREATION-LOG.md": {
+    "mtime": 1779386662.6820357,
+    "ast_hash": "b7ba553678c10cc2234dc9ae193d5347",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/test-academic.md": {
+    "mtime": 1779386662.682572,
+    "ast_hash": "272ab1d95e755a7ff9479d547168eef9",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/defense-in-depth.md": {
+    "mtime": 1779386662.6823888,
+    "ast_hash": "002a0c9e8bee8fc29f85d7a434916977",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/SKILL.md": {
+    "mtime": 1779386662.6820445,
+    "ast_hash": "3a08f3330fce34e3b2104e7d97f64af0",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/test-pressure-3.md": {
+    "mtime": 1779386662.6827114,
+    "ast_hash": "42ea1bd281ca8d837f5dd45143762b95",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/systematic-debugging/root-cause-tracing.md": {
+    "mtime": 1779386662.6825697,
+    "ast_hash": "7e96b2fe346c89d4f2300341529178cc",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/improve-codebase-architecture/LANGUAGE.md": {
+    "mtime": 1779386773.1598284,
+    "ast_hash": "680627d828b489f96b92d4a2d7fa3bb6",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/improve-codebase-architecture/SKILL.md": {
+    "mtime": 1779386773.160138,
+    "ast_hash": "b49bc843f32d06bbba85b4ac4b606aa5",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/improve-codebase-architecture/HTML-REPORT.md": {
+    "mtime": 1779386773.1599674,
+    "ast_hash": "1857b55ee9eb301b094922f32d2f73d7",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/improve-codebase-architecture/DEEPENING.md": {
+    "mtime": 1779386773.1596131,
+    "ast_hash": "ebdd48f7e3b0afeb8085d797df543e1a",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/improve-codebase-architecture/INTERFACE-DESIGN.md": {
+    "mtime": 1779386773.159823,
+    "ast_hash": "aee2c0695396f8c6432ba5bfe547f195",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/diagnose/SKILL.md": {
+    "mtime": 1779386734.2172387,
+    "ast_hash": "70cd92c9a5219eb8db60629b1bf59949",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/python-backend/SKILL.md": {
+    "mtime": 1779386547.528766,
+    "ast_hash": "cca4375f7d7d07e65ffb4823b76a4888",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/python-backend/references/upstash_patterns.md": {
+    "mtime": 1779386547.5294175,
+    "ast_hash": "364f696616f38211a55f0edeb123c763",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/python-backend/references/security_patterns.md": {
+    "mtime": 1779386547.5295362,
+    "ast_hash": "53d19c5817bbf1bc191dbd6996e10b34",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/python-backend/references/database_patterns.md": {
+    "mtime": 1779386547.529429,
+    "ast_hash": "23a4a6c14f254fdda3c7a10e0c6b1121",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/.agents/skills/python-backend/references/fastapi_patterns.md": {
+    "mtime": 1779386547.5294552,
+    "ast_hash": "cba3f9581c6fbb9e111314397105970e",
     "semantic_hash": ""
   }
 }
