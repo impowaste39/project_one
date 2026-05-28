@@ -362,6 +362,8 @@
                                         <th>Qty</th>
                                         <th>Stop Loss</th>
                                         <th>Target</th>
+                                        <th>Curr. Price</th>
+                                        <th>P&amp;L %</th>
                                         <th>Score</th>
                                     </tr>
                                 </thead>
@@ -397,6 +399,25 @@
                                                 ₹{{ "%.2f"|format(trade.target) }}
                                             {% endif %}
                                         </td>
+                                        {% set curr = current_prices.get(trade.symbol) %}
+                                        {% if curr is not none and curr %}
+                                            {% set active_qty = (trade.quantity - (trade.partial_exit_qty or 0)) if trade.partially_exited else trade.quantity %}
+                                            {% set curr_value = curr * active_qty %}
+                                            {% set pnl_pct = ((curr - trade.entry_price) / trade.entry_price) * 100 %}
+                                            {% set price_color = 'text-success' if curr >= trade.entry_price else 'text-danger' %}
+                                            <td class="{{ price_color }}">
+                                                <strong>₹{{ "%.2f"|format(curr) }}</strong>
+                                                <br><small class="text-secondary">₹{{ "%.0f"|format(curr_value) }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="badge {{ 'badge-profit' if pnl_pct >= 0 else 'badge-loss' }}">
+                                                    {{ "%+.2f"|format(pnl_pct) }}%
+                                                </span>
+                                            </td>
+                                        {% else %}
+                                            <td><span class="text-secondary">—</span></td>
+                                            <td><span class="text-secondary">—</span></td>
+                                        {% endif %}
                                         <td><span class="badge badge-open">{{ trade.entry_score or 'N/A' }}</span></td>
                                     </tr>
                                     {% endfor %}

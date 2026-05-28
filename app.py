@@ -931,6 +931,17 @@ def dashboard():
         open_trades = [t for t in all_trades if t.status == 'OPEN']
         closed_trades = [t for t in all_trades if t.status == 'CLOSED'][:20]
 
+        # Fetch current prices for open positions (batch call — single HTTP request)
+        current_prices = {}
+        if open_trades:
+            from services.data_service import DataService
+            ds = DataService()
+            symbols = list({t.symbol for t in open_trades})
+            try:
+                current_prices = ds.get_batch_prices(symbols)
+            except Exception as price_err:
+                logger.warning(f"Could not fetch current prices for dashboard: {price_err}")
+
         # Calculate statistics
         total_closed = db.query(Trade).filter(Trade.status == 'CLOSED').count()
         winning_trades = db.query(Trade).filter(
@@ -952,7 +963,8 @@ def dashboard():
             win_rate=win_rate,
             total_trades=total_closed,
             market_status=market_status,
-            now=datetime.now(IST)
+            now=datetime.now(IST),
+            current_prices=current_prices
         )
 
     finally:
