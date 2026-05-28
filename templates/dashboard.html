@@ -403,11 +403,12 @@
                                         {% if curr is not none and curr %}
                                             {% set active_qty = (trade.quantity - (trade.partial_exit_qty or 0)) if trade.partially_exited else trade.quantity %}
                                             {% set curr_value = curr * active_qty %}
+                                            {% set abs_pnl = (curr - trade.entry_price) * active_qty %}
                                             {% set pnl_pct = ((curr - trade.entry_price) / trade.entry_price) * 100 %}
                                             {% set price_color = 'text-success' if curr >= trade.entry_price else 'text-danger' %}
                                             <td class="{{ price_color }}">
                                                 <strong>₹{{ "%.2f"|format(curr) }}</strong>
-                                                <br><small class="text-secondary">₹{{ "%.0f"|format(curr_value) }}</small>
+                                                <br><small class="text-secondary">₹{{ "%.0f"|format(curr_value) }} <span class="{{ 'text-success' if abs_pnl >= 0 else 'text-danger' }}">({{ '+' if abs_pnl >= 0 else '-' }}₹{{ "%.0f"|format(abs_pnl|abs) }})</span></small>
                                             </td>
                                             <td>
                                                 <span class="badge {{ 'badge-profit' if pnl_pct >= 0 else 'badge-loss' }}">
