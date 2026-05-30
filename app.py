@@ -809,7 +809,9 @@ scheduler.add_job(
     day_of_week='mon-fri',
     hour='9-15',
     minute='*/5',
-    id='market_scan'
+    id='market_scan',
+    coalesce=True,           # collapse missed runs into one on recovery
+    misfire_grace_time=120   # skip if >2 min late (avoids stale scans)
 )
 
 scheduler.add_job(
@@ -818,7 +820,9 @@ scheduler.add_job(
     day_of_week='mon-fri',
     hour='9-15',
     minute='*/2',
-    id='position_monitor'
+    id='position_monitor',
+    coalesce=True,           # collapse missed runs into one on recovery
+    misfire_grace_time=60    # skip if >1 min late (avoids stale position checks)
 )
 
 scheduler.add_job(
@@ -827,7 +831,9 @@ scheduler.add_job(
     day_of_week='mon-fri',
     hour=16,
     minute=0,
-    id='eod_analysis'
+    id='eod_analysis',
+    coalesce=True,
+    misfire_grace_time=300   # 5 min grace for once-a-day job
 )
 
 scheduler.add_job(
@@ -836,7 +842,9 @@ scheduler.add_job(
     day_of_week='mon-fri',
     hour=15,
     minute=35,
-    id='daily_health_digest'
+    id='daily_health_digest',
+    coalesce=True,
+    misfire_grace_time=300   # 5 min grace for once-a-day job
 )
 
 # Pre-market scan: 8:45 AM IST Mon-Fri — surfaces top setups before market opens
@@ -846,7 +854,9 @@ scheduler.add_job(
     day_of_week='mon-fri',
     hour=8,
     minute=45,
-    id='premarket_scan'
+    id='premarket_scan',
+    coalesce=True,
+    misfire_grace_time=300   # 5 min grace; stale pre-market data beyond that is useless
 )
 
 # Weekly portfolio cleanup: Saturday 6:00 AM IST
@@ -856,7 +866,9 @@ scheduler.add_job(
     day_of_week='sat',
     hour=6,
     minute=0,
-    id='weekly_portfolio_cleanup'
+    id='weekly_portfolio_cleanup',
+    coalesce=True,
+    misfire_grace_time=600   # 10 min grace for weekly maintenance job
 )
 
 # Start scheduler
