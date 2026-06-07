@@ -808,7 +808,7 @@ scheduler.add_job(
     'cron',
     day_of_week='mon-fri',
     hour='9-15',
-    minute='*/5',
+    minute='*/10',
     id='market_scan'
 )
 
@@ -817,7 +817,7 @@ scheduler.add_job(
     'cron',
     day_of_week='mon-fri',
     hour='9-15',
-    minute='*/2',
+    minute='*/5',
     id='position_monitor'
 )
 

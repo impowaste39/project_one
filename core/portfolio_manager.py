@@ -451,7 +451,12 @@ class PortfolioManager:
                 status='OPEN',
                 pattern=evaluation['patterns'][0] if evaluation.get(
                     'patterns') else None,
-                confidence_factors=json.dumps(evaluation.get('factors', []))
+                confidence_factors=json.dumps(evaluation.get('factors', [])),
+                rsi=evaluation.get('rsi'),
+                macd=evaluation.get('macd'),
+                volume_ratio=evaluation.get('volume_ratio'),
+                atr=evaluation.get('atr'),
+                pattern_count=evaluation.get('pattern_count')
             )
 
             self.db.add(trade)

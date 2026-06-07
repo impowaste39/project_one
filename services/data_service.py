@@ -42,65 +42,52 @@ class DataService:
         ]
 
         self.custom = [
-            # PSU BANKS & FINANCE
-            "SBIN.NS",
-            "PNB.NS",
-            "BANKBARODA.NS",
-            "CANBK.NS",
-            "UNIONBANK.NS",
-            "MAHABANK.NS",
-            "IDFCFIRSTB.NS",
-            "IRFC.NS",
-            "RECLTD.NS",
-            "PFC.NS",
-
-            # POWER / ENERGY
-            "SUZLON.NS",
-            "NTPC.NS",
-            "NHPC.NS",
-            "TATAPOWER.NS",
-            "ADANIPOWER.NS",
-            "BHEL.NS",
-            "IOC.NS",
-            "ONGC.NS",
-            "GAIL.NS",
-            "IEX.NS",
-
-            # RAILWAYS / INFRA
-            "RVNL.NS",
-            "RITES.NS",
-            "IRB.NS",
-            "NCC.NS",
-
-            # METALS & MATERIALS
-            "SAIL.NS",
-            "NMDC.NS",
-            "HINDCOPPER.NS",
-            "VEDL.NS",
-            "JINDALSTEL.NS",
-            "NATIONALUM.NS",
-
-            # IT & TECH
-            "WIPRO.NS",
-            "REDINGTON.NS",
-            "ROUTE.NS",
-
-            # AUTO & INDUSTRIAL
-            "ASHOKLEY.NS",
-            "MOTHERSON.NS",
-
-            # FMCG / CONSUMER
-            "ITC.NS",
-            "DABUR.NS",
-
-            # PHARMA
-            "AUROPHARMA.NS",
-            "ZYDUSLIFE.NS",
-
-            # HIGH BETA / MOMENTUM
-            "IDEA.NS",
-            "JPPOWER.NS",
-            "BEL.NS"
+            # ADDED FROM TOP SELECTIONS
+            "FEDERALBNK.NS",
+            "ANGELONE.NS",
+            "ADANIENSOL.NS",
+            "MCX.NS",
+            "VBL.NS",
+            "M&M.NS",
+            "FACT.NS",
+            "CHENNPETRO.NS",
+            "ACUTAAS.NS",
+            "CHOLAFIN.NS",
+            "APLAPOLLO.NS",
+            "AIAENG.NS",
+            "MARICO.NS",
+            "SWANCORP.NS",
+            "BELRISE.NS",
+            "ABDL.NS",
+            "3MINDIA.NS",
+            "JSWENERGY.NS",
+            "CGPOWER.NS",
+            "KARURVYSYA.NS",
+            "CESC.NS",
+            "ACMESOLAR.NS",
+            "LTF.NS",
+            "UNOMINDA.NS",
+            "CGCL.NS",
+            "PIRAMALFIN.NS",
+            "CHALET.NS",
+            "VTL.NS",
+            "TEGA.NS",
+            "NAM-INDIA.NS",
+            "ESCORTS.NS",
+            "JSL.NS",
+            "INDIACEM.NS",
+            "NIVABUPA.NS",
+            "TBOTEK.NS",
+            "PERSISTENT.NS",
+            "UPL.NS",
+            "NAVINFLUOR.NS",
+            "CREDITACC.NS",
+            "NUVAMA.NS",
+            "AEGISLOG.NS",
+            "SIEMENS.NS",
+            "ABSLAMC.NS",
+            "LUPIN.NS",
+            "ABCAPITAL.NS"
         ]
 
     def get_watchlist(self, category: str = 'nifty50') -> list:

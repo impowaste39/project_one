@@ -605,6 +605,11 @@ class TradingBrain:
             "ema_penalty_applied": ema_penalty_applied,
             "position_tier": position_tier,
             "ml_model_active": ml_model_active,
+            "rsi": analysis.get("rsi"),
+            "macd": analysis.get("macd"),
+            "volume_ratio": analysis.get("volume_ratio"),
+            "atr": analysis.get("atr"),
+            "pattern_count": analysis.get("pattern_count", 0),
         }
 
     def should_enter_trade(

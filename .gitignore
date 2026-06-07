@@ -42,3 +42,5 @@ Thursday_logs.txt
 .ipynb_checkpoints/retrain-checkpoint.ipynb
 .gitignore
 docs
+failed_work.txt
+generate_universe.py

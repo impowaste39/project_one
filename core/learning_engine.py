@@ -205,14 +205,18 @@ class LearningEngine:
 
             for trade in trades:
                 features = [
-                    trade.entry_score or 70,
+                    trade.rsi if trade.rsi is not None else 50.0,
+                    trade.macd if trade.macd is not None else 0.0,
+                    trade.volume_ratio if trade.volume_ratio is not None else 1.0,
+                    trade.atr if trade.atr is not None else 0.0,
+                    trade.pattern_count if trade.pattern_count is not None else 1,
                     1 if trade.pattern == 'bullish_ma_crossover' else 0,
                     1 if trade.pattern == 'rsi_oversold_bounce' else 0,
                     1 if trade.pattern == 'macd_bullish_crossover' else 0,
                     1 if trade.pattern == 'breakout_with_volume' else 0,
                     1 if trade.pattern == 'pullback_in_uptrend' else 0,
                 ]
-
+                
                 label = 1 if trade.profit_loss and trade.profit_loss > 0 else 0
 
                 X.append(features)

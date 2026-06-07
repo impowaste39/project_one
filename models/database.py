@@ -64,6 +64,13 @@ class Trade(Base):
     # Timing
     hold_duration_days = Column(Integer, nullable=True)
 
+    # ML Features
+    rsi = Column(Float, nullable=True)
+    macd = Column(Float, nullable=True)
+    volume_ratio = Column(Float, nullable=True)
+    atr = Column(Float, nullable=True)
+    pattern_count = Column(Integer, nullable=True)
+
     def __repr__(self):
         return f"<Trade {self.symbol} @ ₹{self.entry_price} - {self.status}>"
 
@@ -93,7 +100,12 @@ class Trade(Base):
             'r_multiple': self.r_multiple,
             'status': self.status,
             'pattern': self.pattern,
-            'hold_duration_days': self.hold_duration_days
+            'hold_duration_days': self.hold_duration_days,
+            'rsi': self.rsi,
+            'macd': self.macd,
+            'volume_ratio': self.volume_ratio,
+            'atr': self.atr,
+            'pattern_count': self.pattern_count
         }
 
 
@@ -286,6 +298,11 @@ def _migrate_database(engine):
             ('partial_exit_price', 'FLOAT'),     # NEW — price at partial exit
             ('partial_exit_qty', 'INTEGER'),     # NEW — qty exited at T1
             ('partial_exit_date', 'TIMESTAMP'),  # NEW — when partial exit happened
+            ('rsi', 'FLOAT'),                    # ML Feature
+            ('macd', 'FLOAT'),                   # ML Feature
+            ('volume_ratio', 'FLOAT'),           # ML Feature
+            ('atr', 'FLOAT'),                    # ML Feature
+            ('pattern_count', 'INTEGER'),        # ML Feature
         ]
 
         with engine.connect() as conn:
