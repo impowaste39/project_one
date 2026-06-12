@@ -6,6 +6,7 @@ Using SQLAlchemy ORM with PostgreSQL
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Text, Boolean, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from contextlib import contextmanager
 from datetime import datetime
 import os
 import json
@@ -85,11 +86,11 @@ class Trade(Base):
             'initial_stop_loss': self.initial_stop_loss,
             'stop_loss': self.stop_loss,
             'target': self.target,
-            'target_2': self.target_2,       # NEW
-            'target_3': self.target_3,       # NEW
-            'partially_exited': self.partially_exited,   # NEW
-            'partial_exit_price': self.partial_exit_price,  # NEW
-            'partial_exit_qty': self.partial_exit_qty,      # NEW
+            'target_2': self.target_2,
+            'target_3': self.target_3,
+            'partially_exited': self.partially_exited,
+            'partial_exit_price': self.partial_exit_price,
+            'partial_exit_qty': self.partial_exit_qty,
             'exit_date': self.exit_date.isoformat() if self.exit_date else None,
             'exit_price': self.exit_price,
             'exit_reason': self.exit_reason,
@@ -250,21 +251,21 @@ def init_database():
     connect_args = {}
     if database_url.startswith('postgres') or database_url.startswith('postgresql'):
         connect_args = {
-            "connect_timeout": 15,       # Fast timeout to prevent thread pile-ups
-            "keepalives": 1,             # Enable TCP keepalives
-            "keepalives_idle": 30,       # Send keepalive after 30 seconds of inactivity
-            "keepalives_interval": 5,    # Probe every 5 seconds if unanswered
-            "keepalives_count": 3        # Drop connection after 3 probe failures
+            "connect_timeout": 15,
+            "keepalives": 1,
+            "keepalives_idle": 30,
+            "keepalives_interval": 5,
+            "keepalives_count": 3
         }
 
     _engine = create_engine(
         database_url,
         echo=False,
-        pool_pre_ping=True,        # tests connection before using it
-        pool_recycle=120,          # aggressively recycle connections to avoid Render firewall drops (idle > 2 mins)
-        pool_timeout=15,           # wait max 15s to check out a connection from pool
-        pool_size=5,               # safe pool size for Aiven Free Tier (max 25 connections limit)
-        max_overflow=5,            # safe overflow limit (5 + 5 = 10 connections max per instance)
+        pool_pre_ping=True,
+        pool_recycle=120,
+        pool_timeout=15,
+        pool_size=2,        # FIX #1: was 5 — keeps steady-state at 2 connections
+        max_overflow=1,     # FIX #1: was 5 — burst ceiling is 3 total (safe under Aiven's 5 limit)
         connect_args=connect_args
     )
     Base.metadata.create_all(_engine)
@@ -291,18 +292,18 @@ def _migrate_database(engine):
         new_columns = [
             ('gross_profit_loss', 'FLOAT'),
             ('brokerage_charges', 'FLOAT'),
-            ('initial_stop_loss', 'FLOAT'),      # NEW — original stop loss
-            ('target_2', 'FLOAT'),               # NEW — stretch target
-            ('target_3', 'FLOAT'),               # NEW — aggressive target
-            ('partially_exited', 'BOOLEAN'),     # NEW — partial exit flag
-            ('partial_exit_price', 'FLOAT'),     # NEW — price at partial exit
-            ('partial_exit_qty', 'INTEGER'),     # NEW — qty exited at T1
-            ('partial_exit_date', 'TIMESTAMP'),  # NEW — when partial exit happened
-            ('rsi', 'FLOAT'),                    # ML Feature
-            ('macd', 'FLOAT'),                   # ML Feature
-            ('volume_ratio', 'FLOAT'),           # ML Feature
-            ('atr', 'FLOAT'),                    # ML Feature
-            ('pattern_count', 'INTEGER'),        # ML Feature
+            ('initial_stop_loss', 'FLOAT'),
+            ('target_2', 'FLOAT'),
+            ('target_3', 'FLOAT'),
+            ('partially_exited', 'BOOLEAN'),
+            ('partial_exit_price', 'FLOAT'),
+            ('partial_exit_qty', 'INTEGER'),
+            ('partial_exit_date', 'TIMESTAMP'),
+            ('rsi', 'FLOAT'),
+            ('macd', 'FLOAT'),
+            ('volume_ratio', 'FLOAT'),
+            ('atr', 'FLOAT'),
+            ('pattern_count', 'INTEGER'),
         ]
 
         with engine.connect() as conn:
@@ -324,12 +325,30 @@ def _migrate_database(engine):
         )
 
 
+@contextmanager
 def get_session():
-    """Get a new database session"""
+    """
+    FIX #5: Context-manager session — always commits or rolls back, always closes.
+
+    Usage:
+        with get_session() as session:
+            session.query(Trade).filter_by(status='OPEN').all()
+
+    The connection is returned to the pool the moment the `with` block exits,
+    keeping live connections well under Aiven's 5-connection limit.
+    """
     global _SessionLocal
     if _SessionLocal is None:
         init_database()
-    return _SessionLocal()
+    session = _SessionLocal()
+    try:
+        yield session
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def get_engine():
