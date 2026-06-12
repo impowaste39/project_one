@@ -250,7 +250,7 @@ def init_database():
     connect_args = {}
     if database_url.startswith('postgres') or database_url.startswith('postgresql'):
         connect_args = {
-            "connect_timeout": 5,        # Fast timeout to prevent thread pile-ups
+            "connect_timeout": 15,       # Fast timeout to prevent thread pile-ups
             "keepalives": 1,             # Enable TCP keepalives
             "keepalives_idle": 30,       # Send keepalive after 30 seconds of inactivity
             "keepalives_interval": 5,    # Probe every 5 seconds if unanswered

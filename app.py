@@ -371,20 +371,21 @@ def monitor_positions_job():
 
         logger.info(f"Monitoring {len(open_trades)} open positions")
 
+        # BATCH FETCH PRICES: Single API call to avoid database connection timeouts
+        symbols = [t.symbol for t in open_trades]
+        batch_prices = monitor.data_service.get_batch_prices(symbols)
+
         for trade in open_trades:
             try:
-                # Fetch current price — 2d is enough and faster than 5d
-                data = monitor.fetch_stock_data(trade.symbol, period='2d')
-
-                if data is None or data.empty:
+                if trade.symbol not in batch_prices:
                     logger.warning(f"Could not fetch data for {trade.symbol}")
                     continue
 
-                current_price = data['Close'].iloc[-1]
+                current_price = batch_prices[trade.symbol]
 
-                # Check exit conditions
+                # Check exit conditions (pass None for data as it only needs current_price)
                 exit_decision = brain.check_exit_conditions(
-                    trade, current_price, data)
+                    trade, current_price, None)
 
                 if exit_decision['action'] == 'PARTIAL_EXIT':
                     # Book 50% of position at T1, move SL to breakeven
@@ -455,9 +456,12 @@ def monitor_positions_job():
             current_prices = {}
             still_open = db.query(Trade).filter(Trade.status == 'OPEN').all()
             for t in still_open:
-                price_data = monitor.fetch_stock_data(t.symbol, period='2d')
-                if price_data is not None and not price_data.empty:
-                    current_prices[t.symbol] = float(price_data['Close'].iloc[-1])
+                if t.symbol in batch_prices:
+                    current_prices[t.symbol] = batch_prices[t.symbol]
+                else:
+                    price = monitor.data_service.get_current_price(t.symbol)
+                    if price is not None:
+                        current_prices[t.symbol] = float(price)
             if current_prices:
                 portfolio_mgr.update_unrealized_pnl(current_prices)
                 logger.debug(f"Unrealized P&L updated for {len(current_prices)} positions")
