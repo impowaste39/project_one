@@ -238,6 +238,105 @@
       "norm_label": "computedhash"
     },
     {
+      "label": "something.json",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L1",
+      "id": "something_json",
+      "community": 82,
+      "norm_label": "something.json"
+    },
+    {
+      "label": "mcpServers",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L2",
+      "id": "personal_work_something_mcpservers",
+      "community": 82,
+      "norm_label": "mcpservers"
+    },
+    {
+      "label": "render",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L3",
+      "id": "personal_work_something_mcpservers_render",
+      "community": 82,
+      "norm_label": "render"
+    },
+    {
+      "label": "serverUrl",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L4",
+      "id": "personal_work_something_render_serverurl",
+      "community": 82,
+      "norm_label": "serverurl"
+    },
+    {
+      "label": "headers",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L5",
+      "id": "personal_work_something_render_headers",
+      "community": 82,
+      "norm_label": "headers"
+    },
+    {
+      "label": "Authorization",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L6",
+      "id": "personal_work_something_headers_authorization",
+      "community": 82,
+      "norm_label": "authorization"
+    },
+    {
+      "label": "disabled",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L8",
+      "id": "personal_work_something_render_disabled",
+      "community": 82,
+      "norm_label": "disabled"
+    },
+    {
+      "label": "aiven-mcp",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L10",
+      "id": "personal_work_something_mcpservers_aiven_mcp",
+      "community": 82,
+      "norm_label": "aiven-mcp"
+    },
+    {
+      "label": "serverUrl",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L11",
+      "id": "personal_work_something_aiven_mcp_serverurl",
+      "community": 82,
+      "norm_label": "serverurl"
+    },
+    {
+      "label": "headers",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L12",
+      "id": "personal_work_something_aiven_mcp_headers",
+      "community": 82,
+      "norm_label": "headers"
+    },
+    {
+      "label": "disabledTools",
+      "file_type": "code",
+      "source_file": "something.json",
+      "source_location": "L15",
+      "id": "personal_work_something_aiven_mcp_disabledtools",
+      "community": 82,
+      "norm_label": "disabledtools"
+    },
+    {
       "label": "test_implementation.py",
       "file_type": "code",
       "source_file": "test_implementation.py",
@@ -360,7 +459,7 @@
       "source_file": "app.py",
       "source_location": "L68",
       "id": "personal_work_app_send_error_alert_guarded",
-      "community": 8,
+      "community": 64,
       "norm_label": "_send_error_alert_guarded()"
     },
     {
@@ -396,7 +495,7 @@
       "source_file": "app.py",
       "source_location": "L148",
       "id": "personal_work_app_initialize_portfolio",
-      "community": 0,
+      "community": 85,
       "norm_label": "initialize_portfolio()"
     },
     {
@@ -414,23 +513,23 @@
       "source_file": "app.py",
       "source_location": "L349",
       "id": "personal_work_app_monitor_positions_job",
-      "community": 6,
+      "community": 64,
       "norm_label": "monitor_positions_job()"
     },
     {
       "label": "end_of_day_analysis_job()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L478",
+      "source_location": "L482",
       "id": "personal_work_app_end_of_day_analysis_job",
-      "community": 8,
+      "community": 3,
       "norm_label": "end_of_day_analysis_job()"
     },
     {
       "label": "premarket_scan_job()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L649",
+      "source_location": "L653",
       "id": "personal_work_app_premarket_scan_job",
       "community": 84,
       "norm_label": "premarket_scan_job()"
@@ -439,7 +538,7 @@
       "label": "weekly_portfolio_cleanup_job()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L713",
+      "source_location": "L717",
       "id": "personal_work_app_weekly_portfolio_cleanup_job",
       "community": 35,
       "norm_label": "weekly_portfolio_cleanup_job()"
@@ -448,7 +547,7 @@
       "label": "daily_health_digest_job()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L750",
+      "source_location": "L754",
       "id": "personal_work_app_daily_health_digest_job",
       "community": 79,
       "norm_label": "daily_health_digest_job()"
@@ -457,7 +556,7 @@
       "label": "_get_consecutive_zero_trade_days()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L873",
+      "source_location": "L877",
       "id": "personal_work_app_get_consecutive_zero_trade_days",
       "community": 50,
       "norm_label": "_get_consecutive_zero_trade_days()"
@@ -466,7 +565,7 @@
       "label": "dashboard()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L919",
+      "source_location": "L923",
       "id": "personal_work_app_dashboard",
       "community": 0,
       "norm_label": "dashboard()"
@@ -475,7 +574,7 @@
       "label": "api_portfolio()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L975",
+      "source_location": "L979",
       "id": "personal_work_app_api_portfolio",
       "community": 34,
       "norm_label": "api_portfolio()"
@@ -484,7 +583,7 @@
       "label": "api_trades()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1001",
+      "source_location": "L1005",
       "id": "personal_work_app_api_trades",
       "community": 0,
       "norm_label": "api_trades()"
@@ -493,7 +592,7 @@
       "label": "api_open_positions()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1015",
+      "source_location": "L1019",
       "id": "personal_work_app_api_open_positions",
       "community": 33,
       "norm_label": "api_open_positions()"
@@ -502,7 +601,7 @@
       "label": "health()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1028",
+      "source_location": "L1032",
       "id": "personal_work_app_health",
       "community": 0,
       "norm_label": "health()"
@@ -511,16 +610,16 @@
       "label": "api_performance()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1085",
+      "source_location": "L1089",
       "id": "personal_work_app_api_performance",
-      "community": 8,
+      "community": 87,
       "norm_label": "api_performance()"
     },
     {
       "label": "api_market_context()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1101",
+      "source_location": "L1105",
       "id": "personal_work_app_api_market_context",
       "community": 81,
       "norm_label": "api_market_context()"
@@ -529,7 +628,7 @@
       "label": "trigger_scan()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1114",
+      "source_location": "L1118",
       "id": "personal_work_app_trigger_scan",
       "community": 80,
       "norm_label": "trigger_scan()"
@@ -538,7 +637,7 @@
       "label": "api_scan_history()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1124",
+      "source_location": "L1128",
       "id": "personal_work_app_api_scan_history",
       "community": 1,
       "norm_label": "api_scan_history()"
@@ -547,16 +646,16 @@
       "label": "api_scan_details()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1142",
+      "source_location": "L1146",
       "id": "personal_work_app_api_scan_details",
-      "community": 74,
+      "community": 1,
       "norm_label": "api_scan_details()"
     },
     {
       "label": "api_pattern_performance()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1162",
+      "source_location": "L1166",
       "id": "personal_work_app_api_pattern_performance",
       "community": 10,
       "norm_label": "api_pattern_performance()"
@@ -565,25 +664,25 @@
       "label": "api_rejection_analysis()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1180",
+      "source_location": "L1184",
       "id": "personal_work_app_api_rejection_analysis",
-      "community": 82,
+      "community": 1,
       "norm_label": "api_rejection_analysis()"
     },
     {
       "label": "api_learning_insights()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1198",
+      "source_location": "L1202",
       "id": "personal_work_app_api_learning_insights",
-      "community": 8,
+      "community": 86,
       "norm_label": "api_learning_insights()"
     },
     {
       "label": "api_trades_summary()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1213",
+      "source_location": "L1217",
       "id": "personal_work_app_api_trades_summary",
       "community": 10,
       "norm_label": "api_trades_summary()"
@@ -592,7 +691,7 @@
       "label": "admin_top_up_capital()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1322",
+      "source_location": "L1326",
       "id": "personal_work_app_admin_top_up_capital",
       "community": 78,
       "norm_label": "admin_top_up_capital()"
@@ -601,7 +700,7 @@
       "label": "admin_flush_history()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1390",
+      "source_location": "L1394",
       "id": "personal_work_app_admin_flush_history",
       "community": 66,
       "norm_label": "admin_flush_history()"
@@ -610,7 +709,7 @@
       "label": "admin_flush_trades()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1438",
+      "source_location": "L1442",
       "id": "personal_work_app_admin_flush_trades",
       "community": 32,
       "norm_label": "admin_flush_trades()"
@@ -619,7 +718,7 @@
       "label": "admin_flush_all()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1509",
+      "source_location": "L1513",
       "id": "personal_work_app_admin_flush_all",
       "community": 76,
       "norm_label": "admin_flush_all()"
@@ -628,7 +727,7 @@
       "label": "admin_system_status()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1583",
+      "source_location": "L1587",
       "id": "personal_work_app_admin_system_status",
       "community": 50,
       "norm_label": "admin_system_status()"
@@ -637,16 +736,16 @@
       "label": "admin_force_scan()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1703",
+      "source_location": "L1707",
       "id": "personal_work_app_admin_force_scan",
-      "community": 77,
+      "community": 26,
       "norm_label": "admin_force_scan()"
     },
     {
       "label": "admin_reload_model()",
       "file_type": "code",
       "source_file": "app.py",
-      "source_location": "L1802",
+      "source_location": "L1806",
       "id": "personal_work_app_admin_reload_model",
       "community": 0,
       "norm_label": "admin_reload_model()"
@@ -666,7 +765,7 @@
       "source_file": "app.py",
       "source_location": "L69",
       "id": "personal_work_app_rationale_69",
-      "community": 8,
+      "community": 64,
       "norm_label": "send a discord error alert at most once per cooldown window per job."
     },
     {
@@ -702,7 +801,7 @@
       "source_file": "app.py",
       "source_location": "L149",
       "id": "personal_work_app_rationale_149",
-      "community": 0,
+      "community": 85,
       "norm_label": "initialize portfolio with starting capital if not exists"
     },
     {
@@ -720,24 +819,24 @@
       "source_file": "app.py",
       "source_location": "L350",
       "id": "personal_work_app_rationale_350",
-      "community": 6,
+      "community": 64,
       "norm_label": "position monitoring job - runs every 2 minutes during market hours"
     },
     {
       "label": "End of day analysis and learning - runs at 4:00 PM IST",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L479",
-      "id": "personal_work_app_rationale_479",
-      "community": 8,
+      "source_location": "L483",
+      "id": "personal_work_app_rationale_483",
+      "community": 3,
       "norm_label": "end of day analysis and learning - runs at 4:00 pm ist"
     },
     {
       "label": "Pre-market scan \u2014 runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L650",
-      "id": "personal_work_app_rationale_650",
+      "source_location": "L654",
+      "id": "personal_work_app_rationale_654",
       "community": 84,
       "norm_label": "pre-market scan \u2014 runs at 8:45 am ist mon-fri.      scans the watchlist using la"
     },
@@ -745,8 +844,8 @@
       "label": "Weekly portfolio row cleanup \u2014 runs every Saturday at 6:00 AM IST.      Keeps on",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L714",
-      "id": "personal_work_app_rationale_714",
+      "source_location": "L718",
+      "id": "personal_work_app_rationale_718",
       "community": 35,
       "norm_label": "weekly portfolio row cleanup \u2014 runs every saturday at 6:00 am ist.      keeps on"
     },
@@ -754,8 +853,8 @@
       "label": "Daily system health digest - runs at 3:35 PM IST (after market close).      Send",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L751",
-      "id": "personal_work_app_rationale_751",
+      "source_location": "L755",
+      "id": "personal_work_app_rationale_755",
       "community": 79,
       "norm_label": "daily system health digest - runs at 3:35 pm ist (after market close).      send"
     },
@@ -763,8 +862,8 @@
       "label": "Count how many consecutive trading days have had zero trades entered",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L874",
-      "id": "personal_work_app_rationale_874",
+      "source_location": "L878",
+      "id": "personal_work_app_rationale_878",
       "community": 50,
       "norm_label": "count how many consecutive trading days have had zero trades entered"
     },
@@ -772,8 +871,8 @@
       "label": "Portfolio API endpoint",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L976",
-      "id": "personal_work_app_rationale_976",
+      "source_location": "L980",
+      "id": "personal_work_app_rationale_980",
       "community": 34,
       "norm_label": "portfolio api endpoint"
     },
@@ -781,8 +880,8 @@
       "label": "Open positions API endpoint",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1016",
-      "id": "personal_work_app_rationale_1016",
+      "source_location": "L1020",
+      "id": "personal_work_app_rationale_1020",
       "community": 33,
       "norm_label": "open positions api endpoint"
     },
@@ -790,8 +889,8 @@
       "label": "Health check endpoint for UptimeRobot",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1029",
-      "id": "personal_work_app_rationale_1029",
+      "source_location": "L1033",
+      "id": "personal_work_app_rationale_1033",
       "community": 0,
       "norm_label": "health check endpoint for uptimerobot"
     },
@@ -799,17 +898,17 @@
       "label": "Performance metrics API",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1086",
-      "id": "personal_work_app_rationale_1086",
-      "community": 8,
+      "source_location": "L1090",
+      "id": "personal_work_app_rationale_1090",
+      "community": 81,
       "norm_label": "performance metrics api"
     },
     {
       "label": "Get current market context",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1102",
-      "id": "personal_work_app_rationale_1102",
+      "source_location": "L1106",
+      "id": "personal_work_app_rationale_1106",
       "community": 81,
       "norm_label": "get current market context"
     },
@@ -817,8 +916,8 @@
       "label": "Manually trigger a market scan",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1115",
-      "id": "personal_work_app_rationale_1115",
+      "source_location": "L1119",
+      "id": "personal_work_app_rationale_1119",
       "community": 80,
       "norm_label": "manually trigger a market scan"
     },
@@ -826,8 +925,8 @@
       "label": "Get recent scan history",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1125",
-      "id": "personal_work_app_rationale_1125",
+      "source_location": "L1129",
+      "id": "personal_work_app_rationale_1129",
       "community": 1,
       "norm_label": "get recent scan history"
     },
@@ -835,17 +934,17 @@
       "label": "Get detailed results for a specific scan",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1143",
-      "id": "personal_work_app_rationale_1143",
-      "community": 74,
+      "source_location": "L1147",
+      "id": "personal_work_app_rationale_1147",
+      "community": 1,
       "norm_label": "get detailed results for a specific scan"
     },
     {
       "label": "Get pattern performance statistics",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1163",
-      "id": "personal_work_app_rationale_1163",
+      "source_location": "L1167",
+      "id": "personal_work_app_rationale_1167",
       "community": 10,
       "norm_label": "get pattern performance statistics"
     },
@@ -853,26 +952,26 @@
       "label": "Get analysis of why opportunities are being rejected",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1181",
-      "id": "personal_work_app_rationale_1181",
-      "community": 82,
+      "source_location": "L1185",
+      "id": "personal_work_app_rationale_1185",
+      "community": 1,
       "norm_label": "get analysis of why opportunities are being rejected"
     },
     {
       "label": "Get AI learning insights",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1199",
-      "id": "personal_work_app_rationale_1199",
-      "community": 8,
+      "source_location": "L1203",
+      "id": "personal_work_app_rationale_1203",
+      "community": 86,
       "norm_label": "get ai learning insights"
     },
     {
       "label": "Comprehensive trade summary with real P&L (after Groww charges).     No auth req",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1214",
-      "id": "personal_work_app_rationale_1214",
+      "source_location": "L1218",
+      "id": "personal_work_app_rationale_1218",
       "community": 10,
       "norm_label": "comprehensive trade summary with real p&l (after groww charges).     no auth req"
     },
@@ -880,8 +979,8 @@
       "label": "Add capital to the existing portfolio WITHOUT resetting trade history.     Use t",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1323",
-      "id": "personal_work_app_rationale_1323",
+      "source_location": "L1327",
+      "id": "personal_work_app_rationale_1327",
       "community": 78,
       "norm_label": "add capital to the existing portfolio without resetting trade history.     use t"
     },
@@ -889,8 +988,8 @@
       "label": "Wipe scan history, pattern occurrences, and learning metrics.     Use this after",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1391",
-      "id": "personal_work_app_rationale_1391",
+      "source_location": "L1395",
+      "id": "personal_work_app_rationale_1395",
       "community": 66,
       "norm_label": "wipe scan history, pattern occurrences, and learning metrics.     use this after"
     },
@@ -898,8 +997,8 @@
       "label": "Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1439",
-      "id": "personal_work_app_rationale_1439",
+      "source_location": "L1443",
+      "id": "personal_work_app_rationale_1443",
       "community": 32,
       "norm_label": "wipe all trade records (open and closed) and reset the portfolio snapshot.     t"
     },
@@ -907,8 +1006,8 @@
       "label": "Nuclear option: wipe ALL data \u2014 trades, scans, patterns, learning, portfolio.",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1510",
-      "id": "personal_work_app_rationale_1510",
+      "source_location": "L1514",
+      "id": "personal_work_app_rationale_1514",
       "community": 76,
       "norm_label": "nuclear option: wipe all data \u2014 trades, scans, patterns, learning, portfolio."
     },
@@ -916,8 +1015,8 @@
       "label": "Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1584",
-      "id": "personal_work_app_rationale_1584",
+      "source_location": "L1588",
+      "id": "personal_work_app_rationale_1588",
       "community": 50,
       "norm_label": "deep diagnostic snapshot of the system.     returns db counts, scoring config, s"
     },
@@ -925,9 +1024,9 @@
       "label": "Immediately trigger a market scan outside the scheduler.     Useful for testing",
       "file_type": "rationale",
       "source_file": "app.py",
-      "source_location": "L1704",
-      "id": "personal_work_app_rationale_1704",
-      "community": 77,
+      "source_location": "L1708",
+      "id": "personal_work_app_rationale_1708",
+      "community": 26,
       "norm_label": "immediately trigger a market scan outside the scheduler.     useful for testing"
     },
     {
@@ -1069,16 +1168,16 @@
       "label": ".save_ml_model()",
       "file_type": "code",
       "source_file": "core/learning_engine.py",
-      "source_location": "L254",
+      "source_location": "L258",
       "id": "core_learning_engine_learningengine_save_ml_model",
-      "community": 8,
+      "community": 83,
       "norm_label": ".save_ml_model()"
     },
     {
       "label": ".generate_performance_report()",
       "file_type": "code",
       "source_file": "core/learning_engine.py",
-      "source_location": "L286",
+      "source_location": "L290",
       "id": "core_learning_engine_learningengine_generate_performance_report",
       "community": 8,
       "norm_label": ".generate_performance_report()"
@@ -1087,7 +1186,7 @@
       "label": ".generate_learning_insights()",
       "file_type": "code",
       "source_file": "core/learning_engine.py",
-      "source_location": "L345",
+      "source_location": "L349",
       "id": "core_learning_engine_learningengine_generate_learning_insights",
       "community": 8,
       "norm_label": ".generate_learning_insights()"
@@ -1159,17 +1258,17 @@
       "label": "Save trained ML model to database",
       "file_type": "rationale",
       "source_file": "core/learning_engine.py",
-      "source_location": "L255",
-      "id": "core_learning_engine_rationale_255",
-      "community": 8,
+      "source_location": "L259",
+      "id": "core_learning_engine_rationale_259",
+      "community": 83,
       "norm_label": "save trained ml model to database"
     },
     {
       "label": "Generate comprehensive performance summary",
       "file_type": "rationale",
       "source_file": "core/learning_engine.py",
-      "source_location": "L287",
-      "id": "core_learning_engine_rationale_287",
+      "source_location": "L291",
+      "id": "core_learning_engine_rationale_291",
       "community": 8,
       "norm_label": "generate comprehensive performance summary"
     },
@@ -1177,8 +1276,8 @@
       "label": "Generate comprehensive learning insights for the AI.          Returns:",
       "file_type": "rationale",
       "source_file": "core/learning_engine.py",
-      "source_location": "L346",
-      "id": "core_learning_engine_rationale_346",
+      "source_location": "L350",
+      "id": "core_learning_engine_rationale_350",
       "community": 8,
       "norm_label": "generate comprehensive learning insights for the ai.          returns:"
     },
@@ -1267,7 +1366,7 @@
       "label": ".exit_trade()",
       "file_type": "code",
       "source_file": "core/portfolio_manager.py",
-      "source_location": "L490",
+      "source_location": "L495",
       "id": "core_portfolio_manager_portfoliomanager_exit_trade",
       "community": 6,
       "norm_label": ".exit_trade()"
@@ -1276,7 +1375,7 @@
       "label": ".get_open_trades()",
       "file_type": "code",
       "source_file": "core/portfolio_manager.py",
-      "source_location": "L584",
+      "source_location": "L589",
       "id": "core_portfolio_manager_portfoliomanager_get_open_trades",
       "community": 6,
       "norm_label": ".get_open_trades()"
@@ -1285,7 +1384,7 @@
       "label": ".get_trade_history()",
       "file_type": "code",
       "source_file": "core/portfolio_manager.py",
-      "source_location": "L592",
+      "source_location": "L597",
       "id": "core_portfolio_manager_portfoliomanager_get_trade_history",
       "community": 6,
       "norm_label": ".get_trade_history()"
@@ -1294,7 +1393,7 @@
       "label": ".update_unrealized_pnl()",
       "file_type": "code",
       "source_file": "core/portfolio_manager.py",
-      "source_location": "L602",
+      "source_location": "L607",
       "id": "core_portfolio_manager_portfoliomanager_update_unrealized_pnl",
       "community": 6,
       "norm_label": ".update_unrealized_pnl()"
@@ -1303,7 +1402,7 @@
       "label": ".get_weekly_pnl_summary()",
       "file_type": "code",
       "source_file": "core/portfolio_manager.py",
-      "source_location": "L630",
+      "source_location": "L635",
       "id": "core_portfolio_manager_portfoliomanager_get_weekly_pnl_summary",
       "community": 6,
       "norm_label": ".get_weekly_pnl_summary()"
@@ -1375,8 +1474,8 @@
       "label": "Execute trade exit.          Args:             trade: Trade object to exit",
       "file_type": "rationale",
       "source_file": "core/portfolio_manager.py",
-      "source_location": "L491",
-      "id": "core_portfolio_manager_rationale_491",
+      "source_location": "L496",
+      "id": "core_portfolio_manager_rationale_496",
       "community": 6,
       "norm_label": "execute trade exit.          args:             trade: trade object to exit"
     },
@@ -1384,8 +1483,8 @@
       "label": "Update unrealized P&L for open positions.          Args:             current_pri",
       "file_type": "rationale",
       "source_file": "core/portfolio_manager.py",
-      "source_location": "L603",
-      "id": "core_portfolio_manager_rationale_603",
+      "source_location": "L608",
+      "id": "core_portfolio_manager_rationale_608",
       "community": 6,
       "norm_label": "update unrealized p&l for open positions.          args:             current_pri"
     },
@@ -1393,8 +1492,8 @@
       "label": "Get this week's P&L summary including circuit breaker status.         Used by EO",
       "file_type": "rationale",
       "source_file": "core/portfolio_manager.py",
-      "source_location": "L631",
-      "id": "core_portfolio_manager_rationale_631",
+      "source_location": "L636",
+      "id": "core_portfolio_manager_rationale_636",
       "community": 6,
       "norm_label": "get this week's p&l summary including circuit breaker status.         used by eo"
     },
@@ -1699,7 +1798,7 @@
       "label": ".should_enter_trade()",
       "file_type": "code",
       "source_file": "core/trading_brain.py",
-      "source_location": "L610",
+      "source_location": "L615",
       "id": "core_trading_brain_tradingbrain_should_enter_trade",
       "community": 3,
       "norm_label": ".should_enter_trade()"
@@ -1708,7 +1807,7 @@
       "label": ".get_decision_reason()",
       "file_type": "code",
       "source_file": "core/trading_brain.py",
-      "source_location": "L821",
+      "source_location": "L826",
       "id": "core_trading_brain_tradingbrain_get_decision_reason",
       "community": 3,
       "norm_label": ".get_decision_reason()"
@@ -1717,7 +1816,7 @@
       "label": ".check_exit_conditions()",
       "file_type": "code",
       "source_file": "core/trading_brain.py",
-      "source_location": "L919",
+      "source_location": "L924",
       "id": "core_trading_brain_tradingbrain_check_exit_conditions",
       "community": 3,
       "norm_label": ".check_exit_conditions()"
@@ -1825,8 +1924,8 @@
       "label": "Final decision gate with multiple checks          Bearish threshold is now scale",
       "file_type": "rationale",
       "source_file": "core/trading_brain.py",
-      "source_location": "L620",
-      "id": "core_trading_brain_rationale_620",
+      "source_location": "L625",
+      "id": "core_trading_brain_rationale_625",
       "community": 3,
       "norm_label": "final decision gate with multiple checks          bearish threshold is now scale"
     },
@@ -1834,8 +1933,8 @@
       "label": "Generate human-readable decision reason",
       "file_type": "rationale",
       "source_file": "core/trading_brain.py",
-      "source_location": "L831",
-      "id": "core_trading_brain_rationale_831",
+      "source_location": "L836",
+      "id": "core_trading_brain_rationale_836",
       "community": 3,
       "norm_label": "generate human-readable decision reason"
     },
@@ -1843,8 +1942,8 @@
       "label": "Determine if position should be exited.         Supports partial exit at T1 \u2014 ex",
       "file_type": "rationale",
       "source_file": "core/trading_brain.py",
-      "source_location": "L922",
-      "id": "core_trading_brain_rationale_922",
+      "source_location": "L927",
+      "id": "core_trading_brain_rationale_927",
       "community": 3,
       "norm_label": "determine if position should be exited.         supports partial exit at t1 \u2014 ex"
     },
@@ -1854,7 +1953,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L1",
       "id": "core_risk_manager_py",
-      "community": 64,
+      "community": 26,
       "norm_label": "risk_manager.py"
     },
     {
@@ -1863,7 +1962,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L12",
       "id": "core_risk_manager_riskmanager",
-      "community": 64,
+      "community": 26,
       "norm_label": "riskmanager"
     },
     {
@@ -1872,7 +1971,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L15",
       "id": "core_risk_manager_riskmanager_init",
-      "community": 64,
+      "community": 26,
       "norm_label": ".__init__()"
     },
     {
@@ -1881,7 +1980,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L37",
       "id": "core_risk_manager_riskmanager_calculate_position_size",
-      "community": 64,
+      "community": 26,
       "norm_label": ".calculate_position_size()"
     },
     {
@@ -1890,7 +1989,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L83",
       "id": "core_risk_manager_riskmanager_validate_trade",
-      "community": 64,
+      "community": 26,
       "norm_label": ".validate_trade()"
     },
     {
@@ -1899,7 +1998,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L114",
       "id": "core_risk_manager_riskmanager_calculate_portfolio_risk",
-      "community": 64,
+      "community": 26,
       "norm_label": ".calculate_portfolio_risk()"
     },
     {
@@ -1908,7 +2007,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L1",
       "id": "core_risk_manager_rationale_1",
-      "community": 64,
+      "community": 26,
       "norm_label": "risk manager handles position sizing and risk calculations"
     },
     {
@@ -1917,7 +2016,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L13",
       "id": "core_risk_manager_rationale_13",
-      "community": 64,
+      "community": 26,
       "norm_label": "risk management and position sizing"
     },
     {
@@ -1926,7 +2025,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L39",
       "id": "core_risk_manager_rationale_39",
-      "community": 64,
+      "community": 26,
       "norm_label": "calculate position size based on risk          args:             capital: availa"
     },
     {
@@ -1935,7 +2034,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L84",
       "id": "core_risk_manager_rationale_84",
-      "community": 64,
+      "community": 26,
       "norm_label": "validate if trade meets risk criteria          args:             portfolio_state"
     },
     {
@@ -1944,7 +2043,7 @@
       "source_file": "core/risk_manager.py",
       "source_location": "L116",
       "id": "core_risk_manager_rationale_116",
-      "community": 64,
+      "community": 26,
       "norm_label": "calculate total portfolio risk from open positions          args:             op"
     },
     {
@@ -2079,7 +2178,7 @@
       "source_file": "utils/helpers.py",
       "source_location": "L19",
       "id": "utils_helpers_is_market_hours",
-      "community": 25,
+      "community": 64,
       "norm_label": "is_market_hours()"
     },
     {
@@ -2142,7 +2241,7 @@
       "source_file": "utils/helpers.py",
       "source_location": "L20",
       "id": "utils_helpers_rationale_20",
-      "community": 25,
+      "community": 64,
       "norm_label": "check if currently in market hours"
     },
     {
@@ -2205,7 +2304,7 @@
       "source_file": "",
       "source_location": "",
       "id": "base",
-      "community": 68,
+      "community": 73,
       "norm_label": "base"
     },
     {
@@ -2259,7 +2358,7 @@
       "source_file": "models/scan_report.py",
       "source_location": "L121",
       "id": "models_scan_report_patternoccurrence",
-      "community": 83,
+      "community": 73,
       "norm_label": "patternoccurrence"
     },
     {
@@ -2268,7 +2367,7 @@
       "source_file": "models/scan_report.py",
       "source_location": "L145",
       "id": "models_scan_report_patternoccurrence_repr",
-      "community": 83,
+      "community": 73,
       "norm_label": ".__repr__()"
     },
     {
@@ -2304,7 +2403,7 @@
       "source_file": "models/scan_report.py",
       "source_location": "L122",
       "id": "models_scan_report_rationale_122",
-      "community": 83,
+      "community": 73,
       "norm_label": "track when patterns appear and their context"
     },
     {
@@ -2322,14 +2421,14 @@
       "source_file": "models/database.py",
       "source_location": "L16",
       "id": "models_database_trade",
-      "community": 6,
+      "community": 73,
       "norm_label": "trade"
     },
     {
       "label": ".__repr__()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L67",
+      "source_location": "L74",
       "id": "models_database_trade_repr",
       "community": 68,
       "norm_label": ".__repr__()"
@@ -2338,7 +2437,7 @@
       "label": ".to_dict()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L70",
+      "source_location": "L77",
       "id": "models_database_trade_to_dict",
       "community": 75,
       "norm_label": ".to_dict()"
@@ -2347,7 +2446,7 @@
       "label": "Portfolio",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L100",
+      "source_location": "L112",
       "id": "models_database_portfolio",
       "community": 75,
       "norm_label": "portfolio"
@@ -2356,7 +2455,7 @@
       "label": ".__repr__()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L117",
+      "source_location": "L129",
       "id": "models_database_portfolio_repr",
       "community": 75,
       "norm_label": ".__repr__()"
@@ -2365,7 +2464,7 @@
       "label": ".to_dict()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L120",
+      "source_location": "L132",
       "id": "models_database_portfolio_to_dict",
       "community": 75,
       "norm_label": ".to_dict()"
@@ -2374,25 +2473,25 @@
       "label": "LearningMetrics",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L134",
+      "source_location": "L146",
       "id": "models_database_learningmetrics",
-      "community": 68,
+      "community": 88,
       "norm_label": "learningmetrics"
     },
     {
       "label": ".__repr__()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L154",
+      "source_location": "L166",
       "id": "models_database_learningmetrics_repr",
-      "community": 68,
+      "community": 88,
       "norm_label": ".__repr__()"
     },
     {
       "label": "MarketDataCache",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L158",
+      "source_location": "L170",
       "id": "models_database_marketdatacache",
       "community": 68,
       "norm_label": "marketdatacache"
@@ -2401,7 +2500,7 @@
       "label": ".__repr__()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L176",
+      "source_location": "L188",
       "id": "models_database_marketdatacache_repr",
       "community": 68,
       "norm_label": ".__repr__()"
@@ -2410,25 +2509,25 @@
       "label": "MLModel",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L180",
+      "source_location": "L192",
       "id": "models_database_mlmodel",
-      "community": 68,
+      "community": 83,
       "norm_label": "mlmodel"
     },
     {
       "label": ".__repr__()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L194",
+      "source_location": "L206",
       "id": "models_database_mlmodel_repr",
-      "community": 68,
+      "community": 83,
       "norm_label": ".__repr__()"
     },
     {
       "label": "EmailLog",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L198",
+      "source_location": "L210",
       "id": "models_database_emaillog",
       "community": 68,
       "norm_label": "emaillog"
@@ -2437,7 +2536,7 @@
       "label": ".__repr__()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L210",
+      "source_location": "L222",
       "id": "models_database_emaillog_repr",
       "community": 68,
       "norm_label": ".__repr__()"
@@ -2446,7 +2545,7 @@
       "label": "init_database()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L219",
+      "source_location": "L231",
       "id": "models_database_init_database",
       "community": 26,
       "norm_label": "init_database()"
@@ -2455,7 +2554,7 @@
       "label": "_migrate_database()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L268",
+      "source_location": "L280",
       "id": "models_database_migrate_database",
       "community": 26,
       "norm_label": "_migrate_database()"
@@ -2464,16 +2563,16 @@
       "label": "get_session()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L310",
+      "source_location": "L327",
       "id": "models_database_get_session",
-      "community": 27,
+      "community": 85,
       "norm_label": "get_session()"
     },
     {
       "label": "get_engine()",
       "file_type": "code",
       "source_file": "models/database.py",
-      "source_location": "L318",
+      "source_location": "L335",
       "id": "models_database_get_engine",
       "community": 26,
       "norm_label": "get_engine()"
@@ -2493,15 +2592,15 @@
       "source_file": "models/database.py",
       "source_location": "L17",
       "id": "models_database_rationale_17",
-      "community": 6,
+      "community": 73,
       "norm_label": "individual trade record"
     },
     {
       "label": "Portfolio snapshot at each point in time",
       "file_type": "rationale",
       "source_file": "models/database.py",
-      "source_location": "L101",
-      "id": "models_database_rationale_101",
+      "source_location": "L113",
+      "id": "models_database_rationale_113",
       "community": 75,
       "norm_label": "portfolio snapshot at each point in time"
     },
@@ -2509,17 +2608,17 @@
       "label": "Pattern and strategy performance metrics",
       "file_type": "rationale",
       "source_file": "models/database.py",
-      "source_location": "L135",
-      "id": "models_database_rationale_135",
-      "community": 68,
+      "source_location": "L147",
+      "id": "models_database_rationale_147",
+      "community": 88,
       "norm_label": "pattern and strategy performance metrics"
     },
     {
       "label": "Cache market data to reduce API calls",
       "file_type": "rationale",
       "source_file": "models/database.py",
-      "source_location": "L159",
-      "id": "models_database_rationale_159",
+      "source_location": "L171",
+      "id": "models_database_rationale_171",
       "community": 68,
       "norm_label": "cache market data to reduce api calls"
     },
@@ -2527,17 +2626,17 @@
       "label": "Store trained ML models",
       "file_type": "rationale",
       "source_file": "models/database.py",
-      "source_location": "L181",
-      "id": "models_database_rationale_181",
-      "community": 68,
+      "source_location": "L193",
+      "id": "models_database_rationale_193",
+      "community": 83,
       "norm_label": "store trained ml models"
     },
     {
       "label": "Initialize database connection and create tables",
       "file_type": "rationale",
       "source_file": "models/database.py",
-      "source_location": "L220",
-      "id": "models_database_rationale_220",
+      "source_location": "L232",
+      "id": "models_database_rationale_232",
       "community": 26,
       "norm_label": "initialize database connection and create tables"
     },
@@ -2545,8 +2644,8 @@
       "label": "Idempotent schema migrations.     Safely adds missing columns on every startup.",
       "file_type": "rationale",
       "source_file": "models/database.py",
-      "source_location": "L269",
-      "id": "models_database_rationale_269",
+      "source_location": "L281",
+      "id": "models_database_rationale_281",
       "community": 26,
       "norm_label": "idempotent schema migrations.     safely adds missing columns on every startup."
     },
@@ -2554,17 +2653,17 @@
       "label": "Get a new database session",
       "file_type": "rationale",
       "source_file": "models/database.py",
-      "source_location": "L311",
-      "id": "models_database_rationale_311",
-      "community": 26,
+      "source_location": "L328",
+      "id": "models_database_rationale_328",
+      "community": 85,
       "norm_label": "get a new database session"
     },
     {
       "label": "Get the database engine",
       "file_type": "rationale",
       "source_file": "models/database.py",
-      "source_location": "L319",
-      "id": "models_database_rationale_319",
+      "source_location": "L336",
+      "id": "models_database_rationale_336",
       "community": 26,
       "norm_label": "get the database engine"
     },
@@ -2576,6 +2675,123 @@
       "id": "models_init_py",
       "community": 17,
       "norm_label": "__init__.py"
+    },
+    {
+      "label": "generate_universe.py",
+      "file_type": "code",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L1",
+      "id": "scripts_generate_universe_py",
+      "community": 74,
+      "norm_label": "generate_universe.py"
+    },
+    {
+      "label": "fetch_nifty500_symbols()",
+      "file_type": "code",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L15",
+      "id": "scripts_generate_universe_fetch_nifty500_symbols",
+      "community": 74,
+      "norm_label": "fetch_nifty500_symbols()"
+    },
+    {
+      "label": "get_fallback_symbols()",
+      "file_type": "code",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L38",
+      "id": "scripts_generate_universe_get_fallback_symbols",
+      "community": 74,
+      "norm_label": "get_fallback_symbols()"
+    },
+    {
+      "label": "calculate_atr_percent()",
+      "file_type": "code",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L60",
+      "id": "scripts_generate_universe_calculate_atr_percent",
+      "community": 74,
+      "norm_label": "calculate_atr_percent()"
+    },
+    {
+      "label": "calculate_rsi()",
+      "file_type": "code",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L73",
+      "id": "scripts_generate_universe_calculate_rsi",
+      "community": 74,
+      "norm_label": "calculate_rsi()"
+    },
+    {
+      "label": "backtest_swing_rule()",
+      "file_type": "code",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L83",
+      "id": "scripts_generate_universe_backtest_swing_rule",
+      "community": 74,
+      "norm_label": "backtest_swing_rule()"
+    },
+    {
+      "label": "process_universe()",
+      "file_type": "code",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L137",
+      "id": "scripts_generate_universe_process_universe",
+      "community": 74,
+      "norm_label": "process_universe()"
+    },
+    {
+      "label": "push_to_bot()",
+      "file_type": "code",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L208",
+      "id": "scripts_generate_universe_push_to_bot",
+      "community": 74,
+      "norm_label": "push_to_bot()"
+    },
+    {
+      "label": "Fetch the latest Nifty 500 constituents from NSE website",
+      "file_type": "rationale",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L16",
+      "id": "scripts_generate_universe_rationale_16",
+      "community": 74,
+      "norm_label": "fetch the latest nifty 500 constituents from nse website"
+    },
+    {
+      "label": "Fallback symbols if NSE download fails",
+      "file_type": "rationale",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L39",
+      "id": "scripts_generate_universe_rationale_39",
+      "community": 74,
+      "norm_label": "fallback symbols if nse download fails"
+    },
+    {
+      "label": "Calculate average true range as a percentage of price",
+      "file_type": "rationale",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L61",
+      "id": "scripts_generate_universe_rationale_61",
+      "community": 74,
+      "norm_label": "calculate average true range as a percentage of price"
+    },
+    {
+      "label": "Backtests a simple swing rule:     Buy: Close > 50 EMA and RSI crosses above 40",
+      "file_type": "rationale",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L84",
+      "id": "scripts_generate_universe_rationale_84",
+      "community": 74,
+      "norm_label": "backtests a simple swing rule:     buy: close > 50 ema and rsi crosses above 40"
+    },
+    {
+      "label": "Send the generated watchlist to the live bot via API",
+      "file_type": "rationale",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L209",
+      "id": "scripts_generate_universe_rationale_209",
+      "community": 74,
+      "norm_label": "send the generated watchlist to the live bot via api"
     },
     {
       "label": "data_service.py",
@@ -2608,7 +2824,7 @@
       "label": ".get_watchlist()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L106",
+      "source_location": "L93",
       "id": "services_data_service_dataservice_get_watchlist",
       "community": 5,
       "norm_label": ".get_watchlist()"
@@ -2617,7 +2833,7 @@
       "label": ".fetch_stock_data()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L114",
+      "source_location": "L101",
       "id": "services_data_service_dataservice_fetch_stock_data",
       "community": 5,
       "norm_label": ".fetch_stock_data()"
@@ -2626,7 +2842,7 @@
       "label": ".fetch_stock_info()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L153",
+      "source_location": "L140",
       "id": "services_data_service_dataservice_fetch_stock_info",
       "community": 5,
       "norm_label": ".fetch_stock_info()"
@@ -2635,7 +2851,7 @@
       "label": ".fetch_nifty_index()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L173",
+      "source_location": "L160",
       "id": "services_data_service_dataservice_fetch_nifty_index",
       "community": 5,
       "norm_label": ".fetch_nifty_index()"
@@ -2644,7 +2860,7 @@
       "label": ".get_current_price()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L199",
+      "source_location": "L186",
       "id": "services_data_service_dataservice_get_current_price",
       "community": 5,
       "norm_label": ".get_current_price()"
@@ -2653,7 +2869,7 @@
       "label": ".get_batch_prices()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L214",
+      "source_location": "L201",
       "id": "services_data_service_dataservice_get_batch_prices",
       "community": 5,
       "norm_label": ".get_batch_prices()"
@@ -2662,7 +2878,7 @@
       "label": ".is_market_open()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L293",
+      "source_location": "L280",
       "id": "services_data_service_dataservice_is_market_open",
       "community": 5,
       "norm_label": ".is_market_open()"
@@ -2671,7 +2887,7 @@
       "label": ".get_market_status()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L304",
+      "source_location": "L291",
       "id": "services_data_service_dataservice_get_market_status",
       "community": 5,
       "norm_label": ".get_market_status()"
@@ -2680,7 +2896,7 @@
       "label": ".fetch_nifty_return()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L333",
+      "source_location": "L320",
       "id": "services_data_service_dataservice_fetch_nifty_return",
       "community": 5,
       "norm_label": ".fetch_nifty_return()"
@@ -2689,7 +2905,7 @@
       "label": ".fetch_earnings_dates()",
       "file_type": "code",
       "source_file": "services/data_service.py",
-      "source_location": "L364",
+      "source_location": "L351",
       "id": "services_data_service_dataservice_fetch_earnings_dates",
       "community": 5,
       "norm_label": ".fetch_earnings_dates()"
@@ -2716,8 +2932,8 @@
       "label": "Fetch historical data for a stock.         Includes retry logic \u2014 if first fetch",
       "file_type": "rationale",
       "source_file": "services/data_service.py",
-      "source_location": "L116",
-      "id": "services_data_service_rationale_116",
+      "source_location": "L103",
+      "id": "services_data_service_rationale_103",
       "community": 5,
       "norm_label": "fetch historical data for a stock.         includes retry logic \u2014 if first fetch"
     },
@@ -2725,8 +2941,8 @@
       "label": "Fetch stock info (market cap, sector, etc.)",
       "file_type": "rationale",
       "source_file": "services/data_service.py",
-      "source_location": "L154",
-      "id": "services_data_service_rationale_154",
+      "source_location": "L141",
+      "id": "services_data_service_rationale_141",
       "community": 5,
       "norm_label": "fetch stock info (market cap, sector, etc.)"
     },
@@ -2734,8 +2950,8 @@
       "label": "Fetch Nifty 50 index data with retry",
       "file_type": "rationale",
       "source_file": "services/data_service.py",
-      "source_location": "L174",
-      "id": "services_data_service_rationale_174",
+      "source_location": "L161",
+      "id": "services_data_service_rationale_161",
       "community": 5,
       "norm_label": "fetch nifty 50 index data with retry"
     },
@@ -2743,8 +2959,8 @@
       "label": "Get current market price of a stock.         Uses 2d period \u2014 faster and suffici",
       "file_type": "rationale",
       "source_file": "services/data_service.py",
-      "source_location": "L200",
-      "id": "services_data_service_rationale_200",
+      "source_location": "L187",
+      "id": "services_data_service_rationale_187",
       "community": 5,
       "norm_label": "get current market price of a stock.         uses 2d period \u2014 faster and suffici"
     },
@@ -2752,8 +2968,8 @@
       "label": "Get current prices for multiple stocks in a single batch fetch.          Uses yf",
       "file_type": "rationale",
       "source_file": "services/data_service.py",
-      "source_location": "L215",
-      "id": "services_data_service_rationale_215",
+      "source_location": "L202",
+      "id": "services_data_service_rationale_202",
       "community": 5,
       "norm_label": "get current prices for multiple stocks in a single batch fetch.          uses yf"
     },
@@ -2761,8 +2977,8 @@
       "label": "Check if Indian stock market is open",
       "file_type": "rationale",
       "source_file": "services/data_service.py",
-      "source_location": "L294",
-      "id": "services_data_service_rationale_294",
+      "source_location": "L281",
+      "id": "services_data_service_rationale_281",
       "community": 5,
       "norm_label": "check if indian stock market is open"
     },
@@ -2770,8 +2986,8 @@
       "label": "Get detailed market status",
       "file_type": "rationale",
       "source_file": "services/data_service.py",
-      "source_location": "L305",
-      "id": "services_data_service_rationale_305",
+      "source_location": "L292",
+      "id": "services_data_service_rationale_292",
       "community": 5,
       "norm_label": "get detailed market status"
     },
@@ -2779,8 +2995,8 @@
       "label": "Fetch Nifty 50's price return over the last N trading days.         Used for rel",
       "file_type": "rationale",
       "source_file": "services/data_service.py",
-      "source_location": "L334",
-      "id": "services_data_service_rationale_334",
+      "source_location": "L321",
+      "id": "services_data_service_rationale_321",
       "community": 5,
       "norm_label": "fetch nifty 50's price return over the last n trading days.         used for rel"
     },
@@ -2788,8 +3004,8 @@
       "label": "Fetch upcoming/recent earnings dates for a stock.         Results are cached for",
       "file_type": "rationale",
       "source_file": "services/data_service.py",
-      "source_location": "L365",
-      "id": "services_data_service_rationale_365",
+      "source_location": "L352",
+      "id": "services_data_service_rationale_352",
       "community": 5,
       "norm_label": "fetch upcoming/recent earnings dates for a stock.         results are cached for"
     },
@@ -3303,7 +3519,7 @@
       "source_file": "services/reporting_service.py",
       "source_location": "L133",
       "id": "services_reporting_service_reportingservice_save_pattern_occurrences",
-      "community": 83,
+      "community": 1,
       "norm_label": "._save_pattern_occurrences()"
     },
     {
@@ -3321,7 +3537,7 @@
       "source_file": "services/reporting_service.py",
       "source_location": "L187",
       "id": "services_reporting_service_reportingservice_get_scan_details",
-      "community": 74,
+      "community": 1,
       "norm_label": ".get_scan_details()"
     },
     {
@@ -3393,7 +3609,7 @@
       "source_file": "services/reporting_service.py",
       "source_location": "L135",
       "id": "services_reporting_service_rationale_135",
-      "community": 83,
+      "community": 1,
       "norm_label": "save pattern occurrence records"
     },
     {
@@ -3411,7 +3627,7 @@
       "source_file": "services/reporting_service.py",
       "source_location": "L188",
       "id": "services_reporting_service_rationale_188",
-      "community": 74,
+      "community": 1,
       "norm_label": "get detailed results for a specific scan          args:             scan_id: sca"
     },
     {
@@ -3447,7 +3663,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L1",
       "id": "services_email_service_py",
-      "community": 44,
+      "community": 4,
       "norm_label": "email_service.py"
     },
     {
@@ -3456,7 +3672,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L15",
       "id": "services_email_service_emailservice",
-      "community": 44,
+      "community": 4,
       "norm_label": "emailservice"
     },
     {
@@ -3465,7 +3681,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L18",
       "id": "services_email_service_emailservice_init",
-      "community": 44,
+      "community": 4,
       "norm_label": ".__init__()"
     },
     {
@@ -3474,7 +3690,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L31",
       "id": "services_email_service_emailservice_send_email",
-      "community": 44,
+      "community": 4,
       "norm_label": ".send_email()"
     },
     {
@@ -3492,7 +3708,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L162",
       "id": "services_email_service_emailservice_send_trade_exit_email",
-      "community": 44,
+      "community": 4,
       "norm_label": ".send_trade_exit_email()"
     },
     {
@@ -3501,7 +3717,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L262",
       "id": "services_email_service_emailservice_send_daily_summary",
-      "community": 44,
+      "community": 4,
       "norm_label": ".send_daily_summary()"
     },
     {
@@ -3510,7 +3726,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L353",
       "id": "services_email_service_emailservice_send_alert_email",
-      "community": 44,
+      "community": 4,
       "norm_label": ".send_alert_email()"
     },
     {
@@ -3519,7 +3735,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L405",
       "id": "services_email_service_emailservice_send_missed_setups_email",
-      "community": 44,
+      "community": 4,
       "norm_label": ".send_missed_setups_email()"
     },
     {
@@ -3528,7 +3744,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L546",
       "id": "services_email_service_emailservice_send_health_alert",
-      "community": 44,
+      "community": 4,
       "norm_label": ".send_health_alert()"
     },
     {
@@ -3537,7 +3753,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L1",
       "id": "services_email_service_rationale_1",
-      "community": 44,
+      "community": 4,
       "norm_label": "email service using resend sends trade notifications and daily summaries"
     },
     {
@@ -3546,7 +3762,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L16",
       "id": "services_email_service_rationale_16",
-      "community": 44,
+      "community": 4,
       "norm_label": "email notification service using resend"
     },
     {
@@ -3555,7 +3771,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L32",
       "id": "services_email_service_rationale_32",
-      "community": 44,
+      "community": 4,
       "norm_label": "send an email using resend          args:             subject: email subject"
     },
     {
@@ -3573,7 +3789,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L163",
       "id": "services_email_service_rationale_163",
-      "community": 44,
+      "community": 4,
       "norm_label": "send email notification for trade exit          args:             trade: trade o"
     },
     {
@@ -3582,7 +3798,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L263",
       "id": "services_email_service_rationale_263",
-      "community": 44,
+      "community": 4,
       "norm_label": "send end-of-day summary email          args:             summary_data: dict with"
     },
     {
@@ -3591,7 +3807,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L354",
       "id": "services_email_service_rationale_354",
-      "community": 44,
+      "community": 4,
       "norm_label": "send a general alert email          args:             title: alert title"
     },
     {
@@ -3600,7 +3816,7 @@
       "source_file": "services/email_service.py",
       "source_location": "L406",
       "id": "services_email_service_rationale_406",
-      "community": 44,
+      "community": 4,
       "norm_label": "send end-of-day email listing stocks that were evaluated but rejected today."
     },
     {
@@ -3609,8 +3825,215 @@
       "source_file": "services/email_service.py",
       "source_location": "L548",
       "id": "services_email_service_rationale_548",
-      "community": 44,
+      "community": 4,
       "norm_label": "send a system health alert email.         called by the daily health digest job"
+    },
+    {
+      "label": ".aider.chat.history.md",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L1",
+      "id": "aider_chat_history_md",
+      "community": 44,
+      "norm_label": ".aider.chat.history.md"
+    },
+    {
+      "label": "aider chat started at 2026-06-12 16:55:58",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L2",
+      "id": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_55_58",
+      "community": 44,
+      "norm_label": "aider chat started at 2026-06-12 16:55:58"
+    },
+    {
+      "label": "aider chat started at 2026-06-12 16:56:37",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L14",
+      "id": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_56_37",
+      "community": 44,
+      "norm_label": "aider chat started at 2026-06-12 16:56:37"
+    },
+    {
+      "label": "/exit",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L27",
+      "id": "personal_work_aider_chat_history_exit",
+      "community": 44,
+      "norm_label": "/exit"
+    },
+    {
+      "label": "aider chat started at 2026-06-12 16:57:35",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L29",
+      "id": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_57_35",
+      "community": 44,
+      "norm_label": "aider chat started at 2026-06-12 16:57:35"
+    },
+    {
+      "label": "/exit",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L42",
+      "id": "personal_work_aider_chat_history_exit_42",
+      "community": 44,
+      "norm_label": "/exit"
+    },
+    {
+      "label": "aider chat started at 2026-06-12 16:58:44",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L44",
+      "id": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_58_44",
+      "community": 44,
+      "norm_label": "aider chat started at 2026-06-12 16:58:44"
+    },
+    {
+      "label": "/add .",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L52",
+      "id": "personal_work_aider_chat_history_add",
+      "community": 44,
+      "norm_label": "/add ."
+    },
+    {
+      "label": "ls",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L56",
+      "id": "personal_work_aider_chat_history_ls",
+      "community": 44,
+      "norm_label": "ls"
+    },
+    {
+      "label": "/exit",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L62",
+      "id": "personal_work_aider_chat_history_exit_62",
+      "community": 44,
+      "norm_label": "/exit"
+    },
+    {
+      "label": "aider chat started at 2026-06-12 17:03:46",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L64",
+      "id": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_03_46",
+      "community": 44,
+      "norm_label": "aider chat started at 2026-06-12 17:03:46"
+    },
+    {
+      "label": "/add .",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L72",
+      "id": "personal_work_aider_chat_history_add_72",
+      "community": 44,
+      "norm_label": "/add ."
+    },
+    {
+      "label": "/exit",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L76",
+      "id": "personal_work_aider_chat_history_exit_76",
+      "community": 44,
+      "norm_label": "/exit"
+    },
+    {
+      "label": "aider chat started at 2026-06-12 17:04:49",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L78",
+      "id": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_04_49",
+      "community": 44,
+      "norm_label": "aider chat started at 2026-06-12 17:04:49"
+    },
+    {
+      "label": "/exit",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L91",
+      "id": "personal_work_aider_chat_history_exit_91",
+      "community": 44,
+      "norm_label": "/exit"
+    },
+    {
+      "label": "aider chat started at 2026-06-12 17:05:10",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L93",
+      "id": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_05_10",
+      "community": 44,
+      "norm_label": "aider chat started at 2026-06-12 17:05:10"
+    },
+    {
+      "label": "/add app.py services/ core/ utils/ models/",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L101",
+      "id": "personal_work_aider_chat_history_add_app_py_services_core_utils_models",
+      "community": 44,
+      "norm_label": "/add app.py services/ core/ utils/ models/"
+    },
+    {
+      "label": "Review all these Python files. Fix bugs, broken imports, incorrect function calls, type errors, and any issues that would cause failures on Render (Python 3.13 compatibility, gunicorn, aiohttp). Do not touch database credentials or environment variables. Fix files directly. Summarize changes at the end.",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L123",
+      "id": "personal_work_aider_chat_history_review_all_these_python_files_fix_bugs_broken_imports_incorrect_function_calls_type_errors_and_any_issues_that_would_cause_failures_on_render_python_3_13_compatibility_gunicorn_aiohttp_do_not_touch_database_credentials_or_environment_variables_fix_files_directly_summarize_changes_at_the_end",
+      "community": 44,
+      "norm_label": "review all these python files. fix bugs, broken imports, incorrect function calls, type errors, and any issues that would cause failures on render (python 3.13 compatibility, gunicorn, aiohttp). do not touch database credentials or environment variables. fix files directly. summarize changes at the end."
+    },
+    {
+      "label": "/drop models/ utils/",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L135",
+      "id": "personal_work_aider_chat_history_drop_models_utils",
+      "community": 44,
+      "norm_label": "/drop models/ utils/"
+    },
+    {
+      "label": "Review app.py, services/ and core/ Python files. Fix bugs, broken imports, type errors, Python 3.13 compatibility issues. Do not touch env variables. Fix directly. Summarize changes.",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L142",
+      "id": "personal_work_aider_chat_history_review_app_py_services_and_core_python_files_fix_bugs_broken_imports_type_errors_python_3_13_compatibility_issues_do_not_touch_env_variables_fix_directly_summarize_changes",
+      "community": 44,
+      "norm_label": "review app.py, services/ and core/ python files. fix bugs, broken imports, type errors, python 3.13 compatibility issues. do not touch env variables. fix directly. summarize changes."
+    },
+    {
+      "label": "/drop core/ services/",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L154",
+      "id": "personal_work_aider_chat_history_drop_core_services",
+      "community": 44,
+      "norm_label": "/drop core/ services/"
+    },
+    {
+      "label": "Review app.py. Fix bugs, broken imports, type errors, Python 3.13 compatibility. Do not touch env variables. Fix directly. Summarize changes.",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L168",
+      "id": "personal_work_aider_chat_history_review_app_py_fix_bugs_broken_imports_type_errors_python_3_13_compatibility_do_not_touch_env_variables_fix_directly_summarize_changes",
+      "community": 44,
+      "norm_label": "review app.py. fix bugs, broken imports, type errors, python 3.13 compatibility. do not touch env variables. fix directly. summarize changes."
+    },
+    {
+      "label": "/exit",
+      "file_type": "document",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L173",
+      "id": "personal_work_aider_chat_history_exit_173",
+      "community": 44,
+      "norm_label": "/exit"
     },
     {
       "label": "README.md",
@@ -3782,6 +4205,105 @@
       "id": "personal_work_readme_license",
       "community": 11,
       "norm_label": "license"
+    },
+    {
+      "label": "implementation_plan.md",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L1",
+      "id": "implementation_plan_md",
+      "community": 77,
+      "norm_label": "implementation_plan.md"
+    },
+    {
+      "label": "Entry and Exit Conditions Review",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L1",
+      "id": "personal_work_implementation_plan_entry_and_exit_conditions_review",
+      "community": 77,
+      "norm_label": "entry and exit conditions review"
+    },
+    {
+      "label": "Open Questions",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L7",
+      "id": "personal_work_implementation_plan_open_questions",
+      "community": 77,
+      "norm_label": "open questions"
+    },
+    {
+      "label": "Review Findings & Proposed Changes",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L12",
+      "id": "personal_work_implementation_plan_review_findings_proposed_changes",
+      "community": 77,
+      "norm_label": "review findings & proposed changes"
+    },
+    {
+      "label": "1. Exit Condition: Flawed Time Stop (Max Duration)",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L14",
+      "id": "personal_work_implementation_plan_1_exit_condition_flawed_time_stop_max_duration",
+      "community": 77,
+      "norm_label": "1. exit condition: flawed time stop (max duration)"
+    },
+    {
+      "label": "2. Entry Condition: Stop Loss Selection is Too Tight",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L20",
+      "id": "personal_work_implementation_plan_2_entry_condition_stop_loss_selection_is_too_tight",
+      "community": 77,
+      "norm_label": "2. entry condition: stop loss selection is too tight"
+    },
+    {
+      "label": "3. Exit Condition: Trailing Stop Overriding Breakeven",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L26",
+      "id": "personal_work_implementation_plan_3_exit_condition_trailing_stop_overriding_breakeven",
+      "community": 77,
+      "norm_label": "3. exit condition: trailing stop overriding breakeven"
+    },
+    {
+      "label": "4. Entry Condition: Hardcoded Risk/Reward Ratio Check",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L31",
+      "id": "personal_work_implementation_plan_4_entry_condition_hardcoded_risk_reward_ratio_check",
+      "community": 77,
+      "norm_label": "4. entry condition: hardcoded risk/reward ratio check"
+    },
+    {
+      "label": "Implementation Plan",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L38",
+      "id": "personal_work_implementation_plan_implementation_plan",
+      "community": 77,
+      "norm_label": "implementation plan"
+    },
+    {
+      "label": "[MODIFY] `core/trading_brain.py`",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L42",
+      "id": "personal_work_implementation_plan_modify_core_trading_brain_py",
+      "community": 77,
+      "norm_label": "[modify] `core/trading_brain.py`"
+    },
+    {
+      "label": "[MODIFY] `app.py`",
+      "file_type": "document",
+      "source_file": "implementation_plan.md",
+      "source_location": "L46",
+      "id": "personal_work_implementation_plan_modify_app_py",
+      "community": 77,
+      "norm_label": "[modify] `app.py`"
     },
     {
       "label": "graphify.md",
@@ -8347,6 +8869,447 @@
       "norm_label": "code:python (if is_system_halted():)"
     },
     {
+      "label": "End of day analysis and learning - runs at 4:00 PM IST",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L479",
+      "community": 3,
+      "norm_label": "end of day analysis and learning - runs at 4:00 pm ist",
+      "id": "personal_work_app_rationale_479"
+    },
+    {
+      "label": "Pre-market scan \u2014 runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L650",
+      "community": 84,
+      "norm_label": "pre-market scan \u2014 runs at 8:45 am ist mon-fri.      scans the watchlist using la",
+      "id": "personal_work_app_rationale_650"
+    },
+    {
+      "label": "Weekly portfolio row cleanup \u2014 runs every Saturday at 6:00 AM IST.      Keeps on",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L714",
+      "community": 35,
+      "norm_label": "weekly portfolio row cleanup \u2014 runs every saturday at 6:00 am ist.      keeps on",
+      "id": "personal_work_app_rationale_714"
+    },
+    {
+      "label": "Daily system health digest - runs at 3:35 PM IST (after market close).      Send",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L751",
+      "community": 79,
+      "norm_label": "daily system health digest - runs at 3:35 pm ist (after market close).      send",
+      "id": "personal_work_app_rationale_751"
+    },
+    {
+      "label": "Count how many consecutive trading days have had zero trades entered",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L874",
+      "community": 50,
+      "norm_label": "count how many consecutive trading days have had zero trades entered",
+      "id": "personal_work_app_rationale_874"
+    },
+    {
+      "label": "Portfolio API endpoint",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L976",
+      "community": 34,
+      "norm_label": "portfolio api endpoint",
+      "id": "personal_work_app_rationale_976"
+    },
+    {
+      "label": "Open positions API endpoint",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1016",
+      "community": 33,
+      "norm_label": "open positions api endpoint",
+      "id": "personal_work_app_rationale_1016"
+    },
+    {
+      "label": "Health check endpoint for UptimeRobot",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1029",
+      "community": 0,
+      "norm_label": "health check endpoint for uptimerobot",
+      "id": "personal_work_app_rationale_1029"
+    },
+    {
+      "label": "Performance metrics API",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1086",
+      "community": 87,
+      "norm_label": "performance metrics api",
+      "id": "personal_work_app_rationale_1086"
+    },
+    {
+      "label": "Get current market context",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1102",
+      "community": 81,
+      "norm_label": "get current market context",
+      "id": "personal_work_app_rationale_1102"
+    },
+    {
+      "label": "Manually trigger a market scan",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1115",
+      "community": 80,
+      "norm_label": "manually trigger a market scan",
+      "id": "personal_work_app_rationale_1115"
+    },
+    {
+      "label": "Get recent scan history",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1125",
+      "community": 1,
+      "norm_label": "get recent scan history",
+      "id": "personal_work_app_rationale_1125"
+    },
+    {
+      "label": "Get detailed results for a specific scan",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1143",
+      "community": 1,
+      "norm_label": "get detailed results for a specific scan",
+      "id": "personal_work_app_rationale_1143"
+    },
+    {
+      "label": "Get pattern performance statistics",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1163",
+      "community": 10,
+      "norm_label": "get pattern performance statistics",
+      "id": "personal_work_app_rationale_1163"
+    },
+    {
+      "label": "Get analysis of why opportunities are being rejected",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1181",
+      "community": 1,
+      "norm_label": "get analysis of why opportunities are being rejected",
+      "id": "personal_work_app_rationale_1181"
+    },
+    {
+      "label": "Get AI learning insights",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1199",
+      "community": 86,
+      "norm_label": "get ai learning insights",
+      "id": "personal_work_app_rationale_1199"
+    },
+    {
+      "label": "Comprehensive trade summary with real P&L (after Groww charges).     No auth req",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1214",
+      "community": 10,
+      "norm_label": "comprehensive trade summary with real p&l (after groww charges).     no auth req",
+      "id": "personal_work_app_rationale_1214"
+    },
+    {
+      "label": "Add capital to the existing portfolio WITHOUT resetting trade history.     Use t",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1323",
+      "community": 78,
+      "norm_label": "add capital to the existing portfolio without resetting trade history.     use t",
+      "id": "personal_work_app_rationale_1323"
+    },
+    {
+      "label": "Wipe scan history, pattern occurrences, and learning metrics.     Use this after",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1391",
+      "community": 66,
+      "norm_label": "wipe scan history, pattern occurrences, and learning metrics.     use this after",
+      "id": "personal_work_app_rationale_1391"
+    },
+    {
+      "label": "Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1439",
+      "community": 32,
+      "norm_label": "wipe all trade records (open and closed) and reset the portfolio snapshot.     t",
+      "id": "personal_work_app_rationale_1439"
+    },
+    {
+      "label": "Nuclear option: wipe ALL data \u2014 trades, scans, patterns, learning, portfolio.",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1510",
+      "community": 76,
+      "norm_label": "nuclear option: wipe all data \u2014 trades, scans, patterns, learning, portfolio.",
+      "id": "personal_work_app_rationale_1510"
+    },
+    {
+      "label": "Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1584",
+      "community": 50,
+      "norm_label": "deep diagnostic snapshot of the system.     returns db counts, scoring config, s",
+      "id": "personal_work_app_rationale_1584"
+    },
+    {
+      "label": "Immediately trigger a market scan outside the scheduler.     Useful for testing",
+      "file_type": "rationale",
+      "source_file": "app.py",
+      "source_location": "L1704",
+      "community": 26,
+      "norm_label": "immediately trigger a market scan outside the scheduler.     useful for testing",
+      "id": "personal_work_app_rationale_1704"
+    },
+    {
+      "label": "Save trained ML model to database",
+      "file_type": "rationale",
+      "source_file": "core/learning_engine.py",
+      "source_location": "L255",
+      "community": 83,
+      "norm_label": "save trained ml model to database",
+      "id": "core_learning_engine_rationale_255"
+    },
+    {
+      "label": "Generate comprehensive performance summary",
+      "file_type": "rationale",
+      "source_file": "core/learning_engine.py",
+      "source_location": "L287",
+      "community": 8,
+      "norm_label": "generate comprehensive performance summary",
+      "id": "core_learning_engine_rationale_287"
+    },
+    {
+      "label": "Generate comprehensive learning insights for the AI.          Returns:",
+      "file_type": "rationale",
+      "source_file": "core/learning_engine.py",
+      "source_location": "L346",
+      "community": 8,
+      "norm_label": "generate comprehensive learning insights for the ai.          returns:",
+      "id": "core_learning_engine_rationale_346"
+    },
+    {
+      "label": "Execute trade exit.          Args:             trade: Trade object to exit",
+      "file_type": "rationale",
+      "source_file": "core/portfolio_manager.py",
+      "source_location": "L491",
+      "community": 6,
+      "norm_label": "execute trade exit.          args:             trade: trade object to exit",
+      "id": "core_portfolio_manager_rationale_491"
+    },
+    {
+      "label": "Update unrealized P&L for open positions.          Args:             current_pri",
+      "file_type": "rationale",
+      "source_file": "core/portfolio_manager.py",
+      "source_location": "L603",
+      "community": 6,
+      "norm_label": "update unrealized p&l for open positions.          args:             current_pri",
+      "id": "core_portfolio_manager_rationale_603"
+    },
+    {
+      "label": "Get this week's P&L summary including circuit breaker status.         Used by EO",
+      "file_type": "rationale",
+      "source_file": "core/portfolio_manager.py",
+      "source_location": "L631",
+      "community": 6,
+      "norm_label": "get this week's p&l summary including circuit breaker status.         used by eo",
+      "id": "core_portfolio_manager_rationale_631"
+    },
+    {
+      "label": "Final decision gate with multiple checks          Bearish threshold is now scale",
+      "file_type": "rationale",
+      "source_file": "core/trading_brain.py",
+      "source_location": "L620",
+      "community": 3,
+      "norm_label": "final decision gate with multiple checks          bearish threshold is now scale",
+      "id": "core_trading_brain_rationale_620"
+    },
+    {
+      "label": "Generate human-readable decision reason",
+      "file_type": "rationale",
+      "source_file": "core/trading_brain.py",
+      "source_location": "L831",
+      "community": 3,
+      "norm_label": "generate human-readable decision reason",
+      "id": "core_trading_brain_rationale_831"
+    },
+    {
+      "label": "Determine if position should be exited.         Supports partial exit at T1 \u2014 ex",
+      "file_type": "rationale",
+      "source_file": "core/trading_brain.py",
+      "source_location": "L922",
+      "community": 3,
+      "norm_label": "determine if position should be exited.         supports partial exit at t1 \u2014 ex",
+      "id": "core_trading_brain_rationale_922"
+    },
+    {
+      "label": "Portfolio snapshot at each point in time",
+      "file_type": "rationale",
+      "source_file": "models/database.py",
+      "source_location": "L101",
+      "community": 75,
+      "norm_label": "portfolio snapshot at each point in time",
+      "id": "models_database_rationale_101"
+    },
+    {
+      "label": "Pattern and strategy performance metrics",
+      "file_type": "rationale",
+      "source_file": "models/database.py",
+      "source_location": "L135",
+      "community": 88,
+      "norm_label": "pattern and strategy performance metrics",
+      "id": "models_database_rationale_135"
+    },
+    {
+      "label": "Cache market data to reduce API calls",
+      "file_type": "rationale",
+      "source_file": "models/database.py",
+      "source_location": "L159",
+      "community": 68,
+      "norm_label": "cache market data to reduce api calls",
+      "id": "models_database_rationale_159"
+    },
+    {
+      "label": "Store trained ML models",
+      "file_type": "rationale",
+      "source_file": "models/database.py",
+      "source_location": "L181",
+      "community": 83,
+      "norm_label": "store trained ml models",
+      "id": "models_database_rationale_181"
+    },
+    {
+      "label": "Initialize database connection and create tables",
+      "file_type": "rationale",
+      "source_file": "models/database.py",
+      "source_location": "L220",
+      "community": 26,
+      "norm_label": "initialize database connection and create tables",
+      "id": "models_database_rationale_220"
+    },
+    {
+      "label": "Idempotent schema migrations.     Safely adds missing columns on every startup.",
+      "file_type": "rationale",
+      "source_file": "models/database.py",
+      "source_location": "L269",
+      "community": 26,
+      "norm_label": "idempotent schema migrations.     safely adds missing columns on every startup.",
+      "id": "models_database_rationale_269"
+    },
+    {
+      "label": "Get a new database session",
+      "file_type": "rationale",
+      "source_file": "models/database.py",
+      "source_location": "L311",
+      "community": 26,
+      "norm_label": "get a new database session",
+      "id": "models_database_rationale_311"
+    },
+    {
+      "label": "Get the database engine",
+      "file_type": "rationale",
+      "source_file": "models/database.py",
+      "source_location": "L319",
+      "community": 26,
+      "norm_label": "get the database engine",
+      "id": "models_database_rationale_319"
+    },
+    {
+      "label": "Fetch historical data for a stock.         Includes retry logic \u2014 if first fetch",
+      "file_type": "rationale",
+      "source_file": "services/data_service.py",
+      "source_location": "L116",
+      "community": 5,
+      "norm_label": "fetch historical data for a stock.         includes retry logic \u2014 if first fetch",
+      "id": "services_data_service_rationale_116"
+    },
+    {
+      "label": "Fetch stock info (market cap, sector, etc.)",
+      "file_type": "rationale",
+      "source_file": "services/data_service.py",
+      "source_location": "L154",
+      "community": 5,
+      "norm_label": "fetch stock info (market cap, sector, etc.)",
+      "id": "services_data_service_rationale_154"
+    },
+    {
+      "label": "Fetch Nifty 50 index data with retry",
+      "file_type": "rationale",
+      "source_file": "services/data_service.py",
+      "source_location": "L174",
+      "community": 5,
+      "norm_label": "fetch nifty 50 index data with retry",
+      "id": "services_data_service_rationale_174"
+    },
+    {
+      "label": "Get current market price of a stock.         Uses 2d period \u2014 faster and suffici",
+      "file_type": "rationale",
+      "source_file": "services/data_service.py",
+      "source_location": "L200",
+      "community": 5,
+      "norm_label": "get current market price of a stock.         uses 2d period \u2014 faster and suffici",
+      "id": "services_data_service_rationale_200"
+    },
+    {
+      "label": "Get current prices for multiple stocks in a single batch fetch.          Uses yf",
+      "file_type": "rationale",
+      "source_file": "services/data_service.py",
+      "source_location": "L215",
+      "community": 5,
+      "norm_label": "get current prices for multiple stocks in a single batch fetch.          uses yf",
+      "id": "services_data_service_rationale_215"
+    },
+    {
+      "label": "Check if Indian stock market is open",
+      "file_type": "rationale",
+      "source_file": "services/data_service.py",
+      "source_location": "L294",
+      "community": 5,
+      "norm_label": "check if indian stock market is open",
+      "id": "services_data_service_rationale_294"
+    },
+    {
+      "label": "Get detailed market status",
+      "file_type": "rationale",
+      "source_file": "services/data_service.py",
+      "source_location": "L305",
+      "community": 5,
+      "norm_label": "get detailed market status",
+      "id": "services_data_service_rationale_305"
+    },
+    {
+      "label": "Fetch Nifty 50's price return over the last N trading days.         Used for rel",
+      "file_type": "rationale",
+      "source_file": "services/data_service.py",
+      "source_location": "L334",
+      "community": 5,
+      "norm_label": "fetch nifty 50's price return over the last n trading days.         used for rel",
+      "id": "services_data_service_rationale_334"
+    },
+    {
+      "label": "Fetch upcoming/recent earnings dates for a stock.         Results are cached for",
+      "file_type": "rationale",
+      "source_file": "services/data_service.py",
+      "source_location": "L365",
+      "community": 5,
+      "norm_label": "fetch upcoming/recent earnings dates for a stock.         results are cached for",
+      "id": "services_data_service_rationale_365"
+    },
+    {
       "label": "Portfolio API endpoint",
       "file_type": "rationale",
       "source_file": "app.py",
@@ -8378,18 +9341,9 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1074",
-      "community": 8,
+      "community": 87,
       "norm_label": "performance metrics api",
       "id": "personal_work_app_rationale_1074"
-    },
-    {
-      "label": "Get current market context",
-      "file_type": "rationale",
-      "source_file": "app.py",
-      "source_location": "L1090",
-      "community": 81,
-      "norm_label": "get current market context",
-      "id": "personal_work_app_rationale_1090"
     },
     {
       "label": "Manually trigger a market scan",
@@ -8414,7 +9368,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1131",
-      "community": 74,
+      "community": 1,
       "norm_label": "get detailed results for a specific scan",
       "id": "personal_work_app_rationale_1131"
     },
@@ -8432,7 +9386,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1169",
-      "community": 82,
+      "community": 1,
       "norm_label": "get analysis of why opportunities are being rejected",
       "id": "personal_work_app_rationale_1169"
     },
@@ -8441,7 +9395,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1187",
-      "community": 8,
+      "community": 86,
       "norm_label": "get ai learning insights",
       "id": "personal_work_app_rationale_1187"
     },
@@ -8504,7 +9458,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1692",
-      "community": 77,
+      "community": 26,
       "norm_label": "immediately trigger a market scan outside the scheduler.     useful for testing",
       "id": "personal_work_app_rationale_1692"
     },
@@ -8576,7 +9530,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1079",
-      "community": 8,
+      "community": 87,
       "norm_label": "performance metrics api",
       "id": "personal_work_app_rationale_1079"
     },
@@ -8612,7 +9566,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1136",
-      "community": 74,
+      "community": 1,
       "norm_label": "get detailed results for a specific scan",
       "id": "personal_work_app_rationale_1136"
     },
@@ -8630,7 +9584,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1174",
-      "community": 82,
+      "community": 1,
       "norm_label": "get analysis of why opportunities are being rejected",
       "id": "personal_work_app_rationale_1174"
     },
@@ -8639,7 +9593,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1192",
-      "community": 8,
+      "community": 86,
       "norm_label": "get ai learning insights",
       "id": "personal_work_app_rationale_1192"
     },
@@ -8702,7 +9656,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1697",
-      "community": 77,
+      "community": 26,
       "norm_label": "immediately trigger a market scan outside the scheduler.     useful for testing",
       "id": "personal_work_app_rationale_1697"
     },
@@ -10120,42 +11074,6 @@
       "id": "core_market_monitor_rationale_485"
     },
     {
-      "label": "Pre-market scan \u2014 runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la",
-      "file_type": "rationale",
-      "source_file": "app.py",
-      "source_location": "L654",
-      "community": 84,
-      "norm_label": "pre-market scan \u2014 runs at 8:45 am ist mon-fri.      scans the watchlist using la",
-      "id": "personal_work_app_rationale_654"
-    },
-    {
-      "label": "Weekly portfolio row cleanup \u2014 runs every Saturday at 6:00 AM IST.      Keeps on",
-      "file_type": "rationale",
-      "source_file": "app.py",
-      "source_location": "L718",
-      "community": 35,
-      "norm_label": "weekly portfolio row cleanup \u2014 runs every saturday at 6:00 am ist.      keeps on",
-      "id": "personal_work_app_rationale_718"
-    },
-    {
-      "label": "Daily system health digest - runs at 3:35 PM IST (after market close).      Send",
-      "file_type": "rationale",
-      "source_file": "app.py",
-      "source_location": "L755",
-      "community": 79,
-      "norm_label": "daily system health digest - runs at 3:35 pm ist (after market close).      send",
-      "id": "personal_work_app_rationale_755"
-    },
-    {
-      "label": "Count how many consecutive trading days have had zero trades entered",
-      "file_type": "rationale",
-      "source_file": "app.py",
-      "source_location": "L878",
-      "community": 50,
-      "norm_label": "count how many consecutive trading days have had zero trades entered",
-      "id": "personal_work_app_rationale_878"
-    },
-    {
       "label": "Portfolio API endpoint",
       "file_type": "rationale",
       "source_file": "app.py",
@@ -10187,7 +11105,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1078",
-      "community": 8,
+      "community": 87,
       "norm_label": "performance metrics api",
       "id": "personal_work_app_rationale_1078"
     },
@@ -10223,7 +11141,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1135",
-      "community": 74,
+      "community": 1,
       "norm_label": "get detailed results for a specific scan",
       "id": "personal_work_app_rationale_1135"
     },
@@ -10241,7 +11159,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1173",
-      "community": 82,
+      "community": 1,
       "norm_label": "get analysis of why opportunities are being rejected",
       "id": "personal_work_app_rationale_1173"
     },
@@ -10250,7 +11168,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1191",
-      "community": 8,
+      "community": 86,
       "norm_label": "get ai learning insights",
       "id": "personal_work_app_rationale_1191"
     },
@@ -10313,7 +11231,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1696",
-      "community": 77,
+      "community": 26,
       "norm_label": "immediately trigger a market scan outside the scheduler.     useful for testing",
       "id": "personal_work_app_rationale_1696"
     },
@@ -10331,7 +11249,7 @@
       "file_type": "rationale",
       "source_file": "models/database.py",
       "source_location": "L303",
-      "community": 27,
+      "community": 85,
       "norm_label": "get a new database session",
       "id": "models_database_rationale_303"
     },
@@ -10484,7 +11402,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1027",
-      "community": 8,
+      "community": 87,
       "norm_label": "performance metrics api",
       "id": "personal_work_app_rationale_1027"
     },
@@ -10520,7 +11438,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1084",
-      "community": 74,
+      "community": 1,
       "norm_label": "get detailed results for a specific scan",
       "id": "personal_work_app_rationale_1084"
     },
@@ -10538,7 +11456,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1122",
-      "community": 82,
+      "community": 1,
       "norm_label": "get analysis of why opportunities are being rejected",
       "id": "personal_work_app_rationale_1122"
     },
@@ -10547,7 +11465,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1140",
-      "community": 8,
+      "community": 86,
       "norm_label": "get ai learning insights",
       "id": "personal_work_app_rationale_1140"
     },
@@ -10601,7 +11519,7 @@
       "file_type": "rationale",
       "source_file": "app.py",
       "source_location": "L1645",
-      "community": 77,
+      "community": 26,
       "norm_label": "immediately trigger a market scan outside the scheduler.     useful for testing",
       "id": "personal_work_app_rationale_1645"
     },
@@ -10736,7 +11654,7 @@
       "file_type": "rationale",
       "source_file": "models/database.py",
       "source_location": "L299",
-      "community": 27,
+      "community": 85,
       "norm_label": "get a new database session",
       "id": "models_database_rationale_299"
     },
@@ -10826,7 +11744,7 @@
       "file_type": "rationale",
       "source_file": "core/risk_manager.py",
       "source_location": "L114",
-      "community": 64,
+      "community": 26,
       "norm_label": "calculate total portfolio risk from open positions          args:             op",
       "id": "core_risk_manager_rationale_114"
     },
@@ -10907,7 +11825,7 @@
       "file_type": "rationale",
       "source_file": "models/database.py",
       "source_location": "L133",
-      "community": 68,
+      "community": 88,
       "norm_label": "pattern and strategy performance metrics",
       "id": "models_database_rationale_133"
     },
@@ -10925,7 +11843,7 @@
       "file_type": "rationale",
       "source_file": "models/database.py",
       "source_location": "L179",
-      "community": 68,
+      "community": 83,
       "norm_label": "store trained ml models",
       "id": "models_database_rationale_179"
     },
@@ -10952,7 +11870,7 @@
       "file_type": "rationale",
       "source_file": "models/database.py",
       "source_location": "L296",
-      "community": 27,
+      "community": 85,
       "norm_label": "get a new database session",
       "id": "models_database_rationale_296"
     },
@@ -11196,6 +12114,116 @@
       "confidence_score": 1.0,
       "source": "personal_work_skills_lock_skills_systematic_debugging",
       "target": "personal_work_skills_lock_systematic_debugging_computedhash"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "something_json",
+      "target": "personal_work_something_mcpservers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "personal_work_something_mcpservers",
+      "target": "personal_work_something_mcpservers_render",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "personal_work_something_mcpservers",
+      "target": "personal_work_something_mcpservers_aiven_mcp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "personal_work_something_mcpservers_render",
+      "target": "personal_work_something_render_serverurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L5",
+      "weight": 1.0,
+      "source": "personal_work_something_mcpservers_render",
+      "target": "personal_work_something_render_headers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "personal_work_something_mcpservers_render",
+      "target": "personal_work_something_render_disabled",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "personal_work_something_render_headers",
+      "target": "personal_work_something_headers_authorization",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "personal_work_something_aiven_mcp_headers",
+      "target": "personal_work_something_headers_authorization",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "personal_work_something_mcpservers_aiven_mcp",
+      "target": "personal_work_something_aiven_mcp_serverurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "personal_work_something_mcpservers_aiven_mcp",
+      "target": "personal_work_something_aiven_mcp_headers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "something.json",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "personal_work_something_mcpservers_aiven_mcp",
+      "target": "personal_work_something_aiven_mcp_disabledtools",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -12303,11 +13331,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L479",
+      "source_location": "L483",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_479",
-      "target": "personal_work_app_end_of_day_analysis_job"
+      "source": "personal_work_app_rationale_483",
+      "target": "personal_work_app_end_of_day_analysis_job",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -12354,6 +13382,16 @@
       "target": "core_portfolio_manager_portfoliomanager"
     },
     {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L479",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_479",
+      "target": "personal_work_app_end_of_day_analysis_job"
+    },
+    {
       "relation": "calls",
       "context": "call",
       "confidence": "INFERRED",
@@ -12379,10 +13417,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L650",
+      "source_location": "L654",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_650",
+      "source": "personal_work_app_rationale_654",
       "target": "personal_work_app_premarket_scan_job"
     },
     {
@@ -12422,20 +13460,20 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L655",
+      "source_location": "L650",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_655",
+      "source": "personal_work_app_rationale_650",
       "target": "personal_work_app_premarket_scan_job"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L654",
+      "source_location": "L655",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_654",
+      "source": "personal_work_app_rationale_655",
       "target": "personal_work_app_premarket_scan_job"
     },
     {
@@ -12474,10 +13512,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L714",
+      "source_location": "L718",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_714",
+      "source": "personal_work_app_rationale_718",
       "target": "personal_work_app_weekly_portfolio_cleanup_job"
     },
     {
@@ -12495,20 +13533,20 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L719",
+      "source_location": "L714",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_719",
+      "source": "personal_work_app_rationale_714",
       "target": "personal_work_app_weekly_portfolio_cleanup_job"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L718",
+      "source_location": "L719",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_718",
+      "source": "personal_work_app_rationale_719",
       "target": "personal_work_app_weekly_portfolio_cleanup_job"
     },
     {
@@ -12536,10 +13574,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L751",
+      "source_location": "L755",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_751",
+      "source": "personal_work_app_rationale_755",
       "target": "personal_work_app_daily_health_digest_job"
     },
     {
@@ -12557,20 +13595,20 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L756",
+      "source_location": "L751",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_756",
+      "source": "personal_work_app_rationale_751",
       "target": "personal_work_app_daily_health_digest_job"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L755",
+      "source_location": "L756",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_755",
+      "source": "personal_work_app_rationale_756",
       "target": "personal_work_app_daily_health_digest_job"
     },
     {
@@ -12620,10 +13658,10 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L874",
+      "source_location": "L878",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_874",
+      "source": "personal_work_app_rationale_878",
       "target": "personal_work_app_get_consecutive_zero_trade_days"
     },
     {
@@ -12641,20 +13679,20 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L879",
+      "source_location": "L874",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_879",
+      "source": "personal_work_app_rationale_874",
       "target": "personal_work_app_get_consecutive_zero_trade_days"
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L878",
+      "source_location": "L879",
       "weight": 1.0,
       "confidence_score": 1.0,
-      "source": "personal_work_app_rationale_878",
+      "source": "personal_work_app_rationale_879",
       "target": "personal_work_app_get_consecutive_zero_trade_days"
     },
     {
@@ -12704,9 +13742,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L976",
+      "source_location": "L980",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_976",
+      "source": "personal_work_app_rationale_980",
       "target": "personal_work_app_api_portfolio",
       "confidence_score": 1.0
     },
@@ -12720,6 +13758,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_portfolio",
       "target": "models_database_get_session"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L976",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_976",
+      "target": "personal_work_app_api_portfolio"
     },
     {
       "relation": "rationale_for",
@@ -12776,9 +13824,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1016",
+      "source_location": "L1020",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1016",
+      "source": "personal_work_app_rationale_1020",
       "target": "personal_work_app_api_open_positions",
       "confidence_score": 1.0
     },
@@ -12792,6 +13840,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_open_positions",
       "target": "models_database_get_session"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1016",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1016",
+      "target": "personal_work_app_api_open_positions"
     },
     {
       "relation": "rationale_for",
@@ -12837,9 +13895,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1029",
+      "source_location": "L1033",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1029",
+      "source": "personal_work_app_rationale_1033",
       "target": "personal_work_app_health",
       "confidence_score": 1.0
     },
@@ -12875,6 +13933,16 @@
       "weight": 1.0,
       "source": "personal_work_app_health",
       "target": "utils_helpers_get_market_status_message"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1029",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1029",
+      "target": "personal_work_app_health"
     },
     {
       "relation": "rationale_for",
@@ -12931,9 +13999,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1086",
+      "source_location": "L1090",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1086",
+      "source": "personal_work_app_rationale_1090",
       "target": "personal_work_app_api_performance",
       "confidence_score": 1.0
     },
@@ -12958,6 +14026,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_performance",
       "target": "core_learning_engine_learningengine"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1086",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1086",
+      "target": "personal_work_app_api_performance"
     },
     {
       "relation": "rationale_for",
@@ -13014,9 +14092,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1102",
+      "source_location": "L1106",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1102",
+      "source": "personal_work_app_rationale_1106",
       "target": "personal_work_app_api_market_context",
       "confidence_score": 1.0
     },
@@ -13041,6 +14119,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_market_context",
       "target": "utils_helpers_get_market_status_message"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1102",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1102",
+      "target": "personal_work_app_api_market_context"
     },
     {
       "relation": "rationale_for",
@@ -13097,11 +14185,21 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1115",
+      "source_location": "L1119",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1115",
+      "source": "personal_work_app_rationale_1119",
       "target": "personal_work_app_trigger_scan",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1115",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1115",
+      "target": "personal_work_app_trigger_scan"
     },
     {
       "relation": "rationale_for",
@@ -13147,9 +14245,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1125",
+      "source_location": "L1129",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1125",
+      "source": "personal_work_app_rationale_1129",
       "target": "personal_work_app_api_scan_history",
       "confidence_score": 1.0
     },
@@ -13174,6 +14272,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_scan_history",
       "target": "services_reporting_service_reportingservice"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1125",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1125",
+      "target": "personal_work_app_api_scan_history"
     },
     {
       "relation": "rationale_for",
@@ -13230,9 +14338,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1143",
+      "source_location": "L1147",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1143",
+      "source": "personal_work_app_rationale_1147",
       "target": "personal_work_app_api_scan_details",
       "confidence_score": 1.0
     },
@@ -13257,6 +14365,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_scan_details",
       "target": "services_reporting_service_reportingservice"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1143",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1143",
+      "target": "personal_work_app_api_scan_details"
     },
     {
       "relation": "rationale_for",
@@ -13313,9 +14431,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1163",
+      "source_location": "L1167",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1163",
+      "source": "personal_work_app_rationale_1167",
       "target": "personal_work_app_api_pattern_performance",
       "confidence_score": 1.0
     },
@@ -13340,6 +14458,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_pattern_performance",
       "target": "services_reporting_service_reportingservice"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1163",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1163",
+      "target": "personal_work_app_api_pattern_performance"
     },
     {
       "relation": "rationale_for",
@@ -13396,9 +14524,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1181",
+      "source_location": "L1185",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1181",
+      "source": "personal_work_app_rationale_1185",
       "target": "personal_work_app_api_rejection_analysis",
       "confidence_score": 1.0
     },
@@ -13423,6 +14551,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_rejection_analysis",
       "target": "services_reporting_service_reportingservice"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1181",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1181",
+      "target": "personal_work_app_api_rejection_analysis"
     },
     {
       "relation": "rationale_for",
@@ -13479,9 +14617,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1199",
+      "source_location": "L1203",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1199",
+      "source": "personal_work_app_rationale_1203",
       "target": "personal_work_app_api_learning_insights",
       "confidence_score": 1.0
     },
@@ -13506,6 +14644,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_learning_insights",
       "target": "core_learning_engine_learningengine"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1199",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1199",
+      "target": "personal_work_app_api_learning_insights"
     },
     {
       "relation": "rationale_for",
@@ -13562,9 +14710,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1214",
+      "source_location": "L1218",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1214",
+      "source": "personal_work_app_rationale_1218",
       "target": "personal_work_app_api_trades_summary",
       "confidence_score": 1.0
     },
@@ -13578,6 +14726,16 @@
       "weight": 1.0,
       "source": "personal_work_app_api_trades_summary",
       "target": "models_database_get_session"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1214",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1214",
+      "target": "personal_work_app_api_trades_summary"
     },
     {
       "relation": "rationale_for",
@@ -13623,9 +14781,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1323",
+      "source_location": "L1327",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1323",
+      "source": "personal_work_app_rationale_1327",
       "target": "personal_work_app_admin_top_up_capital",
       "confidence_score": 1.0
     },
@@ -13650,6 +14808,16 @@
       "weight": 1.0,
       "source": "personal_work_app_admin_top_up_capital",
       "target": "models_database_portfolio"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1323",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1323",
+      "target": "personal_work_app_admin_top_up_capital"
     },
     {
       "relation": "rationale_for",
@@ -13695,9 +14863,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1391",
+      "source_location": "L1395",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1391",
+      "source": "personal_work_app_rationale_1395",
       "target": "personal_work_app_admin_flush_history",
       "confidence_score": 1.0
     },
@@ -13711,6 +14879,16 @@
       "weight": 1.0,
       "source": "personal_work_app_admin_flush_history",
       "target": "models_database_get_session"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1391",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1391",
+      "target": "personal_work_app_admin_flush_history"
     },
     {
       "relation": "rationale_for",
@@ -13756,9 +14934,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1439",
+      "source_location": "L1443",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1439",
+      "source": "personal_work_app_rationale_1443",
       "target": "personal_work_app_admin_flush_trades",
       "confidence_score": 1.0
     },
@@ -13783,6 +14961,16 @@
       "weight": 1.0,
       "source": "personal_work_app_admin_flush_trades",
       "target": "models_database_portfolio"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1439",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1439",
+      "target": "personal_work_app_admin_flush_trades"
     },
     {
       "relation": "rationale_for",
@@ -13828,9 +15016,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1510",
+      "source_location": "L1514",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1510",
+      "source": "personal_work_app_rationale_1514",
       "target": "personal_work_app_admin_flush_all",
       "confidence_score": 1.0
     },
@@ -13855,6 +15043,16 @@
       "weight": 1.0,
       "source": "personal_work_app_admin_flush_all",
       "target": "models_database_portfolio"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1510",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1510",
+      "target": "personal_work_app_admin_flush_all"
     },
     {
       "relation": "rationale_for",
@@ -13900,9 +15098,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1584",
+      "source_location": "L1588",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1584",
+      "source": "personal_work_app_rationale_1588",
       "target": "personal_work_app_admin_system_status",
       "confidence_score": 1.0
     },
@@ -13927,6 +15125,16 @@
       "weight": 1.0,
       "source": "personal_work_app_admin_system_status",
       "target": "core_market_monitor_marketmonitor"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1584",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1584",
+      "target": "personal_work_app_admin_system_status"
     },
     {
       "relation": "rationale_for",
@@ -13983,9 +15191,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "app.py",
-      "source_location": "L1704",
+      "source_location": "L1708",
       "weight": 1.0,
-      "source": "personal_work_app_rationale_1704",
+      "source": "personal_work_app_rationale_1708",
       "target": "personal_work_app_admin_force_scan",
       "confidence_score": 1.0
     },
@@ -14054,6 +15262,16 @@
       "weight": 1.0,
       "source": "personal_work_app_admin_force_scan",
       "target": "services_reporting_service_reportingservice"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "app.py",
+      "source_location": "L1704",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "personal_work_app_rationale_1704",
+      "target": "personal_work_app_admin_force_scan"
     },
     {
       "relation": "rationale_for",
@@ -14725,11 +15943,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "core/learning_engine.py",
-      "source_location": "L255",
+      "source_location": "L259",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "core_learning_engine_rationale_255",
-      "target": "core_learning_engine_learningengine_save_ml_model"
+      "source": "core_learning_engine_rationale_259",
+      "target": "core_learning_engine_learningengine_save_ml_model",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -14746,11 +15964,41 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "core/learning_engine.py",
+      "source_location": "L255",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_learning_engine_rationale_255",
+      "target": "core_learning_engine_learningengine_save_ml_model"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "core/learning_engine.py",
+      "source_location": "L291",
+      "weight": 1.0,
+      "source": "core_learning_engine_rationale_291",
+      "target": "core_learning_engine_learningengine_generate_performance_report",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "core/learning_engine.py",
       "source_location": "L287",
       "weight": 1.0,
       "confidence_score": 1.0,
       "source": "core_learning_engine_rationale_287",
       "target": "core_learning_engine_learningengine_generate_performance_report"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "core/learning_engine.py",
+      "source_location": "L350",
+      "weight": 1.0,
+      "source": "core_learning_engine_rationale_350",
+      "target": "core_learning_engine_learningengine_generate_learning_insights",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -15180,11 +16428,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "core/portfolio_manager.py",
-      "source_location": "L491",
+      "source_location": "L496",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "core_portfolio_manager_rationale_491",
-      "target": "core_portfolio_manager_portfoliomanager_exit_trade"
+      "source": "core_portfolio_manager_rationale_496",
+      "target": "core_portfolio_manager_portfoliomanager_exit_trade",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -15196,6 +16444,16 @@
       "weight": 1.0,
       "source": "core_portfolio_manager_portfoliomanager_exit_trade",
       "target": "core_trading_brain_tradingbrain"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "core/portfolio_manager.py",
+      "source_location": "L491",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_portfolio_manager_rationale_491",
+      "target": "core_portfolio_manager_portfoliomanager_exit_trade"
     },
     {
       "relation": "rationale_for",
@@ -15243,6 +16501,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "core/portfolio_manager.py",
+      "source_location": "L608",
+      "weight": 1.0,
+      "source": "core_portfolio_manager_rationale_608",
+      "target": "core_portfolio_manager_portfoliomanager_update_unrealized_pnl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "core/portfolio_manager.py",
       "source_location": "L603",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -15278,6 +16546,16 @@
       "confidence_score": 1.0,
       "source": "core_portfolio_manager_rationale_503",
       "target": "core_portfolio_manager_portfoliomanager_update_unrealized_pnl"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "core/portfolio_manager.py",
+      "source_location": "L636",
+      "weight": 1.0,
+      "source": "core_portfolio_manager_rationale_636",
+      "target": "core_portfolio_manager_portfoliomanager_get_weekly_pnl_summary",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -16549,11 +17827,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "core/trading_brain.py",
-      "source_location": "L620",
+      "source_location": "L625",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "core_trading_brain_rationale_620",
-      "target": "core_trading_brain_tradingbrain_should_enter_trade"
+      "source": "core_trading_brain_rationale_625",
+      "target": "core_trading_brain_tradingbrain_should_enter_trade",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16565,6 +17843,16 @@
       "weight": 1.0,
       "source": "core_trading_brain_tradingbrain_should_enter_trade",
       "target": "services_data_service_dataservice"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "core/trading_brain.py",
+      "source_location": "L620",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_trading_brain_rationale_620",
+      "target": "core_trading_brain_tradingbrain_should_enter_trade"
     },
     {
       "relation": "rationale_for",
@@ -16621,11 +17909,11 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "core/trading_brain.py",
-      "source_location": "L831",
+      "source_location": "L836",
       "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "core_trading_brain_rationale_831",
-      "target": "core_trading_brain_tradingbrain_get_decision_reason"
+      "source": "core_trading_brain_rationale_836",
+      "target": "core_trading_brain_tradingbrain_get_decision_reason",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",
@@ -16637,6 +17925,16 @@
       "weight": 1.0,
       "source": "core_trading_brain_tradingbrain_get_decision_reason",
       "target": "services_data_service_dataservice"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "core/trading_brain.py",
+      "source_location": "L831",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "core_trading_brain_rationale_831",
+      "target": "core_trading_brain_tradingbrain_get_decision_reason"
     },
     {
       "relation": "rationale_for",
@@ -16688,6 +17986,16 @@
       "weight": 1.0,
       "source": "core_trading_brain_tradingbrain_get_decision_reason",
       "target": "services_data_service_py"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "core/trading_brain.py",
+      "source_location": "L927",
+      "weight": 1.0,
+      "source": "core_trading_brain_rationale_927",
+      "target": "core_trading_brain_tradingbrain_check_exit_conditions",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -17890,6 +19198,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "models/database.py",
+      "source_location": "L113",
+      "weight": 1.0,
+      "source": "models_database_rationale_113",
+      "target": "models_database_portfolio",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "models/database.py",
       "source_location": "L101",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -17915,6 +19233,16 @@
       "confidence_score": 1.0,
       "source": "models_database_learningmetrics",
       "target": "models_database_learningmetrics_repr"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "models/database.py",
+      "source_location": "L147",
+      "weight": 1.0,
+      "source": "models_database_rationale_147",
+      "target": "models_database_learningmetrics",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -17950,6 +19278,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "models/database.py",
+      "source_location": "L171",
+      "weight": 1.0,
+      "source": "models_database_rationale_171",
+      "target": "models_database_marketdatacache",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "models/database.py",
       "source_location": "L159",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -17975,6 +19313,16 @@
       "confidence_score": 1.0,
       "source": "models_database_mlmodel",
       "target": "models_database_mlmodel_repr"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "models/database.py",
+      "source_location": "L193",
+      "weight": 1.0,
+      "source": "models_database_rationale_193",
+      "target": "models_database_mlmodel",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -18043,6 +19391,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "models/database.py",
+      "source_location": "L232",
+      "weight": 1.0,
+      "source": "models_database_rationale_232",
+      "target": "models_database_init_database",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "models/database.py",
       "source_location": "L220",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18058,6 +19416,16 @@
       "confidence_score": 1.0,
       "source": "models_database_rationale_218",
       "target": "models_database_init_database"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "models/database.py",
+      "source_location": "L281",
+      "weight": 1.0,
+      "source": "models_database_rationale_281",
+      "target": "models_database_migrate_database",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -18103,6 +19471,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "models/database.py",
+      "source_location": "L328",
+      "weight": 1.0,
+      "source": "models_database_rationale_328",
+      "target": "models_database_get_session",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "models/database.py",
       "source_location": "L311",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18143,6 +19521,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "models/database.py",
+      "source_location": "L336",
+      "weight": 1.0,
+      "source": "models_database_rationale_336",
+      "target": "models_database_get_engine",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "models/database.py",
       "source_location": "L319",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18178,6 +19566,181 @@
       "confidence_score": 1.0,
       "source": "models_database_rationale_304",
       "target": "models_database_get_engine"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_py",
+      "target": "scripts_generate_universe_fetch_nifty500_symbols",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_py",
+      "target": "scripts_generate_universe_get_fallback_symbols",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L60",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_py",
+      "target": "scripts_generate_universe_calculate_atr_percent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_py",
+      "target": "scripts_generate_universe_calculate_rsi",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_py",
+      "target": "scripts_generate_universe_backtest_swing_rule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L137",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_py",
+      "target": "scripts_generate_universe_process_universe",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L208",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_py",
+      "target": "scripts_generate_universe_push_to_bot",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L36",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_fetch_nifty500_symbols",
+      "target": "scripts_generate_universe_get_fallback_symbols",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L138",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_process_universe",
+      "target": "scripts_generate_universe_fetch_nifty500_symbols",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_rationale_16",
+      "target": "scripts_generate_universe_fetch_nifty500_symbols",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_rationale_39",
+      "target": "scripts_generate_universe_get_fallback_symbols",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L174",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_process_universe",
+      "target": "scripts_generate_universe_calculate_atr_percent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L61",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_rationale_61",
+      "target": "scripts_generate_universe_calculate_atr_percent",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_backtest_swing_rule",
+      "target": "scripts_generate_universe_calculate_rsi",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L179",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_process_universe",
+      "target": "scripts_generate_universe_backtest_swing_rule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L84",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_rationale_84",
+      "target": "scripts_generate_universe_backtest_swing_rule",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "scripts/generate_universe.py",
+      "source_location": "L209",
+      "weight": 1.0,
+      "source": "scripts_generate_universe_rationale_209",
+      "target": "scripts_generate_universe_push_to_bot",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -18443,6 +20006,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/data_service.py",
+      "source_location": "L103",
+      "weight": 1.0,
+      "source": "services_data_service_rationale_103",
+      "target": "services_data_service_dataservice_fetch_stock_data",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/data_service.py",
       "source_location": "L116",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18463,6 +20036,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/data_service.py",
+      "source_location": "L141",
+      "weight": 1.0,
+      "source": "services_data_service_rationale_141",
+      "target": "services_data_service_dataservice_fetch_stock_info",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/data_service.py",
       "source_location": "L154",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18478,6 +20061,16 @@
       "confidence_score": 1.0,
       "source": "services_data_service_rationale_127",
       "target": "services_data_service_dataservice_fetch_stock_info"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/data_service.py",
+      "source_location": "L161",
+      "weight": 1.0,
+      "source": "services_data_service_rationale_161",
+      "target": "services_data_service_dataservice_fetch_nifty_index",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -18514,6 +20107,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/data_service.py",
+      "source_location": "L187",
+      "weight": 1.0,
+      "source": "services_data_service_rationale_187",
+      "target": "services_data_service_dataservice_get_current_price",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/data_service.py",
       "source_location": "L200",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18529,6 +20132,16 @@
       "confidence_score": 1.0,
       "source": "services_data_service_rationale_173",
       "target": "services_data_service_dataservice_get_current_price"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/data_service.py",
+      "source_location": "L202",
+      "weight": 1.0,
+      "source": "services_data_service_rationale_202",
+      "target": "services_data_service_dataservice_get_batch_prices",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -18565,6 +20178,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/data_service.py",
+      "source_location": "L281",
+      "weight": 1.0,
+      "source": "services_data_service_rationale_281",
+      "target": "services_data_service_dataservice_is_market_open",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/data_service.py",
       "source_location": "L294",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18580,6 +20203,16 @@
       "confidence_score": 1.0,
       "source": "services_data_service_rationale_267",
       "target": "services_data_service_dataservice_is_market_open"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/data_service.py",
+      "source_location": "L292",
+      "weight": 1.0,
+      "source": "services_data_service_rationale_292",
+      "target": "services_data_service_dataservice_get_market_status",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -18605,6 +20238,16 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services/data_service.py",
+      "source_location": "L321",
+      "weight": 1.0,
+      "source": "services_data_service_rationale_321",
+      "target": "services_data_service_dataservice_fetch_nifty_return",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/data_service.py",
       "source_location": "L334",
       "weight": 1.0,
       "confidence_score": 1.0,
@@ -18620,6 +20263,16 @@
       "confidence_score": 1.0,
       "source": "services_data_service_rationale_307",
       "target": "services_data_service_dataservice_fetch_nifty_return"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services/data_service.py",
+      "source_location": "L352",
+      "weight": 1.0,
+      "source": "services_data_service_rationale_352",
+      "target": "services_data_service_dataservice_fetch_earnings_dates",
+      "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
@@ -20379,6 +22032,226 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "aider_chat_history_md",
+      "target": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_55_58",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "aider_chat_history_md",
+      "target": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_56_37",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L29",
+      "weight": 1.0,
+      "source": "aider_chat_history_md",
+      "target": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_57_35",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "aider_chat_history_md",
+      "target": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_58_44",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L64",
+      "weight": 1.0,
+      "source": "aider_chat_history_md",
+      "target": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_03_46",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L78",
+      "weight": 1.0,
+      "source": "aider_chat_history_md",
+      "target": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_04_49",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L93",
+      "weight": 1.0,
+      "source": "aider_chat_history_md",
+      "target": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_05_10",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_56_37",
+      "target": "personal_work_aider_chat_history_exit",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_57_35",
+      "target": "personal_work_aider_chat_history_exit_42",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L52",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_58_44",
+      "target": "personal_work_aider_chat_history_add",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L56",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_58_44",
+      "target": "personal_work_aider_chat_history_ls",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L62",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_16_58_44",
+      "target": "personal_work_aider_chat_history_exit_62",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L72",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_03_46",
+      "target": "personal_work_aider_chat_history_add_72",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L76",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_03_46",
+      "target": "personal_work_aider_chat_history_exit_76",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L91",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_04_49",
+      "target": "personal_work_aider_chat_history_exit_91",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L101",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_05_10",
+      "target": "personal_work_aider_chat_history_add_app_py_services_core_utils_models",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L123",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_05_10",
+      "target": "personal_work_aider_chat_history_review_all_these_python_files_fix_bugs_broken_imports_incorrect_function_calls_type_errors_and_any_issues_that_would_cause_failures_on_render_python_3_13_compatibility_gunicorn_aiohttp_do_not_touch_database_credentials_or_environment_variables_fix_files_directly_summarize_changes_at_the_end",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L135",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_05_10",
+      "target": "personal_work_aider_chat_history_drop_models_utils",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L142",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_05_10",
+      "target": "personal_work_aider_chat_history_review_app_py_services_and_core_python_files_fix_bugs_broken_imports_type_errors_python_3_13_compatibility_issues_do_not_touch_env_variables_fix_directly_summarize_changes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L154",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_05_10",
+      "target": "personal_work_aider_chat_history_drop_core_services",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L168",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_05_10",
+      "target": "personal_work_aider_chat_history_review_app_py_fix_bugs_broken_imports_type_errors_python_3_13_compatibility_do_not_touch_env_variables_fix_directly_summarize_changes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": ".aider.chat.history.md",
+      "source_location": "L173",
+      "weight": 1.0,
+      "source": "personal_work_aider_chat_history_aider_chat_started_at_2026_06_12_17_05_10",
+      "target": "personal_work_aider_chat_history_exit_173",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "README.md",
       "source_location": "L1",
       "weight": 1.0,
@@ -20555,6 +22428,106 @@
       "confidence_score": 1.0,
       "source": "personal_work_readme_project_structure",
       "target": "personal_work_readme_codeblock_4"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "implementation_plan_md",
+      "target": "personal_work_implementation_plan_entry_and_exit_conditions_review",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "personal_work_implementation_plan_entry_and_exit_conditions_review",
+      "target": "personal_work_implementation_plan_open_questions",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "personal_work_implementation_plan_entry_and_exit_conditions_review",
+      "target": "personal_work_implementation_plan_review_findings_proposed_changes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "personal_work_implementation_plan_review_findings_proposed_changes",
+      "target": "personal_work_implementation_plan_1_exit_condition_flawed_time_stop_max_duration",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "personal_work_implementation_plan_review_findings_proposed_changes",
+      "target": "personal_work_implementation_plan_2_entry_condition_stop_loss_selection_is_too_tight",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "personal_work_implementation_plan_review_findings_proposed_changes",
+      "target": "personal_work_implementation_plan_3_exit_condition_trailing_stop_overriding_breakeven",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "personal_work_implementation_plan_review_findings_proposed_changes",
+      "target": "personal_work_implementation_plan_4_entry_condition_hardcoded_risk_reward_ratio_check",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "personal_work_implementation_plan_review_findings_proposed_changes",
+      "target": "personal_work_implementation_plan_implementation_plan",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L42",
+      "weight": 1.0,
+      "source": "personal_work_implementation_plan_implementation_plan",
+      "target": "personal_work_implementation_plan_modify_core_trading_brain_py",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "implementation_plan.md",
+      "source_location": "L46",
+      "weight": 1.0,
+      "source": "personal_work_implementation_plan_implementation_plan",
+      "target": "personal_work_implementation_plan_modify_app_py",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -26698,5 +28671,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2af7d50f0b2c499f9750c0d1ee26252c6e163850"
+  "built_at_commit": "49b1d2e0a52ff79ccd6804d485d8c6e383553860"
 }

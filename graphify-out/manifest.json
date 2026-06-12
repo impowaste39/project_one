@@ -15,14 +15,14 @@
     "semantic_hash": "b879228a057feb6b92344ac9fdad2dbf"
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/app.py": {
-    "mtime": 1779951001.0369618,
-    "ast_hash": "395bc2ede7624d5c0f0c932de2aae6b8",
+    "mtime": 1781252959.56764,
+    "ast_hash": "e190c325b7987d69b53212964c480968",
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/core/learning_engine.py": {
-    "mtime": 1773431243.3058736,
-    "ast_hash": "b836c08a8d539e07746ea22ed5257458",
-    "semantic_hash": "b836c08a8d539e07746ea22ed5257458"
+    "mtime": 1780910501.1538892,
+    "ast_hash": "009f92d027838fda5662763c119a3d0f",
+    "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/core/__init__.py": {
     "mtime": 1770481088.9888375,
@@ -30,18 +30,18 @@
     "semantic_hash": "07b84ea5bb2146230760380cfa4d526a"
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/core/portfolio_manager.py": {
-    "mtime": 1779542889.2090962,
-    "ast_hash": "d9feb5e799192c78d26ad172d6467820",
+    "mtime": 1780910501.154315,
+    "ast_hash": "5048a7446d34fae4d1b28bc79aa58984",
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/core/market_monitor.py": {
-    "mtime": 1779544880.4907105,
+    "mtime": 1781263281.602646,
     "ast_hash": "a3c7e745faa3739635892787eb3bc42a",
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/core/trading_brain.py": {
-    "mtime": 1779530984.6564567,
-    "ast_hash": "65c0059f5b840e00ad4a17c2d42d019b",
+    "mtime": 1780910501.1547425,
+    "ast_hash": "9ddea7ab17e74325f841d37e330798fd",
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/core/risk_manager.py": {
@@ -70,8 +70,8 @@
     "semantic_hash": "46d54ea71e97cce23ef17d7d8fa60f2f"
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/models/database.py": {
-    "mtime": 1779171159.8585343,
-    "ast_hash": "5ea38536923a7e92c0b658ed302269dd",
+    "mtime": 1781252900.8938732,
+    "ast_hash": "39da072f7b1177692b106353dbdb0866",
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/models/__init__.py": {
@@ -80,8 +80,8 @@
     "semantic_hash": "d8d9995bd4eef57d49aed40c82854bc9"
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/services/data_service.py": {
-    "mtime": 1779544945.6137598,
-    "ast_hash": "638977765387c5e8a26443e6683689f6",
+    "mtime": 1780910501.155533,
+    "ast_hash": "3a7d59f72391d119ac543feb37fd18e4",
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/services/__init__.py": {
@@ -90,7 +90,7 @@
     "semantic_hash": "9c5d000f789b0650f5663b362f6ae61b"
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/services/discord_service.py": {
-    "mtime": 1779134698.777437,
+    "mtime": 1780768713.2421777,
     "ast_hash": "b142a1c7400e246af5ae052d5094be6f",
     "semantic_hash": ""
   },
@@ -115,7 +115,7 @@
     "semantic_hash": "69be6f75285921544b7e5cd98cc3924b"
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/requirements.txt": {
-    "mtime": 1770482866.3079586,
+    "mtime": 1781263281.6030152,
     "ast_hash": "0cf898534d9ea464747a7eb2d0d3ad7b",
     "semantic_hash": "0cf898534d9ea464747a7eb2d0d3ad7b"
   },
@@ -295,7 +295,7 @@
     "semantic_hash": ""
   },
   "/Users/karthikeyan/Documents/learning/sw/personal-work/docs/project_overview.md": {
-    "mtime": 1779131531.8760614,
+    "mtime": 1780147329.195773,
     "ast_hash": "80e7d6de9dc6561db194dd6b7ab80adb",
     "semantic_hash": ""
   },
@@ -327,6 +327,26 @@
   "/Users/karthikeyan/Documents/learning/sw/personal-work/docs/real_money_implementation_plan.md": {
     "mtime": 1779013381.524737,
     "ast_hash": "d2c36e60e333f2ed74a667e0e9c1a6d1",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/something.json": {
+    "mtime": 1780910507.8676627,
+    "ast_hash": "ac0912a92ae99276253c791b527af3de",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/scripts/generate_universe.py": {
+    "mtime": 1780768524.9227004,
+    "ast_hash": "3a52fcb35930470b71a07c764651dc10",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/failed_work.txt": {
+    "mtime": 1780910337.7281833,
+    "ast_hash": "dd184d756cc17d7a7be0fd836433e99f",
+    "semantic_hash": ""
+  },
+  "/Users/karthikeyan/Documents/learning/sw/personal-work/implementation_plan.md": {
+    "mtime": 1780910507.8673239,
+    "ast_hash": "6659315c21bae744e06a255badee7a61",
     "semantic_hash": ""
   }
 }
