@@ -1,16 +1,16 @@
 # Graph Report - personal-work  (2026-06-13)
 
 ## Corpus Check
-- 63 files · ~91,723 words
+- 62 files · ~90,185 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1320 nodes · 1656 edges · 89 communities (84 shown, 5 thin omitted)
-- Extraction: 89% EXTRACTED · 11% INFERRED · 0% AMBIGUOUS · INFERRED: 175 edges (avg confidence: 0.71)
+- 1401 nodes · 1742 edges · 104 communities (98 shown, 6 thin omitted)
+- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 175 edges (avg confidence: 0.71)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `49b1d2e0`
+- Built from commit: `da416642`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -96,76 +96,91 @@
 - [[_COMMUNITY_Community 86|Community 86]]
 - [[_COMMUNITY_Community 87|Community 87]]
 - [[_COMMUNITY_Community 88|Community 88]]
+- [[_COMMUNITY_Community 89|Community 89]]
+- [[_COMMUNITY_Community 90|Community 90]]
+- [[_COMMUNITY_Community 91|Community 91]]
+- [[_COMMUNITY_Community 92|Community 92]]
+- [[_COMMUNITY_Community 93|Community 93]]
+- [[_COMMUNITY_Community 94|Community 94]]
+- [[_COMMUNITY_Community 95|Community 95]]
+- [[_COMMUNITY_Community 96|Community 96]]
+- [[_COMMUNITY_Community 97|Community 97]]
+- [[_COMMUNITY_Community 98|Community 98]]
+- [[_COMMUNITY_Community 99|Community 99]]
+- [[_COMMUNITY_Community 100|Community 100]]
+- [[_COMMUNITY_Community 101|Community 101]]
+- [[_COMMUNITY_Community 102|Community 102]]
+- [[_COMMUNITY_Community 103|Community 103]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `get_session()` - 38 edges
-2. `TradingBrain` - 26 edges
-3. `LearningEngine` - 22 edges
-4. `MarketMonitor` - 22 edges
-5. `ReportingService` - 21 edges
-6. `PortfolioManager` - 20 edges
-7. `DataService` - 19 edges
-8. `admin_force_scan()` - 18 edges
-9. `ScanResult` - 18 edges
-10. `Portfolio` - 18 edges
+1. `get_session()` - 39 edges
+2. `TradingBrain` - 27 edges
+3. `LearningEngine` - 23 edges
+4. `MarketMonitor` - 23 edges
+5. `PortfolioManager` - 21 edges
+6. `ReportingService` - 21 edges
+7. `DataService` - 20 edges
+8. `admin_force_scan()` - 19 edges
+9. `Portfolio` - 19 edges
+10. `scan_market_job()` - 18 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `api_trades()` --calls--> `get_session()`  [INFERRED]
   app.py → models/database.py
 - `test_database_setup()` --calls--> `init_database()`  [INFERRED]
   test_implementation.py → models/database.py
-- `test_database_setup()` --calls--> `get_session()`  [INFERRED]
-  test_implementation.py → models/database.py
-- `test_reporting_service()` --calls--> `get_session()`  [INFERRED]
-  test_implementation.py → models/database.py
 - `test_reporting_service()` --calls--> `ReportingService`  [INFERRED]
   test_implementation.py → services/reporting_service.py
+- `test_learning_engine()` --calls--> `LearningEngine`  [INFERRED]
+  test_implementation.py → core/learning_engine.py
+- `test_sprint4_features()` --calls--> `get_session()`  [INFERRED]
+  test_sprint4.py → models/database.py
 
-## Communities (89 total, 5 thin omitted)
+## Communities (104 total, 6 thin omitted)
 
 ### Community 0 - "Community 0"
-Cohesion: 0.13
-Nodes (17): admin_reload_model(), api_trades(), dashboard(), _get_brain(), health(), AI Trading Bot - Main Flask Application Autonomous swing trading bot for Indian, Health check endpoint for UptimeRobot, Health check endpoint for UptimeRobot (+9 more)
+Cohesion: 0.18
+Nodes (11): dashboard(), health(), Health check endpoint for UptimeRobot, Health check endpoint for UptimeRobot, Health check endpoint for UptimeRobot, Health check endpoint for UptimeRobot, Health check endpoint for UptimeRobot, Health check endpoint for UptimeRobot (+3 more)
 
 ### Community 1 - "Community 1"
-Cohesion: 0.06
-Nodes (32): api_rejection_analysis(), api_scan_details(), api_scan_history(), Get recent scan history, Get detailed results for a specific scan, Get recent scan history, Get recent scan history, Get recent scan history (+24 more)
+Cohesion: 0.16
+Nodes (10): Reporting Service Handles scan data persistence and retrieval for analysis, Save pattern occurrence records, Get recent scan reports          Args:             limit: Number of reports to r, Service for saving and retrieving scan data, Get pattern performance statistics          Args:             days: Number of da, Analyze why opportunities are being rejected          Args:             days: Nu, Save overall scan session metadata          Args:             market_context: Ma, Remove scan data older than retention period (+2 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.20
-Nodes (11): MarketMonitor, Market Monitor Service Scans markets, fetches data, and detects trading opportun, Complete analysis of a single stock.          Args:             symbol: Stock sy, Market scanning and opportunity detection, Complete analysis of a single stock.          Args:             symbol: Stock sy, Analyze overall market trend (Nifty 50).          On failure, returns the last s, Fetch historical data for a stock, Calculate all technical indicators for a stock          Args:             data: (+3 more)
+Cohesion: 0.13
+Nodes (18): MarketMonitor, Market Monitor Service Scans markets, fetches data, and detects trading opportun, Detect chart patterns and trading setups          Args:             data: DataFr, Complete analysis of a single stock.          Args:             symbol: Stock sy, Market scanning and opportunity detection, Complete analysis of a single stock.          Args:             symbol: Stock sy, Market scanning and opportunity detection, Analyze overall market trend (Nifty 50).          On failure, returns the last s (+10 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.06
-Nodes (41): Trading Brain - AI Decision Engine Makes intelligent trading decisions using ML, Check if stock price is above its 50-week EMA         Returns:             (pass, Check if stock price is above its 50-week EMA         Returns:             (pass, Returns (multiplier, tier_label) based on setup score., Calculate trading setup quality score (0-100)          Scoring:         - Techni, Returns (multiplier, tier_label) based on setup score., Calculate trading setup quality score (0-100)          Scoring:         - Techni, AI Decision Engine for trading (+33 more)
+Cohesion: 0.18
+Nodes (9): Delegates to the shared calculate_net_pnl() in utils/helpers.py.         Kept as, Generate human-readable decision reason, Generate human-readable decision reason, Generate human-readable decision reason, Generate human-readable decision reason, Generate human-readable decision reason, Generate human-readable decision reason, Calculate real net P&L after Groww equity delivery charges.         Returns: Tup (+1 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.08
 Nodes (28): DiscordService, Discord Webhook Alert Service Sends instant trade alerts to your Discord channel, Send alert when a trade is exited (full or partial).         Called from monitor, Send alert when 50% of position is booked at T1.         Includes TradingView ch, Send EOD daily summary at 4 PM IST.         Now includes weekly P&L and circuit, Sends trading alerts to Discord via webhook — zero cost, Dedicated alert the moment circuit breaker triggers mid-day.         Call this f, Send system health alert (+20 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.06
-Nodes (30): DataService, Data Service Fetches market data from Yahoo Finance and NSE, Fetch historical data for a stock.         Includes retry logic — if first fetch, Fetch historical data for a stock.         Includes retry logic — if first fetch, Fetch stock info (market cap, sector, etc.), Fetch stock info (market cap, sector, etc.), Fetch Nifty 50 index data with retry, Fetch stock info (market cap, sector, etc.) (+22 more)
+Cohesion: 0.05
+Nodes (38): DataService, Data Service Fetches market data from Yahoo Finance and NSE, Fetch historical data for a stock.         Includes retry logic — if first fetch, Fetch historical data for a stock.         Includes retry logic — if first fetch, Fetch historical data for a stock.         Includes retry logic — if first fetch, Fetch stock info (market cap, sector, etc.), Fetch stock info (market cap, sector, etc.), Fetch stock info (market cap, sector, etc.) (+30 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.08
-Nodes (23): PortfolioManager, Portfolio Manager Handles trade execution and portfolio management  Improvements, Portfolio and trade management, Get current portfolio state, Check if adding this symbol would breach the sector concentration limit., Check if weekly losses have exceeded the circuit breaker threshold.          Ret, Execute trade entry.         Runs two guards before entering:         1. Sector, Check if daily entries or closed losses exceed daily limits.          Returns: (+15 more)
+Cohesion: 0.29
+Nodes (6): PortfolioManager, Portfolio Manager Handles trade execution and portfolio management  Improvements, Portfolio and trade management, Portfolio and trade management, Get current portfolio state, Get current portfolio state
 
 ### Community 7 - "Community 7"
-Cohesion: 0.14
-Nodes (12): IndicatorService, Technical Indicator Service Calculates various technical indicators for stock an, Calculate Stochastic Oscillator          Args:             data: DataFrame with, Calculate Average Directional Index (ADX)          Args:             data: DataF, Calculate technical indicators for stock data, Calculate Relative Strength Index (RSI)          Args:             prices: Serie, Calculate Volume Weighted Average Price (VWAP)          Args:             data:, Calculate On-Balance Volume (OBV)          Args:             data: DataFrame wit (+4 more)
+Cohesion: 0.18
+Nodes (9): IndicatorService, Technical Indicator Service Calculates various technical indicators for stock an, Calculate Stochastic Oscillator          Args:             data: DataFrame with, Calculate technical indicators for stock data, Calculate Relative Strength Index (RSI)          Args:             prices: Serie, Calculate Volume Weighted Average Price (VWAP)          Args:             data:, Calculate On-Balance Volume (OBV)          Args:             data: DataFrame wit, Calculate support and resistance levels          Args:             data: DataFra (+1 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.14
-Nodes (14): LearningEngine, Learning Engine Self-improvement through trade analysis and ML optimization, Update running statistics for a pattern, Persist pattern statistics to database, Retrain ML model with latest trade data.         Requires minimum 20 closed trad, Self-improvement and trade analysis engine, Load historical pattern performance from database, Generate comprehensive performance summary (+6 more)
+Cohesion: 0.10
+Nodes (21): LearningEngine, Learning Engine Self-improvement through trade analysis and ML optimization, Update running statistics for a pattern, Update running statistics for a pattern, Persist pattern statistics to database, Persist pattern statistics to database, Self-improvement and trade analysis engine, Self-improvement and trade analysis engine (+13 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.09
 Nodes (22): 1. ML Cold Start Bonus (`core/trading_brain.py`), 2. Bearish Threshold Formula (`core/trading_brain.py:505-522`), 3. Weekly EMA: Binary Block → Penalty (`core/trading_brain.py`), 4. MIN_CONFIDENCE_SCORE Config (`render.yaml`), 5. System Status API Enhancement (`app.py`), 6. Discord Alert Improvements (`services/discord_service.py`), Changes Made, code:python (# Before: score = 53 (rejected at 80 threshold)) (+14 more)
 
 ### Community 10 - "Community 10"
-Cohesion: 0.15
-Nodes (13): api_pattern_performance(), api_trades_summary(), Get pattern performance statistics, Get pattern performance statistics, Get pattern performance statistics, Get pattern performance statistics, Get pattern performance statistics, Get pattern performance statistics (+5 more)
+Cohesion: 0.25
+Nodes (8): api_trades_summary(), Comprehensive trade summary with real P&L (after Groww charges)., Get pattern performance statistics, Comprehensive trade summary with real P&L (after Groww charges).     No auth req, Comprehensive trade summary with real P&L (after Groww charges).     No auth req, Comprehensive trade summary with real P&L (after Groww charges).     No auth req, Comprehensive trade summary with real P&L (after Groww charges).     No auth req, Comprehensive trade summary with real P&L (after Groww charges).     No auth req
 
 ### Community 11 - "Community 11"
 Cohesion: 0.11
@@ -180,24 +195,24 @@ Cohesion: 0.13
 Nodes (14): API Endpoints (selected), `app.py` — Flask App + Scheduler Hub (~62KB, central god file), Architecture at a Glance, code:block1 (┌─────────────────────────────────────────────────────────┐), `core/` — Brain Modules, Database Backend, Deployment Status (Render), God Nodes (Most Connected Components) (+6 more)
 
 ### Community 23 - "Community 23"
-Cohesion: 0.20
-Nodes (7): Scan entire watchlist for opportunities.          Pre-fetches Nifty 20d return o, Rank the watchlist by relative strength, momentum, and volume trend.         Ret, Pre-market scan (8:45 AM IST) — runs BEFORE the market opens.          Identical, Scan entire watchlist for opportunities.          Pre-fetches Nifty 20d return o, Scan entire watchlist for opportunities.          Pre-fetches Nifty 20d return o, Pre-market scan (8:45 AM IST) — runs BEFORE the market opens.          Identical, Pre-market scan (8:45 AM IST) — runs BEFORE the market opens.          Identical
+Cohesion: 0.18
+Nodes (8): Scan entire watchlist for opportunities.          Pre-fetches Nifty 20d return o, Rank the watchlist by relative strength, momentum, and volume trend.         Ret, Rank the watchlist by relative strength, momentum, and volume trend.         Ret, Pre-market scan (8:45 AM IST) — runs BEFORE the market opens.          Identical, Scan entire watchlist for opportunities.          Pre-fetches Nifty 20d return o, Scan entire watchlist for opportunities.          Pre-fetches Nifty 20d return o, Pre-market scan (8:45 AM IST) — runs BEFORE the market opens.          Identical, Pre-market scan (8:45 AM IST) — runs BEFORE the market opens.          Identical
 
 ### Community 24 - "Community 24"
 Cohesion: 0.06
 Nodes (32): Cell 1 — Install Dependencies, Cell 2 — Mount Google Drive (if using Step 4 above), Cell 3 — Load Secrets and Connect to DB, Cell 4 — Fetch Closed Trades, Cell 5 — Feature Extraction, Cell 6 — Train the Model, Cell 7 — Save Model to DB, Cell 8 — Trigger Server Reload (Optional) (+24 more)
 
 ### Community 25 - "Community 25"
-Cohesion: 0.22
-Nodes (9): format_currency(), format_percentage(), get_ist_now(), is_trading_hours(), Utility helper functions, Get current time in IST, Check if in safe trading window (avoid first/last 15 min), Format amount as Indian currency (+1 more)
+Cohesion: 0.16
+Nodes (13): calculate_net_pnl(), format_currency(), format_percentage(), get_ist_now(), is_market_hours(), is_trading_hours(), Utility helper functions, Get current time in IST (+5 more)
 
 ### Community 26 - "Community 26"
 Cohesion: 0.06
-Nodes (31): Risk Manager Handles position sizing and risk calculations, Calculate total portfolio risk from open positions          Args:             op, Calculate total portfolio risk from open positions          Args:             op, Risk management and position sizing, Calculate position size based on risk          Args:             capital: Availa, Validate if trade meets risk criteria          Args:             portfolio_state, RiskManager, get_engine() (+23 more)
+Nodes (35): Risk Manager Handles position sizing and risk calculations, Calculate total portfolio risk from open positions          Args:             op, Calculate total portfolio risk from open positions          Args:             op, Risk management and position sizing, Calculate position size based on risk          Args:             capital: Availa, Validate if trade meets risk criteria          Args:             portfolio_state, RiskManager, get_engine() (+27 more)
 
 ### Community 27 - "Community 27"
-Cohesion: 0.33
-Nodes (9): main(), Test that Flask app can start, Test learning engine enhancements, Test database initialization, Test reporting service, test_api_endpoints(), test_database_setup(), test_learning_engine() (+1 more)
+Cohesion: 0.20
+Nodes (15): get_session(), Get a new database session, Get a new database session, Get a new database session, Get a new database session, FIX #5: Context-manager session — always commits or rolls back, always closes., main(), Test that Flask app can start (+7 more)
 
 ### Community 28 - "Community 28"
 Cohesion: 0.05
@@ -216,20 +231,20 @@ Cohesion: 0.06
 Nodes (32): Cell 1 — Install Dependencies, Cell 2 — Mount Google Drive (if using Step 4 above), Cell 3 — Load Secrets and Connect to DB, Cell 4 — Fetch Closed Trades, Cell 5 — Feature Extraction, Cell 6 — Train the Model, Cell 7 — Save Model to DB, Cell 8 — Trigger Server Reload (Optional) (+24 more)
 
 ### Community 32 - "Community 32"
-Cohesion: 0.29
-Nodes (7): admin_flush_trades(), Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T
+Cohesion: 0.25
+Nodes (8): admin_flush_trades(), Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot., Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T, Wipe all trade records (OPEN and CLOSED) and reset the portfolio snapshot.     T
 
 ### Community 33 - "Community 33"
-Cohesion: 0.29
-Nodes (7): api_open_positions(), Open positions API endpoint, Open positions API endpoint, Open positions API endpoint, Open positions API endpoint, Open positions API endpoint, Open positions API endpoint
+Cohesion: 0.13
+Nodes (15): api_open_positions(), api_performance(), Open positions API endpoint, Open positions API endpoint, Open positions API endpoint, Open positions API endpoint, Performance metrics API, Performance metrics API (+7 more)
 
 ### Community 34 - "Community 34"
-Cohesion: 0.29
-Nodes (7): api_portfolio(), Portfolio API endpoint, Portfolio API endpoint, Portfolio API endpoint, Portfolio API endpoint, Portfolio API endpoint, Portfolio API endpoint
+Cohesion: 0.25
+Nodes (8): api_portfolio(), Portfolio API endpoint, Portfolio API endpoint, Portfolio API endpoint, Portfolio API endpoint, Portfolio API endpoint, Portfolio API endpoint, Portfolio API endpoint
 
 ### Community 35 - "Community 35"
-Cohesion: 0.40
-Nodes (5): Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.      Keeps on, Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.      Keeps on, Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.      Keeps on, Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.      Keeps on, weekly_portfolio_cleanup_job()
+Cohesion: 0.18
+Nodes (11): daily_health_digest_job(), Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.      Keeps on, Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST., Daily system health digest - runs at 3:35 PM IST (after market close).      Send, Daily system health digest - runs at 3:35 PM IST (after market close)., Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.      Keeps on, Weekly portfolio row cleanup — runs every Saturday at 6:00 AM IST.      Keeps on, Daily system health digest - runs at 3:35 PM IST (after market close).      Send (+3 more)
 
 ### Community 36 - "Community 36"
 Cohesion: 0.07
@@ -288,8 +303,8 @@ Cohesion: 0.17
 Nodes (11): Diagnose, Iterate on the loop itself, Non-deterministic bugs, Phase 1 — Build a feedback loop, Phase 2 — Reproduce, Phase 3 — Hypothesise, Phase 4 — Instrument, Phase 5 — Fix + regression test (+3 more)
 
 ### Community 50 - "Community 50"
-Cohesion: 0.17
-Nodes (12): admin_system_status(), _get_consecutive_zero_trade_days(), Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s, Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s, Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s, Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s, Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s, Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s (+4 more)
+Cohesion: 0.14
+Nodes (14): admin_system_status(), _get_consecutive_zero_trade_days(), Deep diagnostic snapshot of the system., Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s, Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s, Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s, Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s, Deep diagnostic snapshot of the system.     Returns DB counts, scoring config, s (+6 more)
 
 ### Community 51 - "Community 51"
 Cohesion: 0.08
@@ -344,20 +359,20 @@ Cohesion: 0.40
 Nodes (4): Choose A, B, or C, Pressure Test 3: Authority + Social Pressure, Scenario, Your Options
 
 ### Community 64 - "Community 64"
-Cohesion: 0.29
-Nodes (8): monitor_positions_job(), Market scanning job - runs every 5 minutes during market hours, Position monitoring job - runs every 2 minutes during market hours, Send a Discord error alert at most once per cooldown window per job., scan_market_job(), _send_error_alert_guarded(), is_market_hours(), Check if currently in market hours
+Cohesion: 0.20
+Nodes (10): end_of_day_analysis_job(), monitor_positions_job(), Position monitoring job - runs every 2 minutes during market hours, Position monitoring job - runs every 2 minutes during market hours, End of day analysis and learning - runs at 4:00 PM IST, End of day analysis and learning - runs at 4:00 PM IST, End of day analysis and learning - runs at 4:00 PM IST, Send a Discord error alert at most once per cooldown window per job. (+2 more)
 
 ### Community 66 - "Community 66"
-Cohesion: 0.29
-Nodes (7): admin_flush_history(), Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after
+Cohesion: 0.25
+Nodes (8): admin_flush_history(), Wipe scan history, pattern occurrences, and learning metrics., Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after, Wipe scan history, pattern occurrences, and learning metrics.     Use this after
 
 ### Community 67 - "Community 67"
 Cohesion: 0.20
 Nodes (9): 1. High-Level Architecture, 2. The Daily Code Flow (Chronological), 3. The API Layer, 4. Key Database Entities (`models/database.py`), A. Pre-Market Scan (8:45 AM IST), B. Market Scans (9:30 AM, 12:00 PM, 2:00 PM IST), C. Position Monitoring (Every 15 mins during market hours), D. End of Day Analysis (4:00 PM IST) (+1 more)
 
 ### Community 68 - "Community 68"
-Cohesion: 0.22
-Nodes (6): EmailLog, MarketDataCache, Database models for AI Trading Bot Using SQLAlchemy ORM with PostgreSQL, Cache market data to reduce API calls, Cache market data to reduce API calls, Cache market data to reduce API calls
+Cohesion: 0.33
+Nodes (5): MarketDataCache, Cache market data to reduce API calls, Cache market data to reduce API calls, Cache market data to reduce API calls, Cache market data to reduce API calls
 
 ### Community 69 - "Community 69"
 Cohesion: 0.52
@@ -365,85 +380,141 @@ Nodes (6): ask_ollama(), fetch_ml_model_info(), fetch_pattern_summary(), fetch_r
 
 ### Community 73 - "Community 73"
 Cohesion: 0.19
-Nodes (10): Base, Individual trade record, Trade, PatternOccurrence, Scan Report Models Track every market scan for analysis and learning, Track when patterns appear and their context, Overall scan session metadata, Individual stock analysis result from a scan (+2 more)
+Nodes (9): Base, EmailLog, PatternOccurrence, Scan Report Models Track every market scan for analysis and learning, Track when patterns appear and their context, Overall scan session metadata, Individual stock analysis result from a scan, ScanReport (+1 more)
 
 ### Community 74 - "Community 74"
 Cohesion: 0.22
 Nodes (12): backtest_swing_rule(), calculate_atr_percent(), calculate_rsi(), fetch_nifty500_symbols(), get_fallback_symbols(), process_universe(), push_to_bot(), Fetch the latest Nifty 500 constituents from NSE website (+4 more)
 
 ### Community 75 - "Community 75"
-Cohesion: 0.29
-Nodes (4): Portfolio, Portfolio snapshot at each point in time, Portfolio snapshot at each point in time, Portfolio snapshot at each point in time
+Cohesion: 0.16
+Nodes (9): Portfolio, Database models for AI Trading Bot Using SQLAlchemy ORM with PostgreSQL, Portfolio snapshot at each point in time, Portfolio snapshot at each point in time, Portfolio snapshot at each point in time, Individual trade record, Individual trade record, Portfolio snapshot at each point in time (+1 more)
 
 ### Community 76 - "Community 76"
-Cohesion: 0.29
-Nodes (7): admin_flush_all(), Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio.
+Cohesion: 0.25
+Nodes (8): admin_flush_all(), Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio., Nuclear option: wipe ALL data — trades, scans, patterns, learning, portfolio.
 
 ### Community 77 - "Community 77"
 Cohesion: 0.18
 Nodes (10): 1. Exit Condition: Flawed Time Stop (Max Duration), 2. Entry Condition: Stop Loss Selection is Too Tight, 3. Exit Condition: Trailing Stop Overriding Breakeven, 4. Entry Condition: Hardcoded Risk/Reward Ratio Check, Entry and Exit Conditions Review, Implementation Plan, [MODIFY] `app.py`, [MODIFY] `core/trading_brain.py` (+2 more)
 
 ### Community 78 - "Community 78"
-Cohesion: 0.29
-Nodes (7): admin_top_up_capital(), Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t
+Cohesion: 0.25
+Nodes (8): admin_top_up_capital(), Add capital to the existing portfolio WITHOUT resetting trade history., Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t, Add capital to the existing portfolio WITHOUT resetting trade history.     Use t
 
 ### Community 79 - "Community 79"
-Cohesion: 0.40
-Nodes (5): daily_health_digest_job(), Daily system health digest - runs at 3:35 PM IST (after market close).      Send, Daily system health digest - runs at 3:35 PM IST (after market close).      Send, Daily system health digest - runs at 3:35 PM IST (after market close).      Send, Daily system health digest - runs at 3:35 PM IST (after market close).      Send
+Cohesion: 0.20
+Nodes (7): Check if adding this symbol would breach the sector concentration limit., Check if adding this symbol would breach the sector concentration limit., Check if weekly losses have exceeded the circuit breaker threshold.          Ret, Check if weekly losses have exceeded the circuit breaker threshold.          Ret, Execute trade entry.         Runs two guards before entering:         1. Sector, Execute trade entry.         Runs two guards before entering:         1. Sector, Execute trade entry.         Runs two guards before entering:         1. Sector
 
 ### Community 80 - "Community 80"
-Cohesion: 0.29
-Nodes (7): Manually trigger a market scan, Manually trigger a market scan, Manually trigger a market scan, Manually trigger a market scan, Manually trigger a market scan, Manually trigger a market scan, trigger_scan()
+Cohesion: 0.14
+Nodes (14): api_market_context(), Get current market context, Manually trigger a market scan, Manually trigger a market scan, Get current market context, Get current market context, Get current market context, Manually trigger a market scan (+6 more)
 
 ### Community 81 - "Community 81"
-Cohesion: 0.29
-Nodes (7): api_market_context(), Get current market context, Performance metrics API, Get current market context, Get current market context, Get current market context, Get current market context
+Cohesion: 0.33
+Nodes (6): Trading Brain - AI Decision Engine Makes intelligent trading decisions using ML, AI Decision Engine for trading, AI Decision Engine for trading, Reload existing ML model from database or initialize a new one., Reload existing ML model from database or initialize a new one., TradingBrain
 
 ### Community 82 - "Community 82"
 Cohesion: 0.20
 Nodes (10): disabledTools, headers, serverUrl, Authorization, mcpServers, aiven-mcp, render, disabled (+2 more)
 
 ### Community 83 - "Community 83"
-Cohesion: 0.25
-Nodes (6): Save trained ML model to database, Save trained ML model to database, MLModel, Store trained ML models, Store trained ML models, Store trained ML models
+Cohesion: 0.33
+Nodes (5): MLModel, Store trained ML models, Store trained ML models, Store trained ML models, Store trained ML models
 
 ### Community 84 - "Community 84"
-Cohesion: 0.40
-Nodes (5): premarket_scan_job(), Pre-market scan — runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la, Pre-market scan — runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la, Pre-market scan — runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la, Pre-market scan — runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la
+Cohesion: 0.33
+Nodes (6): premarket_scan_job(), Pre-market scan — runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la, Pre-market scan — runs at 8:45 AM IST Mon-Fri., Pre-market scan — runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la, Pre-market scan — runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la, Pre-market scan — runs at 8:45 AM IST Mon-Fri.      Scans the watchlist using la
 
 ### Community 85 - "Community 85"
-Cohesion: 0.29
-Nodes (7): get_session(), Get a new database session, Get a new database session, Get a new database session, Get a new database session, initialize_portfolio(), Initialize portfolio with starting capital if not exists
+Cohesion: 0.17
+Nodes (12): admin_reload_model(), api_trades(), _get_brain(), initialize_portfolio(), AI Trading Bot - Main Flask Application Autonomous swing trading bot for Indian, Decorator to require a secret API key for sensitive endpoints, Decorator to require a secret API key for sensitive endpoints, Initialize portfolio with starting capital if not exists (+4 more)
 
 ### Community 86 - "Community 86"
-Cohesion: 0.29
-Nodes (7): api_learning_insights(), Get AI learning insights, Get AI learning insights, Get AI learning insights, Get AI learning insights, Get AI learning insights, Get AI learning insights
+Cohesion: 0.25
+Nodes (8): api_learning_insights(), Get AI learning insights, Get AI learning insights, Get AI learning insights, Get AI learning insights, Get AI learning insights, Get AI learning insights, Get AI learning insights
 
 ### Community 87 - "Community 87"
-Cohesion: 0.33
-Nodes (6): api_performance(), Performance metrics API, Performance metrics API, Performance metrics API, Performance metrics API, Performance metrics API
+Cohesion: 0.20
+Nodes (8): Check if stock price is above its 50-week EMA         Returns:             (pass, Check if stock price is above its 50-week EMA         Returns:             (pass, Check if stock price is above its 50-week EMA         Returns:             (pass, Complete evaluation of a trading opportunity.          Features:         - Weekl, Complete evaluation of a trading opportunity.          Features:         - Weekl, Complete evaluation of a trading opportunity.          Features:         - Weekl, Complete evaluation of a trading opportunity.          Features:         - Weekl, Complete evaluation of a trading opportunity.          Features:         - Weekl
 
 ### Community 88 - "Community 88"
+Cohesion: 0.33
+Nodes (5): LearningMetrics, Pattern and strategy performance metrics, Pattern and strategy performance metrics, Pattern and strategy performance metrics, Pattern and strategy performance metrics
+
+### Community 89 - "Community 89"
+Cohesion: 0.20
+Nodes (7): Calculate trading setup quality score (0-100)          Scoring:         - Techni, Calculate trading setup quality score (0-100)          Scoring:         - Techni, Calculate trading setup quality score (0-100)          Scoring:         - Techni, Safely check if the ML model is trained without triggering NotFittedError crashe, Safely check if the ML model is trained without triggering NotFittedError crashe, Extract ML features from stock analysis, Extract ML features from stock analysis
+
+### Community 90 - "Community 90"
+Cohesion: 0.20
+Nodes (9): api_scan_details(), Get detailed results for a specific scan, Get detailed results for a specific scan, Get detailed results for a specific scan, Get detailed results for a specific scan, Get detailed results for a specific scan, Get detailed results for a specific scan, Get detailed results for a specific scan (+1 more)
+
+### Community 91 - "Community 91"
+Cohesion: 0.25
+Nodes (6): Update unrealized P&L for open positions.          Args:             current_pri, Update unrealized P&L for open positions.          Args:             current_pri, Update unrealized P&L for open positions.          Args:             current_pri, Update unrealized P&L for open positions.          Args:             current_pri, Update unrealized P&L for open positions.          Args:             current_pri, Update unrealized P&L for open positions.          Args:             current_pri
+
+### Community 92 - "Community 92"
+Cohesion: 0.25
+Nodes (7): Final decision gate with multiple checks          Bearish threshold is now scale, Final decision gate with multiple checks          Bearish threshold is now scale, Final decision gate with multiple checks          Bearish threshold is now scale, Final decision gate with multiple checks          Bearish threshold is now scale, Final decision gate with multiple checks          Bearish threshold is now scale, Final decision gate with multiple checks          Bearish threshold is now scale, Final decision gate with multiple checks          Bearish threshold is now scale
+
+### Community 93 - "Community 93"
+Cohesion: 0.25
+Nodes (7): Determine if position should be exited.         Supports partial exit at T1 — ex, Generate human-readable decision reason, Determine if position should be exited.         Supports partial exit at T1 — ex, Determine if position should be exited.         Supports partial exit at T1 — ex, Determine if position should be exited.         Supports partial exit at T1 — ex, Determine if position should be exited.         Supports partial exit at T1 — ex, Determine if position should be exited.         Supports partial exit at T1 — ex
+
+### Community 94 - "Community 94"
+Cohesion: 0.25
+Nodes (8): api_scan_history(), Get recent scan history, Get recent scan history, Get recent scan history, Get recent scan history, Get recent scan history, Get recent scan history, Get recent scan history
+
+### Community 95 - "Community 95"
+Cohesion: 0.29
+Nodes (5): Retrain ML model with latest trade data.         Requires minimum 20 closed trad, Retrain ML model with latest trade data.         Requires minimum 20 closed trad, Save trained ML model to database, Save trained ML model to database, Save trained ML model to database
+
+### Community 96 - "Community 96"
+Cohesion: 0.29
+Nodes (6): Get this week's P&L summary including circuit breaker status.         Used by EO, Get this week's P&L summary including circuit breaker status.         Used by EO, Get this week's P&L summary including circuit breaker status.         Used by EO, Get this week's P&L summary including circuit breaker status.         Used by EO, Get this week's P&L summary including circuit breaker status.         Used by EO, Get this week's P&L summary including circuit breaker status.         Used by EO
+
+### Community 97 - "Community 97"
+Cohesion: 0.29
+Nodes (7): api_pattern_performance(), Get pattern performance statistics, Get pattern performance statistics, Get pattern performance statistics, Get pattern performance statistics, Get pattern performance statistics, Get pattern performance statistics
+
+### Community 98 - "Community 98"
+Cohesion: 0.29
+Nodes (7): api_rejection_analysis(), Get analysis of why opportunities are being rejected, Get analysis of why opportunities are being rejected, Get analysis of why opportunities are being rejected, Get analysis of why opportunities are being rejected, Get analysis of why opportunities are being rejected, Get analysis of why opportunities are being rejected
+
+### Community 99 - "Community 99"
+Cohesion: 0.33
+Nodes (5): Execute trade exit.          Args:             trade: Trade object to exit, Execute trade exit.          Args:             trade: Trade object to exit, Execute trade exit.          Args:             trade: Trade object to exit, Execute trade exit.          Args:             trade: Trade object to exit, Execute trade exit.          Args:             trade: Trade object to exit
+
+### Community 100 - "Community 100"
 Cohesion: 0.40
-Nodes (4): LearningMetrics, Pattern and strategy performance metrics, Pattern and strategy performance metrics, Pattern and strategy performance metrics
+Nodes (3): Calculate Average Directional Index (ADX)          Args:             data: DataF, Calculate MACD (Moving Average Convergence Divergence)          Args:, Calculate Average True Range (ATR)          Args:             data: DataFrame wi
+
+### Community 101 - "Community 101"
+Cohesion: 0.40
+Nodes (4): Calculate entry price, stop loss, and target levels, Calculate entry price, stop loss, and target levels, Calculate entry price, stop loss, and target levels, Calculate entry price, stop loss, and target levels
+
+### Community 102 - "Community 102"
+Cohesion: 0.50
+Nodes (3): Returns (multiplier, tier_label) based on setup score., Returns (multiplier, tier_label) based on setup score., Returns (multiplier, tier_label) based on setup score.
 
 ## Knowledge Gaps
 - **432 isolated node(s):** `version`, `source`, `sourceType`, `skillPath`, `computedHash` (+427 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **5 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `get_session()` connect `Community 85` to `Community 0`, `Community 1`, `Community 3`, `Community 10`, `Community 26`, `Community 27`, `Community 32`, `Community 33`, `Community 34`, `Community 35`, `Community 50`, `Community 64`, `Community 66`, `Community 68`, `Community 76`, `Community 78`, `Community 84`, `Community 86`, `Community 87`?**
+- **Why does `get_session()` connect `Community 27` to `Community 0`, `Community 2`, `Community 10`, `Community 26`, `Community 32`, `Community 33`, `Community 34`, `Community 35`, `Community 50`, `Community 64`, `Community 66`, `Community 75`, `Community 76`, `Community 78`, `Community 84`, `Community 85`, `Community 86`, `Community 90`, `Community 94`, `Community 97`, `Community 98`?**
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `TradingBrain` connect `Community 81` to `Community 64`, `Community 3`, `Community 99`, `Community 101`, `Community 102`, `Community 5`, `Community 6`, `Community 75`, `Community 83`, `Community 84`, `Community 85`, `Community 87`, `Community 89`, `Community 26`, `Community 92`, `Community 93`?**
   _High betweenness centrality (0.030) - this node is a cross-community bridge._
-- **Why does `TradingBrain` connect `Community 3` to `Community 0`, `Community 5`, `Community 6`, `Community 73`, `Community 83`, `Community 84`, `Community 26`?**
-  _High betweenness centrality (0.025) - this node is a cross-community bridge._
-- **Why does `admin_force_scan()` connect `Community 26` to `Community 0`, `Community 1`, `Community 2`, `Community 3`, `Community 6`, `Community 85`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+- **Why does `DataService` connect `Community 5` to `Community 0`, `Community 2`, `Community 3`, `Community 7`, `Community 81`, `Community 92`?**
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._
 - **Are the 31 inferred relationships involving `get_session()` (e.g. with `test_database_setup()` and `test_reporting_service()`) actually correct?**
   _`get_session()` has 31 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 10 inferred relationships involving `TradingBrain` (e.g. with `PortfolioManager` and `MLModel`) actually correct?**
+- **Are the 10 inferred relationships involving `TradingBrain` (e.g. with `MLModel` and `Trade`) actually correct?**
   _`TradingBrain` has 10 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 11 inferred relationships involving `LearningEngine` (e.g. with `Trade` and `LearningMetrics`) actually correct?**
   _`LearningEngine` has 11 INFERRED edges - model-reasoned connections that need verification._
