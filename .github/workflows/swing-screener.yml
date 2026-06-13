@@ -1,0 +1,25 @@
+name: Swing Screener
+
+on:
+  schedule:
+    - cron: '30 2 * * 1-5'  # 8AM IST, weekdays only
+  workflow_dispatch:          # manual trigger button too
+
+jobs:
+  run-screener:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas numpy requests
+
+      - name: Run screener
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python swing_screener_cron.py --count 50
