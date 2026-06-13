@@ -15,6 +15,30 @@ API_URL = os.getenv(
 API_KEY = os.getenv("API_WEBHOOK_KEY", "your_secret_key_here")
 
 
+def send_discord_alert(results, capital=5000):
+    webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
+    if not webhook_url:
+        print("DISCORD_WEBHOOK_URL not set, skipping.")
+        return
+    from datetime import datetime
+    date_str = datetime.utcnow().strftime("%d %b %Y")
+    lines = [f"📊 **Swing Picks — {date_str}** | Capital: ₹{capital}\n"]
+    for i, r in enumerate(results[:10], 1):
+        qty = int(capital / r['ltp'])
+        deployed = round(qty * r['ltp'], 1)
+        lines.append(
+            f"`{i:>2}. {r['symbol'].replace('.NS',''):<12}` "
+            f"₹{r['ltp']:>6.1f} | Qty:{qty} | ₹{deployed} | "
+            f"WR:{r['win_rate']:.0f}% PF:{r['profit_factor']:.2f}"
+        )
+    lines.append("\n⚠️ Paper trade only.")
+    try:
+        resp = requests.post(webhook_url, json={"content": "\n".join(lines)}, timeout=10)
+        print("✅ Discord sent!" if resp.status_code == 204 else f"❌ Discord: {resp.status_code}")
+    except Exception as e:
+        print(f"❌ Discord error: {e}")
+
+
 def fetch_nifty500_symbols():
     """Fetch the latest Nifty 500 constituents from NSE website"""
     url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
@@ -228,6 +252,7 @@ def process_universe(count=50):
         deployed = round(qty * r['ltp'], 1)
         print(f"{i}. {r['symbol']:<15} | LTP: ₹{r['ltp']:>6.1f} | Qty: {qty:>3} | Deployed: ₹{deployed:>6} | WR: {r['win_rate']:>5.1f}% | PF: {r['profit_factor']:>4.2f} | ATR: {r['atr_pct']:>4.1f}%")
 
+    send_discord_alert(top_stocks)
     return final_symbols
 
 
