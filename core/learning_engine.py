@@ -6,11 +6,12 @@ Self-improvement through trade analysis and ML optimization
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import pickle
 
 from models.database import Trade, LearningMetrics, MLModel
+from models.scan_report import PatternOccurrence, ScanResult, ScanReport
 
 logger = logging.getLogger(__name__)
 
@@ -355,9 +356,6 @@ class LearningEngine:
         """
         try:
             # Get pattern statistics from scan data
-            from models.scan_report import PatternOccurrence, ScanResult, ScanReport
-            from datetime import timedelta
-
             cutoff_date = datetime.now() - timedelta(days=30)
 
             # Pattern occurrence analysis
