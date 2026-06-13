@@ -9,6 +9,7 @@ Improvements in this version:
 
 import numpy as np
 import pandas as pd
+import yfinance as yf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 import pickle
@@ -23,9 +24,10 @@ logger = logging.getLogger(__name__)
 class TradingBrain:
     """AI Decision Engine for trading"""
 
-    def __init__(self, db_session=None, risk_manager=None):
+    def __init__(self, db_session=None, risk_manager=None, data_service=None):
         self.db = db_session
         self.risk_manager = risk_manager
+        self.data_service = data_service
         self.ml_model = None
         self.scaler = None
         self.min_confidence_score = int(os.getenv("MIN_CONFIDENCE_SCORE", 70))
@@ -167,8 +169,6 @@ class TradingBrain:
             passes=False → below 50W EMA, skip this stock
         """
         try:
-            import yfinance as yf
-
             ticker = yf.Ticker(symbol)
             weekly_data = ticker.history(period="1y", interval="1wk")
 
@@ -420,36 +420,19 @@ class TradingBrain:
 
         entry_price = current_price
 
-        # ── Three stop loss candidates ────────────────────────────────────────
+        # ── Two stop loss candidates ──────────────────────────────────────────
         # 1. ATR-based (2x ATR below entry) — volatility-aware
         atr_stop = current_price - (2 * atr)
 
         # 2. Percent-based (8% from entry) — absolute floor
         percent_stop = current_price * 0.92
 
-        # 3. Swing-low (lowest Low of last 5 bars) — most structurally meaningful.
-        #    A break below the last swing low invalidates the immediate setup.
-        #    Only used when SWING_LOW_SL_ENABLED=true (default: true).
-        swing_low_stop = None
-        try:
-            data = analysis.get('data')
-            if (
-                data is not None
-                and len(data) >= 5
-                and os.getenv('SWING_LOW_SL_ENABLED', 'true').lower() == 'true'
-            ):
-                recent_swing_low = data['Low'].tail(5).min()
-                if pd.notna(recent_swing_low) and recent_swing_low < current_price:
-                    swing_low_stop = recent_swing_low
-        except Exception:
-            pass
-
         # Take the highest (tightest toward entry) of all valid candidates.
         # Never let SL be above entry.
-        candidates = [c for c in [atr_stop, percent_stop, swing_low_stop]
+        candidates = [c for c in [atr_stop, percent_stop]
                       if c is not None and c < entry_price]
         stop_loss = max(candidates) if candidates else percent_stop
-        
+
         # Enforce minimum 1.5% distance to prevent position sizing explosions
         min_sl_distance = entry_price * 0.985
         if stop_loss > min_sl_distance:
@@ -497,7 +480,7 @@ class TradingBrain:
         # Without this bonus, we can't reach thresholds to get those 20 trades.
         # This is temporary and auto-disables once model is trained.
         ml_model_active = self.is_model_trained()
-        
+
         if not ml_model_active:
             old_score = score_breakdown["total_score"]
             score_breakdown["total_score"] = min(100, score_breakdown["total_score"] + 10)
@@ -659,7 +642,7 @@ class TradingBrain:
                 if total_closed >= 10:
                     # Query all closed trades
                     closed_trades = self.db.query(Trade).filter(Trade.status == 'CLOSED').all()
-                    
+
                     # Group by pattern to calculate win rates
                     pattern_stats = {}
                     for t in closed_trades:
@@ -671,7 +654,7 @@ class TradingBrain:
                         # A win is defined as profit_loss > 0
                         if t.profit_loss and t.profit_loss > 0:
                             pattern_stats[t.pattern]['win'] += 1
-                    
+
                     # Adjust pattern thresholds based on performance
                     for pat, stats in pattern_stats.items():
                         if stats['total'] >= 3:  # Need at least 3 trades to adjust specifically
@@ -692,7 +675,7 @@ class TradingBrain:
                                     )
             except Exception as adapt_err:
                 logger.warning(f"[AdaptiveThreshold] Adaptive threshold calculation skipped: {adapt_err}")
-        
+
         # Determine base threshold based on patterns detected
         custom_thresholds = [pattern_thresholds[p] for p in patterns if p in pattern_thresholds]
         base_threshold = max(custom_thresholds) if custom_thresholds else self.min_confidence_score
@@ -804,10 +787,12 @@ class TradingBrain:
         # Earnings cause unpredictable gap moves that invalidate technical setups.
         if symbol and os.getenv('EARNINGS_BLACKOUT_DAYS', '5') != '0':
             try:
-                from services.data_service import DataService
                 from datetime import date
                 blackout_days = int(os.getenv('EARNINGS_BLACKOUT_DAYS', '5'))
-                ds = DataService()
+                ds = self.data_service
+                if ds is None:
+                    from services.data_service import DataService
+                    ds = DataService()
                 earnings_dates = ds.fetch_earnings_dates(symbol)
                 today = date.today()
                 for ed in earnings_dates:
@@ -886,7 +871,7 @@ class TradingBrain:
         if position_info:
             if position_info["quantity"] <= 0:
                 return "Position size too small (Risk management resulted in 0 shares)"
-            
+
             # --- FEAT-01: Brokerage-Adjusted R:R Check ---
             net_t1_pnl, _ = self.calculate_net_pnl(
                 levels["entry_price"], levels["target_1"], position_info["quantity"]
@@ -906,10 +891,12 @@ class TradingBrain:
         # 8. Earnings Blackout
         if symbol and os.getenv('EARNINGS_BLACKOUT_DAYS', '5') != '0':
             try:
-                from services.data_service import DataService
                 from datetime import date
                 blackout_days = int(os.getenv('EARNINGS_BLACKOUT_DAYS', '5'))
-                ds = DataService()
+                ds = self.data_service
+                if ds is None:
+                    from services.data_service import DataService
+                    ds = DataService()
                 earnings_dates = ds.fetch_earnings_dates(symbol)
                 today = date.today()
                 for ed in earnings_dates:
