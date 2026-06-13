@@ -3,6 +3,7 @@ Data Service
 Fetches market data from Yahoo Finance and NSE
 """
 
+import pytz
 import yfinance as yf
 import pandas as pd
 import logging
@@ -202,9 +203,9 @@ class DataService:
         """
         Get current prices for multiple stocks in a single batch fetch.
 
-        Uses yf.download() which is a single HTTP request instead of N serial ones.
-        This is ~60-70% faster than the old serial loop for a 50-stock watchlist.
-        Falls back to serial per-symbol fetch if batch fails.
+        Fetches in chunks of 10 to avoid OOM spikes on Render free tier (512MB).
+        Each chunk is a single yf.download() call; results are merged into prices.
+        Falls back to serial per-symbol fetch if all chunks fail.
 
         Args:
             symbols: List of stock symbols
@@ -217,53 +218,65 @@ class DataService:
         if not symbols:
             return prices
 
-        # --- BATCH FETCH (fast path) ---
+        # --- CHUNKED BATCH FETCH (fast path) ---
+        chunk_size = 10
         try:
-            data = yf.download(
-                symbols,
-                period='2d',
-                interval='1d',
-                progress=False,
-                group_by='ticker',
-                auto_adjust=True,
+            for i in range(0, len(symbols), chunk_size):
+                chunk = symbols[i:i + chunk_size]
+                try:
+                    data = yf.download(
+                        chunk,
+                        period='2d',
+                        interval='1d',
+                        progress=False,
+                        group_by='ticker',
+                        auto_adjust=True,
+                    )
+
+                    if data is None or data.empty:
+                        continue
+
+                    if len(chunk) == 1:
+                        # Single symbol: flat DataFrame
+                        sym = chunk[0]
+                        if 'Close' in data.columns and not data['Close'].empty:
+                            prices[sym] = float(data['Close'].iloc[-1])
+                    else:
+                        # Multi-symbol: MultiIndex columns (ticker, field)
+                        for sym in chunk:
+                            try:
+                                close = data['Close'][sym].dropna()
+                                if not close.empty:
+                                    prices[sym] = float(close.iloc[-1])
+                            except (KeyError, IndexError):
+                                pass  # Will be filled by serial fallback below
+
+                except Exception as chunk_err:
+                    logger.warning(
+                        f"Batch price fetch failed for chunk {chunk}: {chunk_err}"
+                    )
+                    continue  # try remaining chunks; serial fallback catches misses
+
+            logger.debug(
+                f"Batch prices fetched: {len(prices)}/{len(symbols)} symbols"
             )
 
-            if data is not None and not data.empty:
-                if len(symbols) == 1:
-                    # Single symbol: flat DataFrame
-                    sym = symbols[0]
-                    if 'Close' in data.columns and not data['Close'].empty:
-                        prices[sym] = float(data['Close'].iloc[-1])
-                else:
-                    # Multi-symbol: MultiIndex columns (ticker, field)
-                    for sym in symbols:
-                        try:
-                            close = data['Close'][sym].dropna()
-                            if not close.empty:
-                                prices[sym] = float(close.iloc[-1])
-                        except (KeyError, IndexError):
-                            pass  # Will be filled by serial fallback below
+            # Serial fallback for any symbol not captured across all chunks
+            missing = [s for s in symbols if s not in prices]
+            if missing:
+                logger.debug(f"Serial fallback for {len(missing)} symbols")
+                for sym in missing:
+                    try:
+                        price = self.get_current_price(sym)
+                        if price:
+                            prices[sym] = price
+                    except Exception:
+                        pass
 
-                logger.debug(
-                    f"Batch prices fetched: {len(prices)}/{len(symbols)} symbols"
-                )
-
-                # Serial fallback for any symbol not captured in batch
-                missing = [s for s in symbols if s not in prices]
-                if missing:
-                    logger.debug(f"Serial fallback for {len(missing)} symbols")
-                    for sym in missing:
-                        try:
-                            price = self.get_current_price(sym)
-                            if price:
-                                prices[sym] = price
-                        except Exception:
-                            pass
-
-                return prices
+            return prices
 
         except Exception as e:
-            logger.warning(f"Batch price fetch failed ({e}) — falling back to serial")
+            logger.warning(f"Chunked batch fetch failed ({e}) — falling back to serial")
 
         # --- SERIAL FALLBACK ---
         for symbol in symbols:
@@ -279,7 +292,6 @@ class DataService:
 
     def is_market_open(self) -> bool:
         """Check if Indian stock market is open"""
-        import pytz
         ist = pytz.timezone('Asia/Kolkata')
         now = datetime.now(ist)
         if now.weekday() >= 5:
@@ -290,7 +302,6 @@ class DataService:
 
     def get_market_status(self) -> dict:
         """Get detailed market status"""
-        import pytz
         ist = pytz.timezone('Asia/Kolkata')
         now = datetime.now(ist)
         is_open = self.is_market_open()

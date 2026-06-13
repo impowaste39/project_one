@@ -3,8 +3,11 @@ Market Monitor Service
 Scans markets, fetches data, and detects trading opportunities
 """
 
+import os
+import pytz
 import pandas as pd
 import logging
+import yfinance as yf
 from datetime import datetime
 import time
 
@@ -140,22 +143,21 @@ class MarketMonitor:
         if is_breakout:
             patterns.append('breakout_with_volume')
             signals['breakout'] = True
-            
+
             # Check for high-quality breakout filters
             if len(data) >= 21:
                 high_20d = data['High'].iloc[-21:-1].max()
                 if pd.notna(high_20d) and latest['Close'] > high_20d:
                     signals['breakout_20d_high'] = True
-            
+
             if latest['Volume_Ratio'] > 2.0:
                 signals['breakout_volume_2x'] = True
-                
+
             # Time check: first 2 hours of market (9:15 - 11:15 AM IST)
             # Default to True if market is closed (e.g. testing or EOD/pre-market run)
-            import pytz
             ist = pytz.timezone('Asia/Kolkata')
             now_ist = datetime.now(ist)
-            
+
             # If it's a weekday and within market hours, check if it's first 2h
             if now_ist.weekday() < 5:
                 market_open = now_ist.replace(hour=9, minute=15, second=0, microsecond=0)
@@ -208,7 +210,6 @@ class MarketMonitor:
         # we flag it — entering near resistance means limited upside before a pullback.
         # The scoring engine will apply a penalty but won't hard-block.
         try:
-            import os
             resistance_buffer_pct = float(os.getenv('RESISTANCE_BUFFER_PCT', '3.0'))
             swing_high_90d = data['High'].tail(90).max() if len(data) >= 90 else data['High'].max()
             if pd.notna(swing_high_90d) and swing_high_90d > 0:
@@ -219,7 +220,6 @@ class MarketMonitor:
                     signals['resistance_dist_pct'] = round(dist_to_resistance_pct, 2)
         except Exception:
             pass  # Resistance check failing never blocks a scan
-
 
         return {
             'patterns': patterns,
@@ -262,7 +262,6 @@ class MarketMonitor:
             rs_positive = None
             stock_return_20d = None
             try:
-                import os
                 if os.getenv('RS_FILTER_ENABLED', 'true').lower() == 'true' and nifty_return_20d is not None:
                     lookback = int(os.getenv('RS_LOOKBACK_DAYS', '20'))
                     # Compute stock's own N-day return
@@ -297,7 +296,6 @@ class MarketMonitor:
                 'rs_positive': rs_positive,
                 'stock_return_20d': stock_return_20d,
                 'nifty_return_20d': nifty_return_20d,
-                'data': data
             }
 
         except Exception as e:
@@ -311,8 +309,6 @@ class MarketMonitor:
         """
         logger.info(f"[PreRank] Pre-ranking watchlist ({len(self.watchlist)} symbols)...")
         try:
-            import yfinance as yf
-            import os
             # Fetch Nifty 20d return
             lookback = int(os.getenv('RS_LOOKBACK_DAYS', '20'))
             nifty_return_20d = self.data_service.fetch_nifty_return(lookback)
@@ -322,10 +318,10 @@ class MarketMonitor:
             symbols = self.watchlist
             ranked_candidates = []
             chunk_size = 10
-            
+
             for i in range(0, len(symbols), chunk_size):
                 chunk = symbols[i:i + chunk_size]
-                
+
                 # Batch download data for this chunk
                 data = yf.download(
                     chunk,
@@ -335,7 +331,7 @@ class MarketMonitor:
                     group_by='ticker',
                     auto_adjust=True
                 )
-                
+
                 for symbol in chunk:
                     try:
                         # Get symbol data from multi-index DataFrame
@@ -382,7 +378,7 @@ class MarketMonitor:
 
             # Sort by composite rank score descending
             ranked_candidates.sort(key=lambda x: x['rank_score'], reverse=True)
-            
+
             # Extract top N symbols
             top_symbols = [c['symbol'] for c in ranked_candidates[:limit]]
             logger.info(f"[PreRank] Watchlist ranked. Top 5: {top_symbols[:5]}")
@@ -409,7 +405,7 @@ class MarketMonitor:
         # Fetch Nifty return once for all RS comparisons
         if nifty_return_20d is None:
             try:
-                lookback = int(__import__('os').getenv('RS_LOOKBACK_DAYS', '20'))
+                lookback = int(os.getenv('RS_LOOKBACK_DAYS', '20'))
                 nifty_return_20d = self.data_service.fetch_nifty_return(lookback)
                 logger.info(f"[RS] Nifty {lookback}d return: {nifty_return_20d:.2f}%" if nifty_return_20d is not None else "[RS] Nifty return unavailable")
             except Exception as e:
@@ -417,8 +413,8 @@ class MarketMonitor:
 
         # Pre-rank watchlist to focus compute on top-performing setups (FEAT-04)
         watchlist_to_scan = self.watchlist
-        if __import__('os').getenv('WATCHLIST_PRE_RANK_ENABLED', 'true').lower() == 'true':
-            limit = int(__import__('os').getenv('WATCHLIST_PRE_RANK_LIMIT', '30'))
+        if os.getenv('WATCHLIST_PRE_RANK_ENABLED', 'true').lower() == 'true':
+            limit = int(os.getenv('WATCHLIST_PRE_RANK_LIMIT', '30'))
             watchlist_to_scan = self.pre_rank_watchlist(limit=limit)
 
         opportunities = []
@@ -455,15 +451,15 @@ class MarketMonitor:
         logger.info("PRE-MARKET SCAN STARTED")
 
         try:
-            lookback = int(__import__('os').getenv('RS_LOOKBACK_DAYS', '20'))
+            lookback = int(os.getenv('RS_LOOKBACK_DAYS', '20'))
             nifty_return_20d = self.data_service.fetch_nifty_return(lookback)
         except Exception:
             nifty_return_20d = None
 
         # Pre-rank watchlist to focus compute on top-performing setups (FEAT-04)
         watchlist_to_scan = self.watchlist
-        if __import__('os').getenv('WATCHLIST_PRE_RANK_ENABLED', 'true').lower() == 'true':
-            limit = int(__import__('os').getenv('WATCHLIST_PRE_RANK_LIMIT', '30'))
+        if os.getenv('WATCHLIST_PRE_RANK_ENABLED', 'true').lower() == 'true':
+            limit = int(os.getenv('WATCHLIST_PRE_RANK_LIMIT', '30'))
             watchlist_to_scan = self.pre_rank_watchlist(limit=limit)
 
         candidates = []
