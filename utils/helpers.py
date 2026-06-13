@@ -77,3 +77,66 @@ def get_market_status_message():
     else:
         mins_to_close = int((market_close - now).total_seconds() / 60)
         return f"Market Open ({mins_to_close} min remaining)"
+
+def calculate_net_pnl(
+    entry_price: float,
+    exit_price: float,
+    quantity: int,
+    partially_exited: bool = False,
+    partial_exit_price: float = None,
+    partial_exit_qty: int = None,
+) -> tuple:
+    """
+    Calculate real net P&L after Groww equity delivery charges.
+    Supports dual-leg partial exits.
+
+    Pure math — no DB or model dependency. Shared by TradingBrain and
+    PortfolioManager so neither needs to instantiate the other.
+
+    Returns:
+        Tuple of (net_pnl, total_charges)
+    """
+    if partially_exited and partial_exit_price is not None and partial_exit_qty is not None:
+        buy_turnover = entry_price * quantity
+        sell_turnover_1 = partial_exit_price * partial_exit_qty
+        sell_turnover_2 = exit_price * (quantity - partial_exit_qty)
+        sell_turnover = sell_turnover_1 + sell_turnover_2
+        gross_pnl = (
+            (partial_exit_price - entry_price) * partial_exit_qty
+            + (exit_price - entry_price) * (quantity - partial_exit_qty)
+        )
+
+        brokerage_buy = min(20.0, buy_turnover * 0.001)
+        brokerage_sell_1 = min(20.0, sell_turnover_1 * 0.001)
+        brokerage_sell_2 = min(20.0, sell_turnover_2 * 0.001)
+        brokerage_sell = brokerage_sell_1 + brokerage_sell_2
+        dp = 23.60 * 2  # Two sell transactions on different days
+    else:
+        buy_turnover = entry_price * quantity
+        sell_turnover = exit_price * quantity
+        gross_pnl = (exit_price - entry_price) * quantity
+
+        brokerage_buy = min(20.0, buy_turnover * 0.001)
+        brokerage_sell = min(20.0, sell_turnover * 0.001)
+        dp = 23.60  # Single sell transaction
+
+    stt = (buy_turnover + sell_turnover) * 0.001
+    exchange = (buy_turnover + sell_turnover) * 0.0000297
+    stamp = buy_turnover * 0.00015
+    sebi_ipft = (buy_turnover + sell_turnover) * 0.000002
+    gst = (brokerage_buy + brokerage_sell + exchange + sebi_ipft + dp) * 0.18
+
+    total_charges = round(
+        brokerage_buy
+        + brokerage_sell
+        + stt
+        + exchange
+        + stamp
+        + sebi_ipft
+        + dp
+        + gst,
+        2,
+    )
+    net_pnl = round(gross_pnl - total_charges, 2)
+    return net_pnl, total_charges
+

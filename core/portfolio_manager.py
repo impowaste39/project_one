@@ -14,6 +14,7 @@ import json
 import pytz
 
 from models.database import Trade, Portfolio, get_session
+from utils.helpers import calculate_net_pnl
 
 logger = logging.getLogger(__name__)
 
@@ -505,19 +506,15 @@ class PortfolioManager:
             True if trade exited successfully
         """
         try:
-            from core.trading_brain import TradingBrain
-
-            brain = TradingBrain()
-
             if trade.partially_exited:
                 partial_qty = trade.partial_exit_qty if trade.partial_exit_qty else (trade.quantity // 2)
                 remaining_qty = trade.quantity - partial_qty
-                
+
                 # Correct Gross P&L
                 gross_pnl_1 = (trade.partial_exit_price - trade.entry_price) * partial_qty
                 gross_pnl_2 = (exit_price - trade.entry_price) * remaining_qty
                 gross_pnl = gross_pnl_1 + gross_pnl_2
-                
+
                 # Weighted P&L %
                 profit_loss_pct_1 = ((trade.partial_exit_price - trade.entry_price) / trade.entry_price) * 100
                 profit_loss_pct_2 = ((exit_price - trade.entry_price) / trade.entry_price) * 100
@@ -529,7 +526,7 @@ class PortfolioManager:
             hold_duration = (datetime.now() -
                              trade.entry_date).days if trade.entry_date else 0
 
-            net_pnl, charges = brain.calculate_net_pnl(
+            net_pnl, charges = calculate_net_pnl(
                 trade.entry_price,
                 exit_price,
                 trade.quantity,
