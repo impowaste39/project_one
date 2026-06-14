@@ -406,9 +406,9 @@ class TradingBrain:
         # ─────────────────────────────────────────────────────────────────────
 
         risk = entry_price - stop_loss
-        target_1 = entry_price + (risk * 1.5)
-        target_2 = entry_price + (risk * 2.0)
-        target_3 = entry_price + (risk * 3.0)
+        target_1 = entry_price + (risk * 2.0)
+        target_2 = entry_price + (risk * 3.0)
+        target_3 = entry_price + (risk * 4.0)
 
         risk_percent = ((entry_price - stop_loss) / entry_price) * 100
         reward_1_percent = ((target_1 - entry_price) / entry_price) * 100
@@ -947,15 +947,15 @@ class TradingBrain:
             else 0
         )
 
-        if days_held >= 7 and current_price < trade.entry_price:
+        if days_held >= 10 and current_price < trade.entry_price * 0.97:
             return {
                 "action": "EXIT",
-                "reason": f"Time decay ({days_held} days with loss)",
+                "reason": f"Time decay ({days_held} days with loss >3%)",
                 "exit_type": "time_stop",
                 "urgency": "normal",
             }
 
-        if days_held >= 12:
+        if days_held >= 15:
             return {
                 "action": "EXIT",
                 "reason": f"Maximum holding period reached ({days_held} days)",

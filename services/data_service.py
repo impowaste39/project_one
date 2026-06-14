@@ -43,52 +43,38 @@ class DataService:
         ]
 
         self.custom = [
-            # ADDED FROM TOP SELECTIONS
-            "FEDERALBNK.NS",
-            "ANGELONE.NS",
-            "ADANIENSOL.NS",
-            "MCX.NS",
-            "VBL.NS",
-            "M&M.NS",
-            "FACT.NS",
-            "CHENNPETRO.NS",
-            "ACUTAAS.NS",
-            "CHOLAFIN.NS",
-            "APLAPOLLO.NS",
-            "AIAENG.NS",
-            "MARICO.NS",
-            "SWANCORP.NS",
+            # ADDED FROM TOP SELECTIONS (sorted by PF desc)
+            "NATIONALUM.NS",
+            "MRPL.NS",
+            "SWIGGY.NS",
+            "TARIL.NS",
+            "KOTAKBANK.NS",
+            "ADANIPOWER.NS",
+            "COALINDIA.NS",
             "BELRISE.NS",
-            "ABDL.NS",
-            "3MINDIA.NS",
-            "JSWENERGY.NS",
-            "CGPOWER.NS",
-            "KARURVYSYA.NS",
-            "CESC.NS",
+            "USHAMART.NS",
+            "CUB.NS",
             "ACMESOLAR.NS",
+            "VEDL.NS",
+            "JIOFIN.NS",
+            "HINDPETRO.NS",
+            "KARURVYSYA.NS",
+            "BPCL.NS",
             "LTF.NS",
-            "UNOMINDA.NS",
-            "CGCL.NS",
-            "PIRAMALFIN.NS",
-            "CHALET.NS",
-            "VTL.NS",
-            "TEGA.NS",
-            "NAM-INDIA.NS",
-            "ESCORTS.NS",
-            "JSL.NS",
+            "RITES.NS",
+            "SUZLON.NS",
+            "CANBK.NS",
             "INDIACEM.NS",
-            "NIVABUPA.NS",
-            "TBOTEK.NS",
-            "PERSISTENT.NS",
-            "UPL.NS",
-            "NAVINFLUOR.NS",
-            "CREDITACC.NS",
-            "NUVAMA.NS",
-            "AEGISLOG.NS",
-            "SIEMENS.NS",
-            "ABSLAMC.NS",
-            "LUPIN.NS",
-            "ABCAPITAL.NS"
+            "NYKAA.NS",
+            "ICICIPRULI.NS",
+            "GAIL.NS",
+            "SWANCORP.NS",
+            "ITCHOTELS.NS",
+            "ANGELONE.NS",
+            "TATAPOWER.NS",
+            "ONGC.NS",
+            "LICI.NS",
+            "ASHOKLEY.NS",
         ]
 
     def get_watchlist(self, category: str = 'nifty50') -> list:
@@ -191,7 +177,8 @@ class DataService:
         """
         try:
             ticker = yf.Ticker(symbol)
-            data = ticker.history(period='2d')  # FIXED: was '1d', now '2d' for reliability
+            # FIXED: was '1d', now '2d' for reliability
+            data = ticker.history(period='2d')
             if data is None or data.empty:
                 return None
             return data['Close'].iloc[-1]
@@ -276,7 +263,8 @@ class DataService:
             return prices
 
         except Exception as e:
-            logger.warning(f"Chunked batch fetch failed ({e}) — falling back to serial")
+            logger.warning(
+                f"Chunked batch fetch failed ({e}) — falling back to serial")
 
         # --- SERIAL FALLBACK ---
         for symbol in symbols:
@@ -372,7 +360,8 @@ class DataService:
         # Check cache
         cached = _EARNINGS_CACHE.get(symbol)
         if cached:
-            age_hours = (datetime.now() - cached['fetched_at']).total_seconds() / 3600
+            age_hours = (datetime.now() -
+                         cached['fetched_at']).total_seconds() / 3600
             if age_hours < _EARNINGS_CACHE_TTL_HOURS:
                 return cached['dates']
 
@@ -394,7 +383,8 @@ class DataService:
                                     pass
                         else:
                             try:
-                                dates.append(pd.Timestamp(earnings_date).date())
+                                dates.append(pd.Timestamp(
+                                    earnings_date).date())
                             except Exception:
                                 pass
 
@@ -403,5 +393,6 @@ class DataService:
         except Exception as e:
             logger.debug(f"Earnings fetch skipped for {symbol}: {e}")
 
-        _EARNINGS_CACHE[symbol] = {'dates': dates, 'fetched_at': datetime.now()}
+        _EARNINGS_CACHE[symbol] = {
+            'dates': dates, 'fetched_at': datetime.now()}
         return dates
