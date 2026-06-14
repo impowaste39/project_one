@@ -35,7 +35,7 @@ class RiskManager:
         self.volatile_mode = volatile_mode
 
     def calculate_position_size(self, capital: float, entry_price: float,
-                                stop_loss: float) -> dict:
+                                stop_loss: float, atr: float = None) -> dict:
         """
         Calculate position size based on risk
 
@@ -51,8 +51,13 @@ class RiskManager:
             logger.warning("Stop loss must be below entry price")
             return {'quantity': 0, 'investment': 0, 'risk_amount': 0}
 
-        # Risk per share
-        risk_per_share = entry_price - stop_loss
+        # Use ATR-based stop distance when available; fall back to price-derived SL
+        if atr and atr > 0:
+            risk_per_share = max(entry_price - stop_loss, atr * 1.5)
+            logger.debug(
+                f"ATR-based risk_per_share: {risk_per_share:.2f} (ATR={atr:.2f})")
+        else:
+            risk_per_share = entry_price - stop_loss
 
         # Max risk amount based on mode (1.5% volatile / 2% normal)
         max_risk = capital * self.max_risk_per_trade
@@ -100,8 +105,8 @@ class RiskManager:
             return False, "Insufficient capital"
 
         # Check minimum investment
-        # ₹5,000 minimum: brokerage overhead drops to ~1.7% at this level.
-        # At ₹500, round-trip brokerage alone was ~10% of capital — structurally losing.
+        # ₹8,000 minimum: at this level brokerage is ~1.25% round-trip.
+        # Below ₹8,000, charges eat too much of the expected gain.
         if position_info['investment'] < 8000:
             return False, "Investment too small (min ₹8,000)"
 

@@ -523,7 +523,7 @@ class PortfolioManager:
                 gross_pnl = (exit_price - trade.entry_price) * trade.quantity
                 profit_loss_pct = ((exit_price - trade.entry_price) / trade.entry_price) * 100
 
-            hold_duration = (datetime.now() -
+            hold_duration = (datetime.now(IST).replace(tzinfo=None) -
                              trade.entry_date).days if trade.entry_date else 0
 
             net_pnl, charges = calculate_net_pnl(

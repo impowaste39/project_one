@@ -486,6 +486,7 @@ class TradingBrain:
                 capital=portfolio_state["available_capital"],
                 entry_price=levels["entry_price"],
                 stop_loss=levels["stop_loss"],
+                atr=analysis.get("atr"),
             )
 
         # --- POSITION SCALING BY SCORE ---
