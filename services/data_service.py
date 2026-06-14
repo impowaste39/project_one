@@ -44,37 +44,97 @@ class DataService:
 
         self.custom = [
             # ADDED FROM TOP SELECTIONS (sorted by PF desc)
-            "NATIONALUM.NS",
+            # "NATIONALUM.NS",
             "MRPL.NS",
             "SWIGGY.NS",
             "TARIL.NS",
             "KOTAKBANK.NS",
-            "ADANIPOWER.NS",
+            # "ADANIPOWER.NS",
             "COALINDIA.NS",
             "BELRISE.NS",
             "USHAMART.NS",
             "CUB.NS",
             "ACMESOLAR.NS",
-            "VEDL.NS",
+            # "VEDL.NS",
             "JIOFIN.NS",
             "HINDPETRO.NS",
             "KARURVYSYA.NS",
             "BPCL.NS",
             "LTF.NS",
-            "RITES.NS",
-            "SUZLON.NS",
-            "CANBK.NS",
+            # "RITES.NS",
+            # "SUZLON.NS",
+            # "CANBK.NS",
             "INDIACEM.NS",
             "NYKAA.NS",
             "ICICIPRULI.NS",
-            "GAIL.NS",
+            # "GAIL.NS",
             "SWANCORP.NS",
             "ITCHOTELS.NS",
             "ANGELONE.NS",
-            "TATAPOWER.NS",
-            "ONGC.NS",
+            # "TATAPOWER.NS",
+            # "ONGC.NS",
             "LICI.NS",
+            # "ASHOKLEY.NS",
+
+            # PSU BANKS & FINANCE
+            "SBIN.NS",
+            "PNB.NS",
+            "BANKBARODA.NS",
+            "CANBK.NS",
+            "UNIONBANK.NS",
+            "MAHABANK.NS",
+            "IDFCFIRSTB.NS",
+            "IRFC.NS",
+            "RECLTD.NS",
+            "PFC.NS",
+
+            # POWER / ENERGY
+            "SUZLON.NS",
+            "NTPC.NS",
+            "NHPC.NS",
+            "TATAPOWER.NS",
+            "ADANIPOWER.NS",
+            "BHEL.NS",
+            "IOC.NS",
+            "ONGC.NS",
+            "GAIL.NS",
+            "IEX.NS",
+
+            # RAILWAYS / INFRA
+            "RVNL.NS",
+            "RITES.NS",
+            "IRB.NS",
+            "NCC.NS",
+
+            # METALS & MATERIALS
+            "SAIL.NS",
+            "NMDC.NS",
+            "HINDCOPPER.NS",
+            "VEDL.NS",
+            "JINDALSTEL.NS",
+            "NATIONALUM.NS",
+
+            # IT & TECH
+            "WIPRO.NS",
+            "REDINGTON.NS",
+            "ROUTE.NS",
+
+            # AUTO & INDUSTRIAL
             "ASHOKLEY.NS",
+            "MOTHERSON.NS",
+
+            # FMCG / CONSUMER
+            "ITC.NS",
+            "DABUR.NS",
+
+            # PHARMA
+            "AUROPHARMA.NS",
+            "ZYDUSLIFE.NS",
+
+            # HIGH BETA / MOMENTUM
+            "IDEA.NS",
+            "JPPOWER.NS",
+            "BEL.NS"
         ]
 
     def get_watchlist(self, category: str = 'nifty50') -> list:
