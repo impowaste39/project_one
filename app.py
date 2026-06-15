@@ -326,9 +326,12 @@ def scan_market_job():
                     continue
 
             # Update scan report with final trade count
-            if scan_report:
-                scan_report.trades_entered = scan_stats['trades_entered']
-                db.commit()
+            if scan_report_id and scan_stats['trades_entered'] > 0:
+                from models.scan_report import ScanReport as SR
+                live_report = db.query(SR).filter_by(id=scan_report_id).first()
+                if live_report:
+                    live_report.trades_entered = scan_stats['trades_entered']
+                    db.commit()
 
             logger.info(
                 f"Market scan completed - {scan_stats['trades_entered']} trades entered")
