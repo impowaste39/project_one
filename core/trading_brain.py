@@ -63,6 +63,48 @@ class TradingBrain:
             self.ml_model = RandomForestClassifier(n_estimators=100)
             self.scaler = StandardScaler()
 
+    def prime_adaptive_thresholds(self):
+        """
+        Compute adaptive pattern thresholds ONCE before the scan loop.
+        Call this at the start of scan_market_job, not per-stock inside the loop.
+        Stores result in self._cached_pattern_thresholds.
+        """
+        self._cached_pattern_thresholds = {}
+        if not self.db:
+            return
+        try:
+            from models.database import Trade
+            total_closed = self.db.query(Trade).filter(Trade.status == 'CLOSED').count()
+            if total_closed < 10:
+                return
+            closed_trades = self.db.query(Trade).filter(Trade.status == 'CLOSED').all()
+            pattern_stats = {}
+            for t in closed_trades:
+                if not t.pattern:
+                    continue
+                if t.pattern not in pattern_stats:
+                    pattern_stats[t.pattern] = {'win': 0, 'total': 0}
+                pattern_stats[t.pattern]['total'] += 1
+                if t.profit_loss and t.profit_loss > 0:
+                    pattern_stats[t.pattern]['win'] += 1
+            base_thresholds = {
+                'bullish_ma_crossover': 65, 'macd_bullish_crossover': 68,
+                'pullback_in_uptrend': 72,  'breakout_with_volume': 70,
+                'trend_strength': 72,       'rsi_oversold_bounce': 68,
+                'stochastic_oversold': 68,  'strong_momentum': 68,
+            }
+            for pat, stats in pattern_stats.items():
+                if stats['total'] >= 3 and pat in base_thresholds:
+                    win_rate = stats['win'] / stats['total']
+                    base = base_thresholds[pat]
+                    if win_rate > 0.65:
+                        self._cached_pattern_thresholds[pat] = max(60, base - 3)
+                    elif win_rate < 0.45:
+                        self._cached_pattern_thresholds[pat] = min(85, base + 5)
+            logger.info(f"[AdaptiveThreshold] Cached {len(self._cached_pattern_thresholds)} pattern thresholds")
+        except Exception as e:
+            logger.warning(f"[AdaptiveThreshold] Cache build skipped: {e}")
+
     def is_model_trained(self) -> bool:
         """Safely check if the ML model is trained without triggering NotFittedError crashes"""
         try:
@@ -486,7 +528,6 @@ class TradingBrain:
                 capital=portfolio_state["available_capital"],
                 entry_price=levels["entry_price"],
                 stop_loss=levels["stop_loss"],
-                atr=analysis.get("atr"),
             )
 
         # --- POSITION SCALING BY SCORE ---
@@ -601,47 +642,10 @@ class TradingBrain:
         }
 
         # --- FEAT-09: Adaptive Confidence Thresholds ---
-        if self.db:
-            try:
-                from models.database import Trade
-                # Count total closed trades
-                total_closed = self.db.query(Trade).filter(Trade.status == 'CLOSED').count()
-                if total_closed >= 10:
-                    # Query all closed trades
-                    closed_trades = self.db.query(Trade).filter(Trade.status == 'CLOSED').all()
-
-                    # Group by pattern to calculate win rates
-                    pattern_stats = {}
-                    for t in closed_trades:
-                        if not t.pattern:
-                            continue
-                        if t.pattern not in pattern_stats:
-                            pattern_stats[t.pattern] = {'win': 0, 'total': 0}
-                        pattern_stats[t.pattern]['total'] += 1
-                        # A win is defined as profit_loss > 0
-                        if t.profit_loss and t.profit_loss > 0:
-                            pattern_stats[t.pattern]['win'] += 1
-
-                    # Adjust pattern thresholds based on performance
-                    for pat, stats in pattern_stats.items():
-                        if stats['total'] >= 3:  # Need at least 3 trades to adjust specifically
-                            win_rate = stats['win'] / stats['total']
-                            if pat in pattern_thresholds:
-                                base = pattern_thresholds[pat]
-                                if win_rate > 0.65:
-                                    pattern_thresholds[pat] = max(60, base - 3)
-                                    logger.info(
-                                        f"[AdaptiveThreshold] Adjusted {pat} threshold: {base} -> "
-                                        f"{pattern_thresholds[pat]} (Win Rate: {win_rate:.1%})"
-                                    )
-                                elif win_rate < 0.45:
-                                    pattern_thresholds[pat] = min(85, base + 5)
-                                    logger.info(
-                                        f"[AdaptiveThreshold] Adjusted {pat} threshold: {base} -> "
-                                        f"{pattern_thresholds[pat]} (Win Rate: {win_rate:.1%})"
-                                    )
-            except Exception as adapt_err:
-                logger.warning(f"[AdaptiveThreshold] Adaptive threshold calculation skipped: {adapt_err}")
+        # Uses cache built once by prime_adaptive_thresholds() before the scan loop.
+        # Avoids per-stock DB queries that exhaust the connection pool mid-scan.
+        if hasattr(self, '_cached_pattern_thresholds') and self._cached_pattern_thresholds:
+            pattern_thresholds.update(self._cached_pattern_thresholds)
 
         # Determine base threshold based on patterns detected
         custom_thresholds = [pattern_thresholds[p] for p in patterns if p in pattern_thresholds]

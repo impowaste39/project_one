@@ -257,6 +257,9 @@ def scan_market_job():
                 for t in db.query(Trade).filter(Trade.status == 'OPEN').all()
             }
 
+            # Pre-compute adaptive thresholds once — avoids per-stock DB query inside loop
+            brain.prime_adaptive_thresholds()
+
             # Evaluate each opportunity
             for opp in opportunities:
                 try:
