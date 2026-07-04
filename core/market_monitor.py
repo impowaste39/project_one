@@ -257,14 +257,11 @@ class MarketMonitor:
             latest = data.iloc[-1]
 
             # ── Relative Strength vs Nifty ─────────────────────────────────
-            # Stock that moves UP more than Nifty = outperforming = strong candidate.
-            # Stock that underperforms Nifty = money is rotating elsewhere.
             rs_positive = None
             stock_return_20d = None
             try:
                 if os.getenv('RS_FILTER_ENABLED', 'true').lower() == 'true' and nifty_return_20d is not None:
                     lookback = int(os.getenv('RS_LOOKBACK_DAYS', '20'))
-                    # Compute stock's own N-day return
                     price_series = data['Close'].tail(lookback + 5)
                     if len(price_series) >= 2:
                         start_p = price_series.iloc[0]
@@ -280,15 +277,16 @@ class MarketMonitor:
                 logger.debug(f"[RS] {symbol}: RS calc skipped ({rs_err})")
             # ───────────────────────────────────────────────────
 
-            return {
+            # Extract all scalars before freeing the DataFrame
+            result = {
                 'symbol': symbol,
-                'current_price': latest['Close'],
-                'rsi': latest['RSI'],
-                'macd': latest['MACD'],
-                'volume_ratio': latest['Volume_Ratio'],
-                'atr': latest['ATR'],
-                'sma_20': latest['SMA_20'],
-                'sma_50': latest['SMA_50'],
+                'current_price': float(latest['Close']),
+                'rsi': float(latest['RSI']),
+                'macd': float(latest['MACD']),
+                'volume_ratio': float(latest['Volume_Ratio']),
+                'atr': float(latest['ATR']),
+                'sma_20': float(latest['SMA_20']),
+                'sma_50': float(latest['SMA_50']),
                 'patterns': pattern_analysis['patterns'],
                 'signals': pattern_analysis['signals'],
                 'pattern_count': pattern_analysis['pattern_count'],
@@ -297,6 +295,12 @@ class MarketMonitor:
                 'stock_return_20d': stock_return_20d,
                 'nifty_return_20d': nifty_return_20d,
             }
+
+            # Free the 3mo decorated DataFrame immediately — 30 stocks × ~15 cols
+            # would otherwise pile up in RAM across the scan loop
+            del data, latest
+
+            return result
 
         except Exception as e:
             logger.error(f"Error scanning {symbol}: {e}")
@@ -322,10 +326,10 @@ class MarketMonitor:
             for i in range(0, len(symbols), chunk_size):
                 chunk = symbols[i:i + chunk_size]
 
-                # Batch download data for this chunk
+                # Batch download — 1mo is sufficient for 20d RS + 5d vol trend
                 data = yf.download(
                     chunk,
-                    period='3mo',
+                    period='1mo',
                     interval='1d',
                     progress=False,
                     group_by='ticker',
@@ -336,9 +340,9 @@ class MarketMonitor:
                     try:
                         # Get symbol data from multi-index DataFrame
                         if len(chunk) == 1:
-                            sym_data = data
+                            sym_data = data[['High', 'Close', 'Volume']].dropna()
                         else:
-                            sym_data = data[symbol].dropna()
+                            sym_data = data[symbol][['High', 'Close', 'Volume']].dropna()
 
                         if sym_data.empty or len(sym_data) < 20:
                             continue
@@ -352,17 +356,17 @@ class MarketMonitor:
                         # Relative strength vs Nifty
                         rs_score = stock_return - nifty_return_20d
 
-                        # 2. Proximity to 3-month High
-                        high_3m = sym_data['High'].max()
-                        current_price = sym_data['Close'].iloc[-1]
-                        proximity = (current_price / high_3m) if high_3m > 0 else 0.0
+                        # 2. Proximity to 1-month High (aligns with period='1mo')
+                        high_1m = sym_data['High'].max()
+                        current_price = float(sym_data['Close'].iloc[-1])
+                        proximity = (current_price / high_1m) if high_1m > 0 else 0.0
 
                         # 3. Volume Trend (last 5 days vs preceding 15 days)
                         vol_5d = sym_data['Volume'].tail(5).mean()
                         vol_prev = sym_data['Volume'].iloc[-20:-5].mean()
                         vol_ratio = (vol_5d / vol_prev) if vol_prev > 0 else 1.0
 
-                        # Calculate a composite ranking score
+                        # Composite ranking score
                         # RS (weight 50%) + Proximity (weight 30%) + Volume Trend (weight 20%)
                         rank_score = (rs_score * 0.5) + (proximity * 30.0) + (vol_ratio * 20.0)
 
@@ -375,6 +379,8 @@ class MarketMonitor:
                         })
                     except Exception as sym_err:
                         logger.debug(f"[PreRank] Error processing {symbol}: {sym_err}")
+
+                del data  # free chunk before next download — prevents RAM accumulation
 
             # Sort by composite rank score descending
             ranked_candidates.sort(key=lambda x: x['rank_score'], reverse=True)

@@ -178,7 +178,8 @@ class TradingBrain:
         """
         try:
             ticker = yf.Ticker(symbol)
-            weekly_data = ticker.history(period="1y", interval="1wk")
+            # 6 months of weekly data is enough for a 50W EMA with min_periods=10
+            weekly_data = ticker.history(period="6mo", interval="1wk")
 
             if weekly_data is None or weekly_data.empty or len(weekly_data) < 20:
                 logger.debug(
@@ -186,12 +187,12 @@ class TradingBrain:
                 )
                 return True, "Weekly EMA: insufficient data (bypassed)"
 
-            weekly_data["ema_50w"] = (
-                weekly_data["Close"].ewm(span=50, min_periods=10, adjust=False).mean()
-            )
+            ema_series = weekly_data["Close"].ewm(span=50, min_periods=10, adjust=False).mean()
+            current_price = float(weekly_data["Close"].iloc[-1])
+            ema_50w = float(ema_series.iloc[-1])
 
-            current_price = weekly_data["Close"].iloc[-1]
-            ema_50w = weekly_data["ema_50w"].iloc[-1]
+            # Free memory immediately — don't hold the DataFrame for the rest of evaluation
+            del weekly_data, ema_series
 
             if pd.isna(ema_50w):
                 logger.debug(f"[WeeklyEMA] {symbol}: EMA is NaN, bypassing filter")

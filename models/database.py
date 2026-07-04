@@ -253,7 +253,7 @@ def init_database():
         connect_args = {
             "connect_timeout": 15,
             "keepalives": 1,
-            "keepalives_idle": 30,
+            "keepalives_idle": 20,   # send keepalive after 20s idle (was 30)
             "keepalives_interval": 5,
             "keepalives_count": 3
         }
@@ -262,7 +262,7 @@ def init_database():
         database_url,
         echo=False,
         pool_pre_ping=True,
-        pool_recycle=120,
+        pool_recycle=25,    # recycle before Aiven drops idle TCP ~30s (was 120)
         pool_timeout=15,
         pool_size=2,        # FIX #1: was 5 — keeps steady-state at 2 connections
         max_overflow=1,     # FIX #1: was 5 — burst ceiling is 3 total (safe under Aiven's 5 limit)
