@@ -628,6 +628,7 @@ class PortfolioManager:
 
         except Exception as e:
             logger.error(f"Error updating unrealized P&L: {e}")
+            self.db.rollback()
 
     def get_weekly_pnl_summary(self) -> dict:
         """

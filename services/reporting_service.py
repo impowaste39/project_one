@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import json
 import os
 
-from models.database import get_session
+from models.database import MarketDataCache
 from models.scan_report import ScanReport, ScanResult, PatternOccurrence
 
 logger = logging.getLogger(__name__)
@@ -18,10 +18,14 @@ class ReportingService:
     """Service for saving and retrieving scan data"""
 
     def __init__(self, db_session=None):
+        if db_session is None:
+            raise ValueError("ReportingService requires a db_session")
         self.db = db_session
         self.save_enabled = os.getenv(
             'SAVE_SCAN_DATA', 'true').lower() == 'true'
         self.retention_days = int(os.getenv('SCAN_DATA_RETENTION_DAYS', 90))
+        self.cache_retention_days = int(os.getenv('MARKET_CACHE_RETENTION_DAYS', 2))
+
         self.min_score_to_save = int(os.getenv('MIN_SCORE_TO_SAVE', 50))
 
     def save_scan_report(self, market_context: dict, scan_stats: dict,
@@ -41,30 +45,30 @@ class ReportingService:
             return None
 
         try:
-            with get_session() as db:
-                scan_report = ScanReport(
-                    timestamp=datetime.now(),
-                    market_trend=market_context.get('trend'),
-                    market_strength=market_context.get('strength'),
-                    nifty_price=market_context.get('nifty_price'),
-                    nifty_rsi=market_context.get('nifty_rsi'),
-                    market_breadth=market_context.get('market_breadth'),
-                    total_stocks_scanned=scan_stats.get('total_scanned', 0),
-                    opportunities_found=scan_stats.get(
-                        'opportunities_found', 0),
-                    trades_entered=scan_stats.get('trades_entered', 0),
-                    scan_duration_seconds=scan_duration
-                )
+            scan_report = ScanReport(
+                timestamp=datetime.now(),
+                market_trend=market_context.get('trend'),
+                market_strength=market_context.get('strength'),
+                nifty_price=market_context.get('nifty_price'),
+                nifty_rsi=market_context.get('nifty_rsi'),
+                market_breadth=market_context.get('market_breadth'),
+                total_stocks_scanned=scan_stats.get('total_scanned', 0),
+                opportunities_found=scan_stats.get(
+                    'opportunities_found', 0),
+                trades_entered=scan_stats.get('trades_entered', 0),
+                scan_duration_seconds=scan_duration
+            )
 
-                db.add(scan_report)
-                db.commit()
-                db.refresh(scan_report)
+            self.db.add(scan_report)
+            self.db.commit()
+            self.db.refresh(scan_report)
 
             logger.info(f"Saved scan report: {scan_report.id}")
             return scan_report
 
         except Exception as e:
             logger.error(f"Error saving scan report: {e}")
+            self.db.rollback()
             return None
 
     def save_scan_result(self, scan_report_id: int, analysis: dict,
@@ -94,32 +98,31 @@ class ReportingService:
             return None
 
         try:
-            with get_session() as db:
-                scan_result = ScanResult(
-                    scan_report_id=scan_report_id,
-                    symbol=analysis.get('symbol'),
-                    current_price=analysis.get('current_price'),
-                    rsi=analysis.get('rsi'),
-                    macd=analysis.get('macd'),
-                    volume_ratio=analysis.get('volume_ratio'),
-                    atr=analysis.get('atr'),
-                    patterns_detected=json.dumps(analysis.get('patterns', [])),
-                    pattern_count=analysis.get('pattern_count', 0),
-                    total_score=evaluation.get('score'),
-                    technical_score=evaluation.get('technical_score'),
-                    pattern_score=evaluation.get('pattern_score'),
-                    market_score=evaluation.get('market_score'),
-                    ml_score=evaluation.get('ml_score'),
-                    decision=evaluation.get('decision'),
-                    rejection_reason=evaluation.get('reason'),
-                    entry_price=evaluation.get('entry_price'),
-                    stop_loss=evaluation.get('stop_loss'),
-                    target=evaluation.get('target_1'),
-                    rr_ratio=evaluation.get('rr_ratio')
-                )
+            scan_result = ScanResult(
+                scan_report_id=scan_report_id,
+                symbol=analysis.get('symbol'),
+                current_price=analysis.get('current_price'),
+                rsi=analysis.get('rsi'),
+                macd=analysis.get('macd'),
+                volume_ratio=analysis.get('volume_ratio'),
+                atr=analysis.get('atr'),
+                patterns_detected=json.dumps(analysis.get('patterns', [])),
+                pattern_count=analysis.get('pattern_count', 0),
+                total_score=evaluation.get('score'),
+                technical_score=evaluation.get('technical_score'),
+                pattern_score=evaluation.get('pattern_score'),
+                market_score=evaluation.get('market_score'),
+                ml_score=evaluation.get('ml_score'),
+                decision=evaluation.get('decision'),
+                rejection_reason=evaluation.get('reason'),
+                entry_price=evaluation.get('entry_price'),
+                stop_loss=evaluation.get('stop_loss'),
+                target=evaluation.get('target_1'),
+                rr_ratio=evaluation.get('rr_ratio')
+            )
 
-                db.add(scan_result)
-                db.commit()
+            self.db.add(scan_result)
+            self.db.commit()
 
             # Note: Pattern occurrences are saved separately in app.py
             # to ensure they're tracked even for low-scoring stocks
@@ -129,6 +132,7 @@ class ReportingService:
         except Exception as e:
             logger.error(
                 f"Error saving scan result for {analysis.get('symbol')}: {e}")
+            self.db.rollback()
             return None
 
     def _save_pattern_occurrences(self, analysis: dict, evaluation: dict,
@@ -140,29 +144,29 @@ class ReportingService:
                 return
 
             # Get market context from scan report
-            with get_session() as db:
-                scan_report = db.query(ScanReport).filter_by(
-                    id=scan_report_id).first()
+            scan_report = self.db.query(ScanReport).filter_by(
+                id=scan_report_id).first()
 
-                if not scan_report:
-                    return
+            if not scan_report:
+                return
 
-                for pattern in patterns:
-                    occurrence = PatternOccurrence(
-                        timestamp=datetime.now(),
-                        pattern=pattern,
-                        symbol=analysis.get('symbol'),
-                        market_trend=scan_report.market_trend,
-                        nifty_rsi=scan_report.nifty_rsi,
-                        was_traded=(evaluation.get('decision') == 'ENTER'),
-                        score=evaluation.get('score')
-                    )
-                    db.add(occurrence)
-
-                db.commit()
+            for pattern in patterns:
+                occurrence = PatternOccurrence(
+                    timestamp=datetime.now(),
+                    pattern=pattern,
+                    symbol=analysis.get('symbol'),
+                    market_trend=scan_report.market_trend,
+                    nifty_rsi=scan_report.nifty_rsi,
+                    was_traded=(evaluation.get('decision') == 'ENTER'),
+                    score=evaluation.get('score')
+                )
+                self.db.add(occurrence)
+            self.db.commit()
 
         except Exception as e:
             logger.error(f"Error saving pattern occurrences: {e}")
+            self.db.rollback()
+            return None
 
     def get_scan_history(self, limit: int = 50) -> list:
         """
@@ -314,6 +318,8 @@ class ReportingService:
         """Remove scan data older than retention period"""
         try:
             cutoff_date = datetime.now() - timedelta(days=self.retention_days)
+            cache_cutoff_date = datetime.now() - timedelta(days=self.cache_retention_days)
+
 
             # Delete old scan reports (cascade will delete results)
             deleted = self.db.query(ScanReport).filter(
@@ -325,6 +331,11 @@ class ReportingService:
                 PatternOccurrence.timestamp < cutoff_date
             ).delete()
 
+            # Delete old market data cache
+            self.db.query(MarketDataCache).filter(
+                MarketDataCache.timestamp < cutoff_date
+            ).delete()
+
             self.db.commit()
 
             if deleted > 0:
@@ -332,3 +343,4 @@ class ReportingService:
 
         except Exception as e:
             logger.error(f"Error cleaning up old data: {e}")
+            self.db.rollback()
