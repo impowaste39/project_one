@@ -782,7 +782,7 @@ scheduler.add_job(
     'cron',
     day_of_week='mon-fri',
     hour='9-15',
-    minute='*/5',
+    minute='2-57/5',
     id='position_monitor'
 )
 
@@ -892,17 +892,6 @@ def dashboard():
         open_trades = [t for t in all_trades if t.status == 'OPEN']
         closed_trades = [t for t in all_trades if t.status == 'CLOSED'][:20]
 
-        # Fetch current prices for open positions (batch call — single HTTP request)
-        current_prices = {}
-        if open_trades:
-            from services.data_service import DataService
-            ds = DataService()
-            symbols = list({t.symbol for t in open_trades})
-            try:
-                current_prices = ds.get_batch_prices(symbols)
-            except Exception as price_err:
-                logger.warning(f"Could not fetch current prices for dashboard: {price_err}")
-
         # Calculate statistics
         total_closed = db.query(Trade).filter(Trade.status == 'CLOSED').count()
         winning_trades = db.query(Trade).filter(
@@ -913,20 +902,35 @@ def dashboard():
         win_rate = (winning_trades / total_closed *
                     100) if total_closed > 0 else 0
 
-        # Market status
-        market_status = get_market_status_message()
+        # Pull only the plain data we need before the session closes —
+        # avoids holding a DB connection during the slow yfinance call below
+        open_symbols = list({t.symbol for t in open_trades})
 
-        return render_template(
-            'dashboard.html',
-            portfolio=portfolio,
-            open_trades=open_trades,
-            closed_trades=closed_trades,
-            win_rate=win_rate,
-            total_trades=total_closed,
-            market_status=market_status,
-            now=datetime.now(IST),
-            current_prices=current_prices
-        )
+    # --- DB session is closed here; connection returned to pool ---
+    
+    current_prices = {}
+    if open_symbols:
+        from services.data_service import DataService
+        ds = DataService()
+        try:
+            current_prices = ds.get_batch_prices(open_symbols)
+        except Exception as price_err:
+            logger.warning(f"Could not fetch current prices for dashboard: {price_err}")
+    
+    # Market status
+    market_status = get_market_status_message()
+
+    return render_template(
+        'dashboard.html',
+        portfolio=portfolio,
+        open_trades=open_trades,
+        closed_trades=closed_trades,
+        win_rate=win_rate,
+        total_trades=total_closed,
+        market_status=market_status,
+        now=datetime.now(IST),
+        current_prices=current_prices
+    )
 
 
 @app.route('/api/portfolio')

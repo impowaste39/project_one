@@ -344,6 +344,9 @@ def get_session():
     try:
         yield session
         session.commit()
+        session.expunge_all()   # FIX: detach objects with data intact so callers
+                                # can read attributes after the session closes
+
     except Exception:
         session.rollback()
         raise
