@@ -270,7 +270,7 @@ def init_database():
     )
     Base.metadata.create_all(_engine)
 
-    _SessionLocal = sessionmaker(bind=_engine)
+    _SessionLocal = sessionmaker(bind=_engine, expire_on_commit=False)
 
     # Run migrations to add new columns to existing databases
     _migrate_database(_engine)
@@ -344,9 +344,6 @@ def get_session():
     try:
         yield session
         session.commit()
-        session.expunge_all()   # FIX: detach objects with data intact so callers
-                                # can read attributes after the session closes
-
     except Exception:
         session.rollback()
         raise
