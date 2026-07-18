@@ -1,0 +1,24 @@
+# ==========================================
+# 1. Ignored Folders
+# ==========================================
+__pycache__/
+venv/
+logs/
+response/
+
+# ==========================================
+# 2. File Restrictions
+# Ignore all files by default, then allow specific ones
+# ==========================================
+# Ignore all files at the root level
+/*.*
+
+# Un-ignore your allowed files
+!/README.md
+!/analyze.py
+!/app.py
+!/implementation_plan.md
+!/render.yaml
+!/requirements.txt
+!/retrain.ipynb
+!/runtime.txt
