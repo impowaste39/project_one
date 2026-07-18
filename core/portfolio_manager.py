@@ -439,7 +439,7 @@ class PortfolioManager:
         try:
             trade = Trade(
                 symbol=symbol,
-                entry_date=datetime.now(),
+                entry_date=datetime.now(IST).replace(tzinfo=None),
                 entry_price=evaluation['entry_price'],
                 quantity=evaluation['quantity'],
                 entry_score=evaluation['score'],
@@ -472,7 +472,7 @@ class PortfolioManager:
                 portfolio.deployed_capital = portfolio.deployed_capital + evaluation['investment']
                 portfolio.available_capital = portfolio.available_capital - evaluation['investment']
                 portfolio.open_positions = portfolio.open_positions + 1
-                portfolio.timestamp = datetime.now()
+                portfolio.timestamp = datetime.now(IST).replace(tzinfo=None)
 
             self.db.commit()
 
@@ -539,7 +539,7 @@ class PortfolioManager:
             initial_risk = (trade.entry_price - initial_sl) * trade.quantity
             r_multiple = net_pnl / initial_risk if initial_risk > 0 else 0
 
-            trade.exit_date = datetime.now()
+            trade.exit_date = datetime.now(IST).replace(tzinfo=None)
             trade.exit_price = exit_price
             trade.exit_reason = exit_reason
             trade.gross_profit_loss = round(gross_pnl, 2)
@@ -563,7 +563,7 @@ class PortfolioManager:
                 portfolio.available_capital = portfolio.available_capital + investment + net_pnl
                 portfolio.realized_pnl = portfolio.realized_pnl + net_pnl
                 portfolio.open_positions = max(0, portfolio.open_positions - 1)
-                portfolio.timestamp = datetime.now()
+                portfolio.timestamp = datetime.now(IST).replace(tzinfo=None)
                 # BUG-04: total_return_pct was always 0 — now calculated on every exit
                 _initial_capital = float(os.getenv('INITIAL_CAPITAL', 10000))
                 portfolio.total_return_pct = round(

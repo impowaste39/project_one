@@ -333,7 +333,7 @@ class ReportingService:
 
             # Delete old market data cache
             self.db.query(MarketDataCache).filter(
-                MarketDataCache.timestamp < cutoff_date
+                MarketDataCache.timestamp < cache_cutoff_date
             ).delete()
 
             self.db.commit()

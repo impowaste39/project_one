@@ -21,6 +21,7 @@ from utils.helpers import calculate_net_pnl
 
 logger = logging.getLogger(__name__)
 
+IST = pytz.timezone('Asia/Kolkata')
 
 class TradingBrain:
     """AI Decision Engine for trading"""
@@ -529,6 +530,7 @@ class TradingBrain:
                 capital=portfolio_state["available_capital"],
                 entry_price=levels["entry_price"],
                 stop_loss=levels["stop_loss"],
+                atr=analysis.get("atr")
             )
 
         # --- POSITION SCALING BY SCORE ---
@@ -709,7 +711,7 @@ class TradingBrain:
                 .first()
             )
             if recent_closed and recent_closed.exit_date:
-                if (datetime.now() - recent_closed.exit_date) < timedelta(hours=24):
+                if (datetime.now(IST).replace(tzinfo=None) - recent_closed.exit_date) < timedelta(hours=24):
                     logger.debug(f"Cooldown guard: {symbol} exited recently (less than 24h) — skipping")
                     return False
 

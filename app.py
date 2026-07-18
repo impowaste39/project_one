@@ -1362,7 +1362,7 @@ def admin_flush_trades():
                 unrealized_pnl=0,
                 realized_pnl=0,
                 open_positions=0,
-                timestamp=datetime.now()
+                timestamp=datetime.now(IST).replace(tzinfo=None)
             ))
             db.commit()
 
@@ -1427,7 +1427,7 @@ def admin_flush_all():
                 unrealized_pnl=0,
                 realized_pnl=0,
                 open_positions=0,
-                timestamp=datetime.now()
+                timestamp=datetime.now(IST).replace(tzinfo=None)
             ))
             db.commit()
 
