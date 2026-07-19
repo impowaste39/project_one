@@ -66,6 +66,9 @@ import time as _time
 _last_error_alert: dict = {}
 _ERROR_ALERT_COOLDOWN_SECONDS = 600  # 10 minutes
 
+_dashboard_price_cache = {'prices': {}, 'symbols': None, 'fetched_at': None}
+_DASHBOARD_PRICE_CACHE_TTL = 45
+
 
 def _send_error_alert_guarded(job_name: str, exc: Exception) -> None:
     """Send a Discord error alert at most once per cooldown window per job."""
@@ -918,12 +921,24 @@ def dashboard():
     
     current_prices = {}
     if open_symbols:
-        from services.data_service import DataService
-        ds = DataService()
-        try:
-            current_prices = ds.get_batch_prices(open_symbols)
-        except Exception as price_err:
-            logger.warning(f"Could not fetch current prices for dashboard: {price_err}")
+        now_ts = datetime.now(IST)
+        cache = _dashboard_price_cache
+        cache_fresh = (
+            cache['fetched_at'] is not None
+            and cache['symbols'] == set(open_symbols)
+            and (now_ts - cache['fetched_at']).total_seconds() < _DASHBOARD_PRICE_CACHE_TTL
+        )
+        if cache_fresh:
+            current_prices = cache['prices']
+        else:
+            from services.data_service import DataService
+            ds = DataService()
+            try:
+                current_prices = ds.get_batch_prices(open_symbols)
+                cache.update({'prices': current_prices, 'symbols': set(open_symbols), 'fetched_at': now_ts})
+            except Exception as price_err:
+                logger.warning(f"Could not fetch current prices for dashboard: {price_err}")
+                current_prices = cache['prices']  # fall back to last known-good prices
     
     # Market status
     market_status = get_market_status_message()
