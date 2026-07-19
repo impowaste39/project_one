@@ -25,6 +25,7 @@ from core.learning_engine import LearningEngine
 from services.email_service import EmailService
 from services.data_service import DataService
 from services.discord_service import DiscordService
+from services.reporting_service import ReportingService
 from utils.helpers import get_ist_now, is_market_hours, get_market_status_message
 
 # Configure logging
@@ -714,6 +715,13 @@ def weekly_portfolio_cleanup_job():
 
     except Exception as e:
         logger.error(f"Error in portfolio cleanup job: {e}")
+
+    try:
+        with get_session() as db:
+            reporting = ReportingService(db)
+            reporting.cleanup_old_data()
+    except Exception as e:
+        logger.error(f"Error in scan-data cleanup job: {e}")
 
 
 def daily_health_digest_job():
