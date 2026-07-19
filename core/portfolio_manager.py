@@ -526,20 +526,28 @@ class PortfolioManager:
             hold_duration = (datetime.now(IST).replace(tzinfo=None) -
                              trade.entry_date).days if trade.entry_date else 0
 
+            exit_now = datetime.now(IST).replace(tzinfo=None)
+            same_day_exit = (
+                trade.partially_exited
+                and trade.partial_exit_date is not None
+                and trade.partial_exit_date.date() == exit_now.date()
+            )
+
             net_pnl, charges = calculate_net_pnl(
                 trade.entry_price,
                 exit_price,
                 trade.quantity,
                 partially_exited=trade.partially_exited,
                 partial_exit_price=trade.partial_exit_price,
-                partial_exit_qty=trade.partial_exit_qty
+                partial_exit_qty=trade.partial_exit_qty,
+                same_day_exit=same_day_exit,
             )
 
             initial_sl = trade.initial_stop_loss if trade.initial_stop_loss else trade.stop_loss
             initial_risk = (trade.entry_price - initial_sl) * trade.quantity
             r_multiple = net_pnl / initial_risk if initial_risk > 0 else 0
 
-            trade.exit_date = datetime.now(IST).replace(tzinfo=None)
+            trade.exit_date = exit_now
             trade.exit_price = exit_price
             trade.exit_reason = exit_reason
             trade.gross_profit_loss = round(gross_pnl, 2)

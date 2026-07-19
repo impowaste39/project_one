@@ -8,8 +8,14 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from contextlib import contextmanager
 from datetime import datetime
+import pytz
 import os
 import json
+
+IST = pytz.timezone('Asia/Kolkata')
+
+def _ist_now():
+    return datetime.now(IST).replace(tzinfo=None)
 
 Base = declarative_base()
 
@@ -23,7 +29,7 @@ class Trade(Base):
 
     # Entry details
     entry_date = Column(DateTime, nullable=False,
-                        default=datetime.now, index=True)
+                        default=_ist_now, index=True)
     entry_price = Column(Float, nullable=False)
     quantity = Column(Integer, nullable=False)
     entry_score = Column(Integer)  # Setup quality score (0-100)
@@ -115,7 +121,7 @@ class Portfolio(Base):
     __tablename__ = 'portfolio'
 
     id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, default=datetime.now, index=True)
+    timestamp = Column(DateTime, default=_ist_now, index=True)
 
     total_capital = Column(Float, nullable=False)
     deployed_capital = Column(Float, nullable=False)
@@ -162,7 +168,7 @@ class LearningMetrics(Base):
 
     expectancy = Column(Float, default=0)  # Expected return per trade
 
-    last_updated = Column(DateTime, default=datetime.now)
+    last_updated = Column(DateTime, default=_ist_now)
 
     def __repr__(self):
         return f"<Metrics {self.pattern}: {self.win_rate:.1f}% WR>"
@@ -184,7 +190,7 @@ class MarketDataCache(Base):
 
     indicators = Column(Text, nullable=True)  # JSON string
 
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=_ist_now)
 
     def __repr__(self):
         return f"<MarketData {self.symbol} @ {self.timestamp}>"
@@ -200,7 +206,7 @@ class MLModel(Base):
     scaler_data = Column(LargeBinary, nullable=True)   # Pickled scaler
 
     is_active = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=_ist_now)
 
     accuracy = Column(Float, nullable=True)
 
@@ -216,7 +222,7 @@ class EmailLog(Base):
     email_type = Column(String(50), nullable=False)  # ENTRY, EXIT, SUMMARY
     trade_id = Column(Integer, nullable=True)
 
-    sent_at = Column(DateTime, default=datetime.now)
+    sent_at = Column(DateTime, default=_ist_now)
     subject = Column(Text)
     status = Column(String(20), default='SENT')  # SENT, FAILED
 
@@ -264,8 +270,8 @@ def init_database():
         pool_pre_ping=True,
         pool_recycle=25,    # recycle before Aiven drops idle TCP ~30s (was 120)
         pool_timeout=15,
-        pool_size=2,        # FIX #1: was 5 — keeps steady-state at 2 connections
-        max_overflow=1,     # FIX #1: was 5 — burst ceiling is 3 total (safe under Aiven's 5 limit)
+        pool_size=5,        # steady-state — real Aiven limit is 20, confirmed via console
+        max_overflow=3,     # burst ceiling 8 total — comfortable headroom under 20
         connect_args=connect_args
     )
     Base.metadata.create_all(_engine)

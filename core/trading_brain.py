@@ -434,19 +434,11 @@ class TradingBrain:
         # 1. ATR-based (2x ATR below entry) — volatility-aware
         atr_stop = current_price - (2 * atr)
 
-        # 2. Percent-based (8% from entry) — absolute floor
-        percent_stop = current_price * 0.92
+        max_distance_stop = current_price * 0.88    # loosest allowed: 12% away
+        min_distance_stop = current_price * 0.985   # tightest allowed: 1.5% away
 
-        # Take the highest (tightest toward entry) of all valid candidates.
-        # Never let SL be above entry.
-        candidates = [c for c in [atr_stop, percent_stop]
-                      if c is not None and c < entry_price]
-        stop_loss = max(candidates) if candidates else percent_stop
-
-        # Enforce minimum 1.5% distance to prevent position sizing explosions
-        min_sl_distance = entry_price * 0.985
-        if stop_loss > min_sl_distance:
-            stop_loss = min_sl_distance
+        stop_loss = max(atr_stop, max_distance_stop)   # never wider than 12%
+        stop_loss = min(stop_loss, min_distance_stop)  # never tighter than 1.5%
         # ─────────────────────────────────────────────────────────────────────
 
         risk = entry_price - stop_loss
@@ -715,9 +707,6 @@ class TradingBrain:
                     logger.debug(f"Cooldown guard: {symbol} exited recently (less than 24h) — skipping")
                     return False
 
-        if levels["rr_ratio"] < 1.45:
-            return False
-
         max_pos = int(os.getenv("MAX_POSITIONS", 7))
         if portfolio_state["positions_count"] >= max_pos:
             return False
@@ -828,20 +817,16 @@ class TradingBrain:
             if existing:
                 return f"Duplicate guard: {symbol} already held in portfolio"
 
-        # 4. Risk-Reward check
-        if levels["rr_ratio"] < 1.45:
-            return f"Risk-reward too low ({levels['rr_ratio']}:1)"
-
-        # 5. Position Limits
+        # 4. Position Limits
         max_pos = int(os.getenv("MAX_POSITIONS", 7))
         if portfolio_state["positions_count"] >= max_pos:
             return f"Maximum positions reached ({max_pos}/{max_pos})"
 
-        # 6. Capital availability
+        # 5. Capital availability
         if portfolio_state["available_capital"] < 1000:
             return "Insufficient capital (min ₹1000 required)"
 
-        # 7. Position Sizing constraints
+        # 6. Position Sizing constraints
         if position_info:
             if position_info["quantity"] <= 0:
                 return "Position size too small (Risk management resulted in 0 shares)"
@@ -862,7 +847,7 @@ class TradingBrain:
             if position_info["investment"] > portfolio_state["available_capital"] * 0.30:
                 return "Investment exceeds 30% single-position capital limit"
 
-        # 8. Earnings Blackout
+        # 7. Earnings Blackout
         if symbol and os.getenv('EARNINGS_BLACKOUT_DAYS', '5') != '0':
             try:
                 from datetime import date
@@ -921,7 +906,7 @@ class TradingBrain:
             }
 
         # --- FULL EXIT AT TARGET (no T2, legacy) ---
-        if current_price >= trade.target:
+        if not t2 and current_price >= trade.target:
             return {
                 "action": "EXIT",
                 "reason": "Target achieved",
@@ -948,14 +933,14 @@ class TradingBrain:
                 }
 
         # --- TIME STOP ---
-        IST = pytz.timezone("Asia/Kolkata")
-        days_held = (
-            (datetime.now(IST).replace(tzinfo=None) - trade.entry_date).days
-            if trade.entry_date
-            else 0
-        )
+        if trade.entry_date:
+            entry_d = trade.entry_date.date()
+            today_d = datetime.now(IST).replace(tzinfo=None).date()
+            days_held = int(np.busday_count(entry_d, today_d))  # trading days, weekends excluded
+        else:
+            days_held = 0
 
-        if days_held >= 10 and current_price < trade.entry_price * 0.97:
+        if days_held >= 7 and current_price < trade.entry_price * 0.97:
             return {
                 "action": "EXIT",
                 "reason": f"Time decay ({days_held} days with loss >3%)",

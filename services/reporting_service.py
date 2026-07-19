@@ -7,11 +7,14 @@ import logging
 from datetime import datetime, timedelta
 import json
 import os
+import pytz
 
 from models.database import MarketDataCache
 from models.scan_report import ScanReport, ScanResult, PatternOccurrence
 
 logger = logging.getLogger(__name__)
+
+IST = pytz.timezone('Asia/Kolkata')
 
 
 class ReportingService:
@@ -46,7 +49,7 @@ class ReportingService:
 
         try:
             scan_report = ScanReport(
-                timestamp=datetime.now(),
+                timestamp=datetime.now(IST).replace(tzinfo=None),
                 market_trend=market_context.get('trend'),
                 market_strength=market_context.get('strength'),
                 nifty_price=market_context.get('nifty_price'),
@@ -152,7 +155,7 @@ class ReportingService:
 
             for pattern in patterns:
                 occurrence = PatternOccurrence(
-                    timestamp=datetime.now(),
+                    timestamp=datetime.now(IST).replace(tzinfo=None),
                     pattern=pattern,
                     symbol=analysis.get('symbol'),
                     market_trend=scan_report.market_trend,
@@ -229,7 +232,7 @@ class ReportingService:
             Dict with pattern statistics
         """
         try:
-            cutoff_date = datetime.now() - timedelta(days=days)
+            cutoff_date = datetime.now(IST).replace(tzinfo=None) - timedelta(days=days)
 
             occurrences = self.db.query(PatternOccurrence).filter(
                 PatternOccurrence.timestamp >= cutoff_date
@@ -279,7 +282,7 @@ class ReportingService:
             Dict with rejection reason breakdown
         """
         try:
-            cutoff_date = datetime.now() - timedelta(days=days)
+            cutoff_date = datetime.now(IST).replace(tzinfo=None) - timedelta(days=days)
 
             results = self.db.query(ScanResult).join(ScanReport).filter(
                 ScanReport.timestamp >= cutoff_date,
@@ -317,8 +320,8 @@ class ReportingService:
     def cleanup_old_data(self):
         """Remove scan data older than retention period"""
         try:
-            cutoff_date = datetime.now() - timedelta(days=self.retention_days)
-            cache_cutoff_date = datetime.now() - timedelta(days=self.cache_retention_days)
+            cutoff_date = datetime.now(IST).replace(tzinfo=None) - timedelta(days=self.retention_days)
+            cache_cutoff_date = datetime.now(IST).replace(tzinfo=None) - timedelta(days=self.cache_retention_days)
 
 
             # Delete old scan reports (cascade will delete results)

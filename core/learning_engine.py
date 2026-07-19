@@ -9,12 +9,14 @@ from sklearn.model_selection import train_test_split
 from datetime import datetime, timedelta
 import logging
 import pickle
+import pytz
 
 from models.database import Trade, LearningMetrics, MLModel
 from models.scan_report import PatternOccurrence, ScanResult, ScanReport
 
 logger = logging.getLogger(__name__)
 
+IST = pytz.timezone('Asia/Kolkata')
 
 class LearningEngine:
     """Self-improvement and trade analysis engine"""
@@ -164,7 +166,7 @@ class LearningEngine:
                 metric.avg_win_pct = stats['avg_win_pct']
                 metric.avg_loss_pct = stats['avg_loss_pct']
                 metric.expectancy = stats['expectancy']
-                metric.last_updated = datetime.now()
+                metric.last_updated = datetime.now(IST).replace(tzinfo=None)
             else:
                 metric = LearningMetrics(
                     pattern=pattern,
@@ -175,7 +177,7 @@ class LearningEngine:
                     avg_win_pct=stats['avg_win_pct'],
                     avg_loss_pct=stats['avg_loss_pct'],
                     expectancy=stats['expectancy'],
-                    last_updated=datetime.now()
+                    last_updated=datetime.now(IST).replace(tzinfo=None)
                 )
                 self.db.add(metric)
 
@@ -275,7 +277,7 @@ class LearningEngine:
                 scaler_data=scaler_data,
                 is_active=True,
                 accuracy=accuracy,
-                created_at=datetime.now()
+                created_at=datetime.now(IST).replace(tzinfo=None)
             )
 
             self.db.add(new_model)
@@ -356,7 +358,7 @@ class LearningEngine:
         """
         try:
             # Get pattern statistics from scan data
-            cutoff_date = datetime.now() - timedelta(days=30)
+            cutoff_date = datetime.now(IST).replace(tzinfo=None) - timedelta(days=30)
 
             # Pattern occurrence analysis
             pattern_occurrences = self.db.query(PatternOccurrence).filter(

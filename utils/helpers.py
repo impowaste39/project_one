@@ -85,6 +85,7 @@ def calculate_net_pnl(
     partially_exited: bool = False,
     partial_exit_price: float = None,
     partial_exit_qty: int = None,
+    same_day_exit: bool = False,
 ) -> tuple:
     """
     Calculate real net P&L after Groww equity delivery charges.
@@ -110,7 +111,7 @@ def calculate_net_pnl(
         brokerage_sell_1 = min(20.0, sell_turnover_1 * 0.001)
         brokerage_sell_2 = min(20.0, sell_turnover_2 * 0.001)
         brokerage_sell = brokerage_sell_1 + brokerage_sell_2
-        dp = 23.60 * 2  # Two sell transactions on different days
+        dp = 23.60 if same_day_exit else 23.60 * 2  # Two sell transactions on different days
     else:
         buy_turnover = entry_price * quantity
         sell_turnover = exit_price * quantity
