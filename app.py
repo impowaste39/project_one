@@ -14,6 +14,7 @@ import logging
 import atexit
 import pytz
 import traceback
+import threading
 
 # Import core modules
 from models.database import init_database, get_session, Portfolio, Trade
@@ -97,19 +98,23 @@ def _send_error_alert_guarded(job_name: str, exc: Exception) -> None:
 # ---------------------------------------------------------------------------
 _brain_singleton: TradingBrain = None
 _learning_engine_singleton: LearningEngine = None
+_brain_lock = threading.Lock()
+_learning_engine_lock = threading.Lock()
 
 
 def _get_brain(db_session, risk_manager=None) -> TradingBrain:
     """Return the shared TradingBrain, binding it to the current DB session."""
     global _brain_singleton
+
     if _brain_singleton is None:
-        _brain_singleton = TradingBrain(db_session, risk_manager)
-        logger.info("TradingBrain singleton created")
-    else:
-        # Re-attach a fresh session for this job's transaction scope
-        _brain_singleton.db = db_session
-        if risk_manager is not None:
-            _brain_singleton.risk_manager = risk_manager
+        with _brain_lock:
+            if _brain_singleton is None:
+                _brain_singleton = TradingBrain(db_session, risk_manager)
+                logger.info("TradingBrain singleton created")
+    _brain_singleton.db = db_session
+
+    if risk_manager is not None:
+        _brain_singleton.risk_manager = risk_manager
     return _brain_singleton
 
 
