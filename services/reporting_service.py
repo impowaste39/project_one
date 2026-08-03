@@ -323,21 +323,28 @@ class ReportingService:
             cutoff_date = datetime.now(IST).replace(tzinfo=None) - timedelta(days=self.retention_days)
             cache_cutoff_date = datetime.now(IST).replace(tzinfo=None) - timedelta(days=self.cache_retention_days)
 
+            # Delete child scan_results first (bulk delete() does NOT cascade)
+            old_reports_subq = self.db.query(ScanReport.id).filter(
+                ScanReport.timestamp < cutoff_date
+            ).subquery()
 
-            # Delete old scan reports (cascade will delete results)
+            self.db.query(ScanResult).filter(
+                ScanResult.scan_report_id.in_(old_reports_subq)
+            ).delete(synchronize_session=False)
+
             deleted = self.db.query(ScanReport).filter(
                 ScanReport.timestamp < cutoff_date
-            ).delete()
+            ).delete(synchronize_session=False)
 
             # Delete old pattern occurrences
             self.db.query(PatternOccurrence).filter(
                 PatternOccurrence.timestamp < cutoff_date
-            ).delete()
+            ).delete(synchronize_session=False)
 
             # Delete old market data cache
             self.db.query(MarketDataCache).filter(
                 MarketDataCache.timestamp < cache_cutoff_date
-            ).delete()
+            ).delete(synchronize_session=False)
 
             self.db.commit()
 
