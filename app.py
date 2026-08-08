@@ -1257,6 +1257,31 @@ def api_trades_summary():
         logger.error(f"Error in trades summary: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/equity-curve')
+def api_equity_curve():
+    """Cumulative net P&L over time for closed trades"""
+    try:
+        with get_session() as db:
+            closed = (
+                db.query(Trade)
+                .filter(Trade.status == 'CLOSED', Trade.exit_date.isnot(None))
+                .order_by(Trade.exit_date.asc())
+                .all()
+            )
+            curve = []
+            running_total = 0.0
+            for t in closed:
+                running_total += t.profit_loss or 0
+                curve.append({
+                    'date': t.exit_date.isoformat(),
+                    'symbol': t.symbol,
+                    'trade_pnl': round(t.profit_loss or 0, 2),
+                    'cumulative_pnl': round(running_total, 2)
+                })
+            return jsonify(curve)
+    except Exception as e:
+        logger.error(f"Error in equity curve: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # ===== ADMIN ENDPOINTS (all require X-API-KEY header) =====
 
