@@ -292,8 +292,31 @@ class ReportingService:
             rejection_reasons = {}
             score_distribution = []
 
+            def _categorize_reason(reason: str) -> str:
+                """Group dynamic-score rejection strings into stable categories."""
+                if reason.startswith("Setup quality insufficient"):
+                    return "Setup quality insufficient"
+                if reason.startswith("Bearish market"):
+                    return "Bearish market — score below elevated threshold"
+                if reason.startswith("Maximum positions reached"):
+                    return "Maximum positions reached"
+                if reason.startswith("Duplicate guard"):
+                    return "Duplicate guard — already holding symbol"
+                if reason.startswith("Brokerage-adjusted R:R"):
+                    return "R:R too low after brokerage charges"
+                if reason.startswith("Investment exceeds"):
+                    return "Position size exceeds capital limit"
+                if reason.startswith("Earnings blackout"):
+                    return "Earnings blackout window"
+                if reason.startswith("Insufficient capital"):
+                    return "Insufficient capital"
+                if reason.startswith("Position size too small"):
+                    return "Position size too small"
+                return reason
+
             for result in results:
-                reason = result.rejection_reason or 'Unknown'
+                raw_reason = result.rejection_reason or 'Unknown'
+                reason = _categorize_reason(raw_reason)
                 rejection_reasons[reason] = rejection_reasons.get(
                     reason, 0) + 1
                 if result.total_score:
