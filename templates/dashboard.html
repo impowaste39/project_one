@@ -639,7 +639,14 @@
                         datasets: [{
                             label: 'Cumulative Net P&L (₹)',
                             data: values,
-                            borderColor: '#3fb950',
+                            borderColor: ctx => {
+                                const v = ctx.p1 ? ctx.p1.parsed.y : values[ctx.dataIndex];
+                                return v >= 0 ? '#3fb950' : '#f85149';
+                            },
+                            segment: {
+                                borderColor: ctx => ctx.p1.parsed.y >= 0 ? '#3fb950' : '#f85149'
+                            },
+                            pointBackgroundColor: ctx => (values[ctx.dataIndex] >= 0 ? '#3fb950' : '#f85149'),
                             backgroundColor: 'rgba(63, 185, 80, 0.1)',
                             fill: true,
                             tension: 0.2,
@@ -658,24 +665,22 @@
             })
             .catch(err => console.error('Equity curve load failed:', err));
 
-        // --- Pattern Performance ---
-        fetch('/api/pattern-performance')
+        // --- Pattern Performance (real trade outcomes, from /api/trades/summary) ---
+        fetch('/api/trades/summary')
             .then(r => r.json())
             .then(data => {
                 const el = document.getElementById('patternPerfBody');
-                const patterns = Array.isArray(data) ? data : (data.patterns || Object.values(data));
-                if (!patterns || patterns.length === 0) {
+                const byPattern = data.by_pattern || {};
+                const entries = Object.entries(byPattern);
+                if (entries.length === 0) {
                     el.innerHTML = '<div class="text-secondary text-center p-3">No pattern data yet</div>';
                     return;
                 }
                 let html = '<div class="table-responsive"><table class="table"><thead><tr>' +
                     '<th>Pattern</th><th>Trades</th><th>Win %</th></tr></thead><tbody>';
-                patterns.forEach(p => {
-                    const name = p.pattern || p.name || 'unknown';
-                    const trades = p.total_trades ?? p.trades ?? 0;
-                    const winRate = p.win_rate ?? 0;
-                    const cls = winRate >= 50 ? 'text-success' : 'text-danger';
-                    html += `<tr><td>${name}</td><td>${trades}</td><td class="${cls}">${winRate.toFixed ? winRate.toFixed(1) : winRate}%</td></tr>`;
+                entries.forEach(([name, s]) => {
+                    const cls = s.win_rate >= 50 ? 'text-success' : 'text-danger';
+                    html += `<tr><td>${name}</td><td>${s.trades}</td><td class="${cls}">${s.win_rate}%</td></tr>`;
                 });
                 html += '</tbody></table></div>';
                 el.innerHTML = html;
@@ -691,15 +696,15 @@
             .then(r => r.json())
             .then(data => {
                 const el = document.getElementById('rejectionBody');
-                const reasons = data.top_rejections || data.reasons || data;
-                const entries = Array.isArray(reasons) ? reasons : Object.entries(reasons || {});
-                if (!entries || entries.length === 0) {
+                const reasons = data.rejection_reasons || {};
+                const entries = Object.entries(reasons)
+                    .sort((a, b) => b[1] - a[1]);
+                if (entries.length === 0) {
                     el.innerHTML = '<div class="text-secondary text-center p-3">No rejection data yet</div>';
                     return;
                 }
                 let html = '<div class="p-3">';
-                entries.slice(0, 5).forEach(entry => {
-                    const [reason, count] = Array.isArray(entry) ? entry : [entry.reason, entry.count];
+                entries.slice(0, 5).forEach(([reason, count]) => {
                     html += `<div class="d-flex justify-content-between mb-2">
                         <span class="text-secondary" style="font-size: 0.85rem;">${reason}</span>
                         <span class="fw-bold">${count}</span>
