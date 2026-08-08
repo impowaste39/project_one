@@ -192,14 +192,20 @@ class LearningEngine:
         Retrain ML model with latest trade data.
         Requires minimum 20 closed trades (lowered from 50 for faster learning).
         """
+        FEATURE_COLS = ['rsi', 'macd', 'volume_ratio', 'atr', 'pattern_count']
+
         try:
             trades = self.db.query(Trade).filter(
                 Trade.status == 'CLOSED').all()
 
+            # Exclude trades with missing features (pre-fix data, silently defaulted otherwise)
+            trades = [t for t in trades if all(
+                getattr(t, c) is not None for c in FEATURE_COLS)]
+
             # Lowered from 50 → 20 so ML starts learning sooner
             if len(trades) < 20:
                 logger.info(
-                    f"Not enough trades for retraining ({len(trades)}/20 required)")
+                    f"Not enough clean trades for retraining ({len(trades)}/20 required)")
                 return False
 
             # Prepare training data

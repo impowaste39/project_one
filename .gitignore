@@ -46,3 +46,4 @@ failed_work.txt
 generate_universe.py
 response
 graphify-out
+verify_training_data.py
