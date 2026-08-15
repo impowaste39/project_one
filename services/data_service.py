@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 _EARNINGS_CACHE = {}   # symbol -> {'dates': [...], 'fetched_at': datetime}
 _EARNINGS_CACHE_TTL_HOURS = 24
 
+IST = pytz.timezone('Asia/Kolkata')
 
 class DataService:
     """Service for fetching market data"""
@@ -420,7 +421,7 @@ class DataService:
         # Check cache
         cached = _EARNINGS_CACHE.get(symbol)
         if cached:
-            age_hours = (datetime.now() -
+            age_hours = (datetime.now(IST) -
                          cached['fetched_at']).total_seconds() / 3600
             if age_hours < _EARNINGS_CACHE_TTL_HOURS:
                 return cached['dates']
@@ -454,5 +455,5 @@ class DataService:
             logger.debug(f"Earnings fetch skipped for {symbol}: {e}")
 
         _EARNINGS_CACHE[symbol] = {
-            'dates': dates, 'fetched_at': datetime.now()}
+            'dates': dates, 'fetched_at': datetime.now(IST)}
         return dates

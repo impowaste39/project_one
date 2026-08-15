@@ -407,6 +407,10 @@ def monitor_positions_job():
                         trade.stop_loss = trade.entry_price  # Move SL to breakeven
                         db.commit()
 
+                        # Release the partial sale's principal back to available capital now.
+                        # Profit/loss is booked later, once, at final exit.
+                        portfolio_mgr.credit_partial_exit_capital(trade, partial_qty)
+
                         # Send Discord alert for partial exit
                         discord_service.send_partial_exit_alert(
                             symbol=trade.symbol,

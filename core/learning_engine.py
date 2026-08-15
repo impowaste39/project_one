@@ -121,7 +121,7 @@ class LearningEngine:
         stats = self.pattern_stats[pattern]
         stats['total_trades'] += 1
 
-        if trade.profit_loss and trade.profit_loss > 0:
+        if trade.profit_loss is not None and trade.profit_loss >= 0:
             stats['wins'] += 1
             if stats['wins'] > 0:
                 stats['avg_win_pct'] = (
@@ -226,7 +226,7 @@ class LearningEngine:
                     1 if trade.pattern == 'pullback_in_uptrend' else 0,
                 ]
                 
-                label = 1 if trade.profit_loss and trade.profit_loss > 0 else 0
+                label = 1 if trade.profit_loss is not None and trade.profit_loss > 0 else 0
 
                 X.append(features)
                 y.append(label)

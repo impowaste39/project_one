@@ -493,6 +493,19 @@ class PortfolioManager:
             self.db.rollback()
             return False
 
+    def credit_partial_exit_capital(self, trade: Trade, partial_qty: int):
+        """Release the partial-exit leg's principal back to available capital,
+        and reduce deployed capital by the same amount. No P&L booked here —
+        that happens once, at final exit."""
+        portfolio = self.db.query(Portfolio).order_by(
+            Portfolio.timestamp.desc()
+        ).first()
+        if portfolio:
+            principal_released = trade.entry_price * partial_qty
+            portfolio.available_capital = portfolio.available_capital + principal_released
+            portfolio.deployed_capital = portfolio.deployed_capital - principal_released
+            portfolio.timestamp = datetime.now(IST).replace(tzinfo=None)
+
     def exit_trade(self, trade: Trade, exit_price: float, exit_reason: str) -> bool:
         """
         Execute trade exit.
@@ -563,7 +576,8 @@ class PortfolioManager:
             ).first()
 
             if portfolio:
-                investment = trade.entry_price * trade.quantity
+                remaining_qty = (trade.quantity - trade.partial_exit_qty) if trade.partially_exited else trade.quantity
+                investment = trade.entry_price * remaining_qty
 
                 # UPDATE existing row in-place — no new row inserted.
                 portfolio.total_capital = portfolio.total_capital + net_pnl

@@ -352,7 +352,7 @@ class TradingBrain:
             market_score -= 5
             factors.append("India VIX elevated (volatility penalty)")
 
-        score += max(0, market_score)
+        score += max(-10, market_score)
 
         # === ML PREDICTION SCORE (10 points) ===
         ml_score = 0
