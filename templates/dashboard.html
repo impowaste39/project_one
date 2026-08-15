@@ -578,11 +578,18 @@
                             <span class="fw-bold">₹{{ "%.2f"|format(portfolio.deployed_capital if portfolio else 0) }}</span>
                         </div>
                         <div class="d-flex justify-content-between">
-                            <span class="text-secondary">Unrealized P&L</span>
-                            {% set unrealized = portfolio.unrealized_pnl if portfolio else 0 %}
-                            <span class="fw-bold {{ 'text-success' if unrealized >= 0 else 'text-danger' }}">
-                                ₹{{ "%+.2f"|format(unrealized) }}
-                            </span>
+                            <span class="text-secondary">Position Monitor</span>
+                            <span class="text-success"><i class="fas fa-check-circle"></i> Active</span>
+                        </div>
+                        <div class="d-flex justify-content-between mt-2 pt-2 border-top border-secondary">
+                            <span class="text-secondary">ML Model</span>
+                            {% if ml_readiness.model_active %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i> Active</span>
+                            {% elif ml_readiness.ready %}
+                                <span class="text-warning"><i class="fas fa-hourglass-half"></i> Ready to retrain</span>
+                            {% else %}
+                                <span class="text-secondary">{{ ml_readiness.clean_trades }}/{{ ml_readiness.needed }} clean trades</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

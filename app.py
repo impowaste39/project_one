@@ -922,6 +922,8 @@ def dashboard():
         win_rate = (winning_trades / total_closed *
                     100) if total_closed > 0 else 0
 
+        ml_readiness = LearningEngine(db).get_ml_readiness()
+
         # Pull only the plain data we need before the session closes —
         # avoids holding a DB connection during the slow yfinance call below
         open_symbols = list({t.symbol for t in open_trades})
@@ -961,7 +963,8 @@ def dashboard():
         total_trades=total_closed,
         market_status=market_status,
         now=datetime.now(IST),
-        current_prices=current_prices
+        current_prices=current_prices,
+        ml_readiness=ml_readiness
     )
 
 
