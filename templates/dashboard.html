@@ -381,6 +381,7 @@
                                         <th>Curr. Price</th>
                                         <th>P&amp;L %</th>
                                         <th>To SL / Target</th>
+                                        <th>R-Mult</th>
                                         <th>Score</th>
                                     </tr>
                                 </thead>
@@ -439,7 +440,20 @@
                                             <small class="text-danger">SL: {{ "%.1f"|format(dist_to_sl) }}%</small><br>
                                             <small class="text-success">Tgt: {{ "%.1f"|format(dist_to_target) }}%</small>
                                         </td>
+                                        {% set initial_sl = trade.initial_stop_loss if trade.initial_stop_loss else trade.stop_loss %}
+                                        {% set initial_risk = (trade.entry_price - initial_sl) * active_qty %}
+                                        <td>
+                                            {% if initial_risk > 0 %}
+                                                {% set r_mult = abs_pnl / initial_risk %}
+                                                <span class="{{ 'text-success' if r_mult >= 0 else 'text-danger' }}">
+                                                    {{ "%+.2f"|format(r_mult) }}R
+                                                </span>
+                                            {% else %}
+                                                <span class="text-secondary">—</span>
+                                            {% endif %}
+                                        </td>
                                         {% else %}
+                                            <td><span class="text-secondary">—</span></td>
                                             <td><span class="text-secondary">—</span></td>
                                             <td><span class="text-secondary">—</span></td>
                                             <td><span class="text-secondary">—</span></td>
