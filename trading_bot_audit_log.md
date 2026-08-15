@@ -267,12 +267,55 @@ Confirmed via `verify_training_data.py` / active-model check: currently
 `email_service.py`, `helpers.py`, `app.py`, `requirements.txt`, `render.yaml`,
 `runtime.txt`
 
+---
+
+## Dashboard Value-Add Features (spec'd this session)
+
+Explored 4 candidate features to make the dashboard more useful. Findings:
+
+### Feature 1 — Live position health (R-Multiple column) — **SPEC'D, not yet applied**
+File: `dashboard.html` only — no backend change needed (`current_prices` and
+`trade.initial_stop_loss` already available in the template context).
+- Add `<th>R-Mult</th>` column header (between "To SL / Target" and "Score")
+- Add matching `<td>` computing `r_mult = abs_pnl / initial_risk`, where
+  `initial_risk = (entry_price - initial_stop_loss) * active_qty` — uses the
+  *original* stop, not a trailed/breakeven one, so the R-multiple stays meaningful
+- Also add a 4th `—` placeholder in the "no live price" fallback branch to keep
+  column count aligned with the new header
+- Exact before/after diff already given earlier in this conversation
+
+### Feature 2 — ML training readiness indicator — **SPEC'D, not yet applied**
+3-file change:
+1. `learning_engine.py` — new method `get_ml_readiness()` (inserted between
+   `retrain_ml_model()` and `save_ml_model()`) — counts clean closed trades
+   vs. the 20 needed, checks if a model is currently active
+2. `app.py` — `dashboard()` route: call `LearningEngine(db).get_ml_readiness()`
+   while the DB session is open, pass `ml_readiness` into `render_template(...)`
+3. `dashboard.html` — new row in the existing "System Status" card showing
+   either "Active" (model live), "Ready to retrain" (20+ clean trades but not
+   yet retrained), or "`X/20` clean trades" (still accumulating)
+- Exact before/after diff already given earlier in this conversation
+
+### Feature 3 — Rejection reason breakdown — **ALREADY LIVE, no work needed**
+Fully implemented already: `reporting_service.get_rejection_analysis()` →
+`/api/rejection-analysis` route → rendered in the "Top Rejection Reasons (7d)"
+card via JS fetch in `dashboard.html`. Confirmed working end-to-end.
+
+### Feature 4 — Pattern win-rate table — **ALREADY LIVE, no work needed**
+Fully implemented already: served via `/api/trades/summary` → rendered in the
+"Pattern Performance" card via JS fetch in `dashboard.html`. Confirmed working
+end-to-end.
+
+---
+
 ## Not Yet Applied to Live Code
-All fixes above are **agreed and drafted** in this conversation but not yet
-confirmed as deployed — verify against the live repo before assuming they're live.
+All fixes and features above are **agreed and drafted** in this conversation.
+User is applying them manually and deploying — not confirmed live yet. Verify
+against the live repo in the next session before assuming any of this is deployed.
 
 ## Immediate Next Steps
-1. Apply fixes #2 (both spots), #3, #4, #5, #6 to the actual repo if not done yet
+1. Manually apply and deploy: fixes #2 (both spots), #3, #4, #5, #6, plus
+   Dashboard Features #1 and #2 above
 2. Decide + implement ML retrain trigger mechanism (local vs. remote)
 3. Revisit dashboard `SCORE` labeling if desired later
 4. Once 20+ clean trades exist, retrain and reactivate ML scoring
