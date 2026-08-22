@@ -4,6 +4,7 @@ Autonomous swing trading bot for Indian stock market
 """
 
 from flask import Flask, render_template, jsonify, request, abort
+from flask_caching import Cache
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.memory import MemoryJobStore
@@ -41,6 +42,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv(
     'SECRET_KEY', 'dev-secret-key-change-in-production')
 CORS(app)
+
+# Caching — SimpleCache (in-process) for now.
+app.config['CACHE_TYPE'] = os.getenv('CACHE_TYPE', 'SimpleCache')
+app.config['CACHE_DEFAULT_TIMEOUT'] = 60
+cache = Cache(app)
 
 # Initialize database
 init_database()
@@ -137,9 +143,13 @@ def require_api_key(f):
     def decorated_function(*args, **kwargs):
         api_key = os.getenv('API_WEBHOOK_KEY')
 
-        # If no key is set, it's open (not recommended)
+        # Fail closed: if no key is configured, admin routes are locked out
+        # entirely rather than silently opened to the public internet.
         if not api_key:
-            return f(*args, **kwargs)
+            logger.error(
+                "API_WEBHOOK_KEY is not set — admin route blocked (fail-closed)")
+            return jsonify({'error': 'Server misconfigured',
+                            'message': 'Admin API key not configured'}), 503
 
         request_key = request.headers.get('X-API-KEY')
         if not request_key or request_key != api_key:
@@ -433,6 +443,11 @@ def monitor_positions_job():
                         if success:
                             logger.info(
                                 f"🔴 TRADE EXITED: {trade.symbol} @ ₹{current_price:.2f}")
+
+                            # Invalidate cached dashboard data so the closed
+                            # trade shows up immediately instead of after 120s
+                            cache.delete('view//api/trades/summary')
+                            cache.delete('view//api/equity-curve')
 
                             # Refresh trade from DB
                             db.refresh(trade)
@@ -916,7 +931,7 @@ def dashboard():
         total_closed = db.query(Trade).filter(Trade.status == 'CLOSED').count()
         winning_trades = db.query(Trade).filter(
             Trade.status == 'CLOSED',
-            Trade.profit_loss > 0
+            Trade.profit_loss >= 0
         ).count()
 
         win_rate = (winning_trades / total_closed *
@@ -933,23 +948,23 @@ def dashboard():
     current_prices = {}
     if open_symbols:
         now_ts = datetime.now(IST)
-        cache = _dashboard_price_cache
+        dashboard_cache = _dashboard_price_cache
         cache_fresh = (
-            cache['fetched_at'] is not None
-            and cache['symbols'] == set(open_symbols)
-            and (now_ts - cache['fetched_at']).total_seconds() < _DASHBOARD_PRICE_CACHE_TTL
+            dashboard_cache['fetched_at'] is not None
+            and dashboard_cache['symbols'] == set(open_symbols)
+            and (now_ts - dashboard_cache['fetched_at']).total_seconds() < _DASHBOARD_PRICE_CACHE_TTL
         )
         if cache_fresh:
-            current_prices = cache['prices']
+            current_prices = dashboard_cache['prices']
         else:
             from services.data_service import DataService
             ds = DataService()
             try:
                 current_prices = ds.get_batch_prices(open_symbols)
-                cache.update({'prices': current_prices, 'symbols': set(open_symbols), 'fetched_at': now_ts})
+                dashboard_cache.update({'prices': current_prices, 'symbols': set(open_symbols), 'fetched_at': now_ts})
             except Exception as price_err:
                 logger.warning(f"Could not fetch current prices for dashboard: {price_err}")
-                current_prices = cache['prices']  # fall back to last known-good prices
+                current_prices = dashboard_cache['prices']  # fall back to last known-good prices
     
     # Market status
     market_status = get_market_status_message()
@@ -1137,6 +1152,7 @@ def api_pattern_performance():
 
 
 @app.route('/api/rejection-analysis')
+@cache.cached(timeout=120, query_string=True)
 def api_rejection_analysis():
     """Get analysis of why opportunities are being rejected"""
     try:
@@ -1163,6 +1179,7 @@ def api_learning_insights():
 
 
 @app.route('/api/trades/summary')
+@cache.cached(timeout=120)
 def api_trades_summary():
     """
     Comprehensive trade summary with real P&L (after Groww charges).
@@ -1173,8 +1190,8 @@ def api_trades_summary():
             closed = [t for t in all_trades if t.status == 'CLOSED']
             open_trades = [t for t in all_trades if t.status == 'OPEN']
 
-            wins = [t for t in closed if t.profit_loss and t.profit_loss > 0]
-            losses = [t for t in closed if t.profit_loss and t.profit_loss <= 0]
+            wins = [t for t in closed if t.profit_loss is not None and t.profit_loss >= 0]
+            losses = [t for t in closed if t.profit_loss is not None and t.profit_loss < 0]
 
             total_net_pnl = sum(
                 t.profit_loss for t in closed if t.profit_loss) or 0
@@ -1198,7 +1215,7 @@ def api_trades_summary():
                     pattern_stats[p] = {'trades': 0, 'wins': 0, 'total_pnl': 0.0,
                                         'total_charges': 0.0}
                 pattern_stats[p]['trades'] += 1
-                if t.profit_loss and t.profit_loss > 0:
+                if t.profit_loss is not None and t.profit_loss >= 0:
                     pattern_stats[p]['wins'] += 1
                 pattern_stats[p]['total_pnl'] += t.profit_loss or 0
                 pattern_stats[p]['total_charges'] += t.brokerage_charges or 0
@@ -1265,6 +1282,7 @@ def api_trades_summary():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/equity-curve')
+@cache.cached(timeout=120)
 def api_equity_curve():
     """Cumulative net P&L over time for closed trades"""
     try:
@@ -1589,11 +1607,11 @@ def admin_system_status():
 
             # Config summary
             config = {
-                'min_confidence_score': int(os.getenv('MIN_CONFIDENCE_SCORE', 60)),
+                'min_confidence_score': int(os.getenv('MIN_CONFIDENCE_SCORE', 58)),
                 'min_score_to_save': int(os.getenv('MIN_SCORE_TO_SAVE', 50)),
                 'initial_capital': float(os.getenv('INITIAL_CAPITAL', 5000)),
                 'risk_per_trade': float(os.getenv('RISK_PER_TRADE', 0.02)),
-                'max_positions': int(os.getenv('MAX_POSITIONS', 5)),
+                'max_positions': int(os.getenv('MAX_POSITIONS', 20)),
                 'watchlist_type': os.getenv('WATCHLIST_TYPE', 'custom'),
             }
 

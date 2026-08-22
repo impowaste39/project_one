@@ -35,5 +35,8 @@ resend>=0.7.0
 # Logging
 python-json-logger>=2.0.7
 
+# Caching
+Flask-Caching>=2.3.0
+
 # Timezone
 pytz>=2024.1
