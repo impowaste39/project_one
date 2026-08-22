@@ -266,7 +266,7 @@ class LearningEngine:
 
     def get_ml_readiness(self) -> dict:
         """
-        Check progress toward the 20 clean closed trades needed to retrain.
+        Check progress toward the 100 clean closed trades needed to retrain.
         'Clean' = all 5 ML feature columns are non-null.
         """
         FEATURE_COLS = ['rsi', 'macd', 'volume_ratio', 'atr', 'pattern_count']
@@ -282,13 +282,13 @@ class LearningEngine:
             ).first()
             return {
                 'clean_trades': clean_count,
-                'needed': 20,
-                'ready': clean_count >= 20,
+                'needed': 100,
+                'ready': clean_count >= 100,
                 'model_active': active_model is not None,
             }
         except Exception as e:
             logger.error(f"Error checking ML readiness: {e}")
-            return {'clean_trades': 0, 'needed': 20, 'ready': False, 'model_active': False}
+            return {'clean_trades': 0, 'needed': 100, 'ready': False, 'model_active': False}
 
     def save_ml_model(self, trading_brain, accuracy: float = None):
         """Save trained ML model to database"""
