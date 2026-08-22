@@ -66,7 +66,7 @@ class LearningEngine:
 
         pattern = trade.pattern or 'unknown'
 
-        if trade.profit_loss and trade.profit_loss > 0:
+        if trade.profit_loss is not None and trade.profit_loss >= 0:
             # Winning trade analysis
             insights.append(f"✅ Profitable trade: +{profit_pct:.2f}%")
             insights.append(f"✅ Pattern '{pattern}' worked as expected")
@@ -226,7 +226,7 @@ class LearningEngine:
                     1 if trade.pattern == 'pullback_in_uptrend' else 0,
                 ]
                 
-                label = 1 if trade.profit_loss is not None and trade.profit_loss > 0 else 0
+                label = 1 if trade.profit_loss is not None and trade.profit_loss >= 0 else 0
 
                 X.append(features)
                 y.append(label)
