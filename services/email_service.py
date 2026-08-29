@@ -171,7 +171,7 @@ class EmailService:
         Returns:
             True if sent successfully
         """
-        is_profit = trade.profit_loss > 0
+        is_profit = trade.profit_loss is not None and trade.profit_loss >= 0
         emoji = "✅" if is_profit else "❌"
         result_text = "PROFIT" if is_profit else "LOSS"
         color = "#51cf66" if is_profit else "#ff6b6b"

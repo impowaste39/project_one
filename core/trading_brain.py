@@ -86,7 +86,7 @@ class TradingBrain:
                 if t.pattern not in pattern_stats:
                     pattern_stats[t.pattern] = {'win': 0, 'total': 0}
                 pattern_stats[t.pattern]['total'] += 1
-                if t.profit_loss and t.profit_loss > 0:
+                if t.profit_loss is not None and t.profit_loss >= 0:
                     pattern_stats[t.pattern]['win'] += 1
             base_thresholds = {
                 'bullish_ma_crossover': 65, 'macd_bullish_crossover': 68,
@@ -875,11 +875,21 @@ class TradingBrain:
         Supports partial exit at T1 — exits 50%, moves SL to breakeven.
         """
         # --- STOP LOSS ---
+        # trade.stop_loss may have been ratcheted above entry_price by the trailing-stop
+        # arming logic below, or moved to breakeven by the T1 partial-exit handler in
+        # app.py — distinguish those cases so exit_reason/exit_type stay accurate for
+        # Discord/email alerts and the learning engine.
         if current_price <= trade.stop_loss:
+            if trade.stop_loss > trade.entry_price:
+                reason, exit_type = "Trailing stop hit (profit protected)", "trailing_stop"
+            elif trade.partially_exited and trade.stop_loss == trade.entry_price:
+                reason, exit_type = "Breakeven stop hit (post-partial-exit)", "breakeven_stop"
+            else:
+                reason, exit_type = "Stop loss hit", "stop_loss"
             return {
                 "action": "EXIT",
-                "reason": "Stop loss hit",
-                "exit_type": "stop_loss",
+                "reason": reason,
+                "exit_type": exit_type,
                 "urgency": "immediate",
             }
 
@@ -915,22 +925,23 @@ class TradingBrain:
             }
 
         # --- TRAILING STOP ---
-        # BUG-02 / FEAT-02: Use initial_stop_loss to avoid break-even division-by-zero or zero risk calculation
+        # Ratchets trade.stop_loss upward (never down) once price reaches +1R.
+        # The STOP LOSS check above performs the actual exit on a later cycle if price
+        # falls back — this reuses the same persist-via-session-commit mechanism already
+        # used by the partial-exit breakeven-SL move, so no new DB field is needed.
         initial_sl = trade.initial_stop_loss if trade.initial_stop_loss else trade.stop_loss
-        initial_risk = (trade.entry_price - initial_sl) * trade.quantity
-        unrealized_pnl = (current_price - trade.entry_price) * trade.quantity
+        risk_per_share = trade.entry_price - initial_sl
 
-        if initial_risk > 0 and unrealized_pnl >= initial_risk:
-            # Lock in 0.5R profit (which is entry + 0.5 * initial_risk_per_share)
-            risk_per_share = trade.entry_price - initial_sl
-            trailing_stop = trade.entry_price + (risk_per_share * 0.5)
-            if current_price <= trailing_stop:
-                return {
-                    "action": "EXIT",
-                    "reason": "Trailing stop hit (0.5R profit protected)",
-                    "exit_type": "trailing_stop",
-                    "urgency": "immediate",
-                }
+        if risk_per_share > 0:
+            unrealized_per_share = current_price - trade.entry_price
+            if unrealized_per_share >= risk_per_share:
+                locked_stop = trade.entry_price + (risk_per_share * 0.5)
+                if locked_stop > trade.stop_loss:
+                    logger.info(
+                        f"[TrailingStop] {trade.symbol}: +1R reached — "
+                        f"SL ratcheted ₹{trade.stop_loss:.2f} → ₹{locked_stop:.2f} (0.5R locked)"
+                    )
+                    trade.stop_loss = locked_stop
 
         # --- TIME STOP ---
         if trade.entry_date:

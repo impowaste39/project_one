@@ -678,9 +678,12 @@ class PortfolioManager:
             )
             week_wins = sum(
                 1 for t in week_trades
-                if t.profit_loss and t.profit_loss > 0
+                if t.profit_loss is not None and t.profit_loss >= 0
             )
-            week_losses = len(week_trades) - week_wins
+            week_losses = sum(
+                1 for t in week_trades
+                if t.profit_loss is not None and t.profit_loss < 0
+            )
 
             portfolio = self.db.query(Portfolio).order_by(
                 Portfolio.timestamp.desc()

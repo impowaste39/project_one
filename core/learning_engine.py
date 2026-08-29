@@ -21,6 +21,8 @@ IST = pytz.timezone('Asia/Kolkata')
 class LearningEngine:
     """Self-improvement and trade analysis engine"""
 
+    MIN_TRADES_FOR_RETRAIN = 20  # single source of truth — was hardcoded separately as 20 here and 100 in get_ml_readiness()
+
     def __init__(self, db_session=None):
         self.db = db_session
         self.pattern_stats = {}
@@ -203,9 +205,9 @@ class LearningEngine:
                 getattr(t, c) is not None for c in FEATURE_COLS)]
 
             # Lowered from 50 → 20 so ML starts learning sooner
-            if len(trades) < 20:
+            if len(trades) < self.MIN_TRADES_FOR_RETRAIN:
                 logger.info(
-                    f"Not enough clean trades for retraining ({len(trades)}/20 required)")
+                    f"Not enough clean trades for retraining ({len(trades)}/{self.MIN_TRADES_FOR_RETRAIN} required)")
                 return False
 
             # Prepare training data
@@ -266,7 +268,7 @@ class LearningEngine:
 
     def get_ml_readiness(self) -> dict:
         """
-        Check progress toward the 100 clean closed trades needed to retrain.
+        Check progress toward MIN_TRADES_FOR_RETRAIN clean closed trades needed to retrain.
         'Clean' = all 5 ML feature columns are non-null.
         """
         FEATURE_COLS = ['rsi', 'macd', 'volume_ratio', 'atr', 'pattern_count']
@@ -282,13 +284,13 @@ class LearningEngine:
             ).first()
             return {
                 'clean_trades': clean_count,
-                'needed': 100,
-                'ready': clean_count >= 100,
+                'needed': self.MIN_TRADES_FOR_RETRAIN,
+                'ready': clean_count >= self.MIN_TRADES_FOR_RETRAIN,
                 'model_active': active_model is not None,
             }
         except Exception as e:
             logger.error(f"Error checking ML readiness: {e}")
-            return {'clean_trades': 0, 'needed': 100, 'ready': False, 'model_active': False}
+            return {'clean_trades': 0, 'needed': self.MIN_TRADES_FOR_RETRAIN, 'ready': False, 'model_active': False}
 
     def save_ml_model(self, trading_brain, accuracy: float = None):
         """Save trained ML model to database"""
@@ -333,9 +335,9 @@ class LearningEngine:
 
             total_trades = len(trades)
             winning_trades = [
-                t for t in trades if t.profit_loss and t.profit_loss > 0]
+                t for t in trades if t.profit_loss is not None and t.profit_loss >= 0]
             losing_trades = [
-                t for t in trades if t.profit_loss and t.profit_loss <= 0]
+                t for t in trades if t.profit_loss is not None and t.profit_loss < 0]
 
             win_rate = (len(winning_trades) / total_trades) * \
                 100 if total_trades > 0 else 0
@@ -475,8 +477,8 @@ class LearningEngine:
 
             trade_performance = {
                 'total_trades': len(trades),
-                'wins': len([t for t in trades if t.profit_loss and t.profit_loss > 0]),
-                'losses': len([t for t in trades if t.profit_loss and t.profit_loss <= 0])
+                'wins': len([t for t in trades if t.profit_loss is not None and t.profit_loss >= 0]),
+                'losses': len([t for t in trades if t.profit_loss is not None and t.profit_loss < 0])
             }
 
             if trade_performance['total_trades'] > 0:

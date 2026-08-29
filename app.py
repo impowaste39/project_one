@@ -414,7 +414,11 @@ def monitor_positions_job():
                         trade.partial_exit_price = current_price
                         trade.partial_exit_qty = partial_qty
                         trade.partial_exit_date = datetime.now(IST).replace(tzinfo=None)  # FIX: naive datetime for DB
-                        trade.stop_loss = trade.entry_price  # Move SL to breakeven
+                        
+                        # Never lower the stop: if the trailing-stop ratchet in
+                        # check_exit_conditions() already moved it above entry_price
+                        # (price ran to +1R before T1 triggered), keep that stronger level.
+                        trade.stop_loss = max(trade.stop_loss, trade.entry_price)
                         db.commit()
 
                         # Release the partial sale's principal back to available capital now.
@@ -543,7 +547,7 @@ def end_of_day_analysis_job():
 
             last_20_trades = db.query(Trade).filter(Trade.status == 'CLOSED').order_by(Trade.exit_date.desc()).limit(20).all()
             if last_20_trades:
-                wins_20 = sum(1 for t in last_20_trades if t.profit_loss and t.profit_loss > 0)
+                wins_20 = sum(1 for t in last_20_trades if t.profit_loss is not None and t.profit_loss >= 0)
                 rolling_win_rate = (wins_20 / len(last_20_trades)) * 100
             else:
                 rolling_win_rate = 0.0
@@ -878,7 +882,7 @@ def _get_consecutive_zero_trade_days() -> int:
             from datetime import timedelta
 
             # Check last 14 days of scan reports grouped by date
-            cutoff = datetime.now(IST) - timedelta(days=14)
+            cutoff = datetime.now(IST).replace(tzinfo=None) - timedelta(days=14)
             recent_scans = db.query(ScanReport).filter(
                 ScanReport.timestamp >= cutoff
             ).order_by(ScanReport.timestamp.desc()).all()
