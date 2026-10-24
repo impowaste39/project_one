@@ -14,7 +14,7 @@ import json
 import pytz
 
 from models.database import Trade, Portfolio, get_session
-from utils.helpers import calculate_net_pnl
+from utils.helpers import calculate_net_pnl, calc_return_pct
 
 logger = logging.getLogger(__name__)
 
@@ -586,10 +586,10 @@ class PortfolioManager:
                 portfolio.realized_pnl = portfolio.realized_pnl + net_pnl
                 portfolio.open_positions = max(0, portfolio.open_positions - 1)
                 portfolio.timestamp = datetime.now(IST).replace(tzinfo=None)
-                # BUG-04: total_return_pct was always 0 — now calculated on every exit
-                _initial_capital = float(os.getenv('INITIAL_CAPITAL', 10000))
-                portfolio.total_return_pct = round(
-                    ((portfolio.total_capital - _initial_capital) / _initial_capital) * 100, 4
+                # Return on contributed capital (correct after top-ups; no env var)
+                portfolio.total_return_pct = calc_return_pct(
+                    portfolio.total_capital, portfolio.realized_pnl
+                )
                 )
 
             self.db.commit()

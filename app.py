@@ -30,7 +30,7 @@ from services.email_service import EmailService
 from services.data_service import DataService
 from services.discord_service import DiscordService
 from services.reporting_service import ReportingService
-from utils.helpers import get_ist_now, is_market_hours, get_market_status_message
+from utils.helpers import get_ist_now, is_market_hours, get_market_status_message, calc_return_pct
 from utils.memory import memory_guard
 
 # Configure logging
@@ -1016,7 +1016,11 @@ def api_portfolio():
                 'open_positions': 0
             })
 
-        return jsonify(portfolio.to_dict())
+        data = portfolio.to_dict()
+        # computed on read so a stale stored value can never be served
+        data['total_return_pct'] = calc_return_pct(
+            portfolio.total_capital, portfolio.realized_pnl)
+        return jsonify(data)
 
 
 @app.route('/api/trades')
@@ -1358,8 +1362,12 @@ def admin_top_up_capital():
                 available_capital=portfolio.available_capital + amount,
                 unrealized_pnl=portfolio.unrealized_pnl,
                 realized_pnl=portfolio.realized_pnl,
+                total_return_pct=calc_return_pct(
+                    portfolio.total_capital + amount, portfolio.realized_pnl),
                 open_positions=portfolio.open_positions,
-                timestamp=datetime.now(IST)
+                # naive IST like every other portfolio write; an aware datetime is
+                # stored as GMT (5.5h earlier) and can sort behind an older row
+                timestamp=datetime.now(IST).replace(tzinfo=None)
             )
             db.add(new_portfolio)
             db.commit()
