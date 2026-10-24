@@ -8,6 +8,7 @@ from flask_caching import Cache
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.memory import MemoryJobStore
+from apscheduler.executors.pool import ThreadPoolExecutor
 from datetime import datetime
 from functools import wraps
 import os
@@ -16,6 +17,7 @@ import atexit
 import pytz
 import traceback
 import threading
+import warnings
 
 # Import core modules
 from models.database import init_database, get_session, Portfolio, Trade
@@ -29,6 +31,7 @@ from services.data_service import DataService
 from services.discord_service import DiscordService
 from services.reporting_service import ReportingService
 from utils.helpers import get_ist_now, is_market_hours, get_market_status_message
+from utils.memory import memory_guard
 
 # Configure logging
 logging.basicConfig(
@@ -36,6 +39,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# yfinance 1.x + pandas 3 emit a deprecation warning per call; it floods the logs
+warnings.filterwarnings("ignore", message=".*inplace keyword.*")
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -164,6 +170,7 @@ def require_api_key(f):
 # Scheduler
 scheduler = BackgroundScheduler(
     jobstores={'default': MemoryJobStore()},
+    executors={'default': ThreadPoolExecutor(4)},  # default is 10 threads; 6 jobs, max 3 ever overlap
     job_defaults={'coalesce': True, 'max_instances': 1, 'misfire_grace_time': 60},
     timezone=IST,
     daemon=True,
@@ -198,6 +205,7 @@ def initialize_portfolio():
 
 # ===== SCHEDULED JOBS =====
 
+@memory_guard('market_scan')
 def scan_market_job():
     """Market scanning job - runs every 5 minutes during market hours"""
     if not is_market_hours():
@@ -363,6 +371,7 @@ def scan_market_job():
         _send_error_alert_guarded("Market Scan", e)
 
 
+@memory_guard('position_monitor')
 def monitor_positions_job():
     """Position monitoring job - runs every 2 minutes during market hours"""
     if not is_market_hours():
@@ -502,6 +511,7 @@ def monitor_positions_job():
         _send_error_alert_guarded("Position Monitor", e)
 
 
+@memory_guard('eod_analysis')
 def end_of_day_analysis_job():
     """End of day analysis and learning - runs at 4:00 PM IST"""
     try:
@@ -663,6 +673,7 @@ def end_of_day_analysis_job():
         _send_error_alert_guarded("EOD Analysis", e)
 
 
+@memory_guard('premarket_scan')
 def premarket_scan_job():
     """
     Pre-market scan — runs at 8:45 AM IST Mon-Fri.

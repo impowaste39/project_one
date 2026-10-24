@@ -1,42 +1,47 @@
+# Versions pinned to the set that built and ran successfully on Render (2026-10-24 build).
+# Bump deliberately, one package at a time; unpinned ranges previously pulled pandas 3.x
+# and a newer scikit-learn than the one the stored ML model was pickled with.
+
 # Core Web Framework
-flask>=3.0.0
-gunicorn>=21.2.0
-flask-cors>=4.0.0
+flask==3.1.3
+gunicorn==26.2.0
+flask-cors==6.0.5
 
 # Background Jobs
-APScheduler>=3.10.4
+APScheduler==3.11.3
 
 # Database
-sqlalchemy>=2.0.23
-psycopg[binary]>=3.1.18
-alembic>=1.13.1
+sqlalchemy==2.1.6
+psycopg[binary]==3.3.6
+alembic==1.20.1
 
 # Data Processing & Analysis (Python 3.13 compatible)
-pandas>=2.2.0
-numpy>=1.26.0
-yfinance>=0.2.36
+pandas==3.1.0
+numpy==2.5.4
+scipy==1.18.1
+yfinance==1.7.0
 
 # Technical Analysis (use custom implementation if pandas_ta fails)
 # pandas_ta>=0.3.14b0
 
 # Machine Learning
-scikit-learn>=1.4.0
+scikit-learn==1.9.1
 
 # HTTP Requests
-requests>=2.31.0
-beautifulsoup4>=4.12.2
+requests==2.34.2
+beautifulsoup4==4.15.0
 
 # Environment & Config
-python-dotenv>=1.0.0
+python-dotenv==1.2.4
 
 # Email Service (Resend)
-resend>=0.7.0
+resend==2.50.0
 
 # Logging
-python-json-logger>=2.0.7
+python-json-logger==4.2.0
 
 # Caching
-Flask-Caching>=2.3.0
+Flask-Caching==2.5.1
 
 # Timezone
-pytz>=2024.1
+pytz==2026.5
