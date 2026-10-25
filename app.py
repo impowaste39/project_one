@@ -16,6 +16,7 @@ import logging
 import atexit
 import pytz
 import traceback
+import hmac
 import threading
 import warnings
 
@@ -158,7 +159,8 @@ def require_api_key(f):
                             'message': 'Admin API key not configured'}), 503
 
         request_key = request.headers.get('X-API-KEY')
-        if not request_key or request_key != api_key:
+        if not request_key or not hmac.compare_digest(
+                request_key.encode('utf-8'), api_key.encode('utf-8')):
             logger.warning(
                 f"Unauthorized API access attempt from {request.remote_addr}")
             return jsonify({'error': 'Unauthorized', 'message': 'Invalid or missing API key'}), 401
@@ -1004,6 +1006,7 @@ def dashboard():
 
 
 @app.route('/api/portfolio')
+@require_api_key
 def api_portfolio():
     """Portfolio API endpoint"""
     with get_session() as db:
