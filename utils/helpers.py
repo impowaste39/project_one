@@ -156,3 +156,14 @@ def calc_return_pct(total_capital, realized_pnl) -> float:
     return round(realized / base * 100, 4)
 
 
+def resolve_base_threshold(patterns, pattern_thresholds, floor) -> int:
+    """Entry-score threshold before market-regime scaling.
+
+    The highest threshold among the detected patterns wins. `floor`
+    (MIN_CONFIDENCE_SCORE) is a global minimum no pattern may undercut, and is
+    the threshold when no known pattern was detected.
+    """
+    custom = [pattern_thresholds[p] for p in (patterns or []) if p in pattern_thresholds]
+    return max(custom + [floor])
+
+

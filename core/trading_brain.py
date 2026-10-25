@@ -17,7 +17,7 @@ import logging
 import os
 import pytz
 from datetime import datetime
-from utils.helpers import calculate_net_pnl
+from utils.helpers import calculate_net_pnl, resolve_base_threshold
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,8 @@ class TradingBrain:
         self.data_service = data_service
         self.ml_model = None
         self.scaler = None
-        self.min_confidence_score = int(os.getenv("MIN_CONFIDENCE_SCORE", 70))
+        # default 58 matches render.yaml and the /api status endpoints (was 70 here only)
+        self.min_confidence_score = int(os.getenv("MIN_CONFIDENCE_SCORE", 58))
         self.reload_ml_model()
 
     def reload_ml_model(self):
@@ -647,8 +648,10 @@ class TradingBrain:
             pattern_thresholds.update(self._cached_pattern_thresholds)
 
         # Determine base threshold based on patterns detected
-        custom_thresholds = [pattern_thresholds[p] for p in patterns if p in pattern_thresholds]
-        base_threshold = max(custom_thresholds) if custom_thresholds else self.min_confidence_score
+        # MIN_CONFIDENCE_SCORE is a global floor: no pattern threshold may undercut it
+        base_threshold = resolve_base_threshold(
+            patterns, pattern_thresholds, self.min_confidence_score
+        )
 
         if trend == "bearish":
             # Scaled threshold: 70 + (strength * 2), capped at 80
