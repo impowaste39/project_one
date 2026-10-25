@@ -32,6 +32,7 @@ class RiskManager:
 
         self.max_positions = int(os.getenv('MAX_POSITIONS', 7))
         self.max_portfolio_risk = 0.10  # 10% max total portfolio risk
+        self.min_investment_pct = float(os.getenv('MIN_INVESTMENT_PCT', 0.10))
         self.volatile_mode = volatile_mode
 
     def calculate_position_size(self, capital: float, entry_price: float,
@@ -105,10 +106,10 @@ class RiskManager:
             return False, "Insufficient capital"
 
         # Check minimum investment
-        # ₹8,000 minimum: at this level brokerage is ~1.25% round-trip.
-        # Below ₹8,000, charges eat too much of the expected gain.
-        if position_info['investment'] < 8000:
-            return False, "Investment too small (min ₹8,000)"
+        # Use percentage of available capital (default 10%) with a hard floor of ₹2,000
+        min_required = max(2000, portfolio_state['available_capital'] * self.min_investment_pct)
+        if position_info['investment'] < min_required:
+            return False, f"Investment too small (min ₹{min_required:,.0f})"
 
         # Check risk amount
         if position_info['risk_amount'] > portfolio_state['available_capital'] * self.max_risk_per_trade:

@@ -711,8 +711,12 @@ class TradingBrain:
         if portfolio_state["positions_count"] >= max_pos:
             return False
 
-        if portfolio_state["available_capital"] < 1000:
-            return False
+        # --- RISK MANAGER VALIDATION ---
+        if self.risk_manager:
+            valid, reason = self.risk_manager.validate_trade(portfolio_state, position_info)
+            if not valid:
+                logger.info(f"[RiskGuard] {symbol} blocked: {reason}")
+                return False
 
         if position_info["quantity"] <= 0:
             return False
@@ -822,9 +826,11 @@ class TradingBrain:
         if portfolio_state["positions_count"] >= max_pos:
             return f"Maximum positions reached ({max_pos}/{max_pos})"
 
-        # 5. Capital availability
-        if portfolio_state["available_capital"] < 1000:
-            return "Insufficient capital (min ₹1000 required)"
+        # 5. Risk Manager validation
+        if position_info and self.risk_manager:
+            valid, reason = self.risk_manager.validate_trade(portfolio_state, position_info)
+            if not valid:
+                return reason
 
         # 6. Position Sizing constraints
         if position_info:
