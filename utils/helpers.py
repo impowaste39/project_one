@@ -141,3 +141,18 @@ def calculate_net_pnl(
     net_pnl = round(gross_pnl - total_charges, 2)
     return net_pnl, total_charges
 
+
+def calc_return_pct(total_capital, realized_pnl) -> float:
+    """Realized return (%) on contributed capital.
+
+    total_capital only ever moves by realized P&L and top-ups, so
+    contributed capital == total_capital - realized_pnl. This stays correct
+    after top-ups and needs no INITIAL_CAPITAL env var.
+    """
+    realized = realized_pnl or 0.0
+    base = (total_capital or 0.0) - realized
+    if base <= 0:
+        return 0.0
+    return round(realized / base * 100, 4)
+
+
