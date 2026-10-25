@@ -533,8 +533,8 @@ class TradingBrain:
             scaled_qty = max(1, round(position_info["quantity"] * multiplier))
             scaled_investment = scaled_qty * levels["entry_price"]
 
-            # Hard cap: never exceed 30% of available capital
-            max_investment = portfolio_state["available_capital"] * 0.30
+            # Use the risk manager's max_position_pct instead of a hardcoded 0.30
+            max_investment = portfolio_state["available_capital"] * self.risk_manager.max_position_pct
             if scaled_investment > max_investment:
                 scaled_qty = max(1, int(max_investment / levels["entry_price"]))
                 scaled_investment = scaled_qty * levels["entry_price"]

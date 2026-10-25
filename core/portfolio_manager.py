@@ -590,7 +590,6 @@ class PortfolioManager:
                 portfolio.total_return_pct = calc_return_pct(
                     portfolio.total_capital, portfolio.realized_pnl
                 )
-                )
 
             self.db.commit()
 
