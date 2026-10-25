@@ -379,7 +379,7 @@ class TradingBrain:
                         ml_score = 2
                         factors.append("Heuristic: RSI in broad range")
         except Exception as e:
-            logger.debug(f"ML prediction skipped: {e}")
+            logger.warning(f"ML prediction failed, scoring 0: {e}")
 
         score += ml_score
 
@@ -564,6 +564,10 @@ class TradingBrain:
             "symbol": symbol,
             "score": score_breakdown["total_score"],
             "confidence": score_breakdown["confidence"],
+            "technical_score": score_breakdown.get("technical_score"),
+            "pattern_score": score_breakdown.get("pattern_score"),
+            "market_score": score_breakdown.get("market_score"),
+            "ml_score": score_breakdown.get("ml_score"),
             "factors": score_breakdown["factors"],
             "entry_price": levels["entry_price"],
             "stop_loss": levels["stop_loss"],
