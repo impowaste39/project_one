@@ -1032,6 +1032,7 @@ def api_portfolio():
 
 
 @app.route('/api/trades')
+@require_api_key
 def api_trades():
     """Trades API endpoint"""
     with get_session() as db:
@@ -1041,6 +1042,7 @@ def api_trades():
 
 
 @app.route('/api/open-positions')
+@require_api_key
 def api_open_positions():
     """Open positions API endpoint"""
     with get_session() as db:
@@ -1136,6 +1138,7 @@ def trigger_scan():
 
 
 @app.route('/api/scan-history')
+@require_api_key
 def api_scan_history():
     """Get recent scan history"""
     try:
@@ -1150,6 +1153,7 @@ def api_scan_history():
 
 
 @app.route('/api/scan-details/<int:scan_id>')
+@require_api_key
 def api_scan_details(scan_id):
     """Get detailed results for a specific scan"""
     try:
@@ -1165,6 +1169,7 @@ def api_scan_details(scan_id):
 
 
 @app.route('/api/pattern-performance')
+@require_api_key
 def api_pattern_performance():
     """Get pattern performance statistics"""
     try:
@@ -1194,6 +1199,7 @@ def api_rejection_analysis():
 
 
 @app.route('/api/learning-insights')
+@require_api_key
 def api_learning_insights():
     """Get AI learning insights"""
     try:
