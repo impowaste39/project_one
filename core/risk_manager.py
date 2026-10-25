@@ -6,6 +6,8 @@ Handles position sizing and risk calculations
 import os
 import logging
 
+from utils.helpers import calc_open_risk
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,7 +33,7 @@ class RiskManager:
                 "RiskManager: NORMAL MODE active (2% risk, 30% max position)")
 
         self.max_positions = int(os.getenv('MAX_POSITIONS', 7))
-        self.max_portfolio_risk = 0.10  # 10% max total portfolio risk
+        self.max_portfolio_risk = float(os.getenv('MAX_PORTFOLIO_RISK', 0.10))  # max total open risk
         self.min_investment_pct = float(os.getenv('MIN_INVESTMENT_PCT', 0.10))
         self.volatile_mode = volatile_mode
 
@@ -115,6 +117,17 @@ class RiskManager:
         if position_info['risk_amount'] > portfolio_state['available_capital'] * self.max_risk_per_trade:
             return False, "Risk exceeds limit"
 
+        # Portfolio heat: money at risk across open positions (at their current
+        # stops) plus this trade must stay within MAX_PORTFOLIO_RISK of capital
+        heat_limit = portfolio_state.get('total_capital', 0) * self.max_portfolio_risk
+        open_risk = portfolio_state.get('open_risk_amount', 0.0)
+        if heat_limit > 0 and open_risk + position_info['risk_amount'] > heat_limit:
+            return False, (
+                f"Portfolio risk limit reached (open risk ₹{open_risk:,.0f} + "
+                f"₹{position_info['risk_amount']:,.0f} > "
+                f"{self.max_portfolio_risk:.0%} of capital)"
+            )
+
         return True, "Trade validated"
 
     def calculate_portfolio_risk(self, open_trades: list,
@@ -129,11 +142,7 @@ class RiskManager:
         Returns:
             Dict with risk metrics
         """
-        total_risk = 0
-
-        for trade in open_trades:
-            risk = (trade.entry_price - trade.stop_loss) * trade.quantity
-            total_risk += risk
+        total_risk = calc_open_risk(open_trades)
 
         risk_percent = (total_risk / portfolio_total) * \
             100 if portfolio_total > 0 else 0

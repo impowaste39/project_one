@@ -167,3 +167,18 @@ def resolve_base_threshold(patterns, pattern_thresholds, floor) -> int:
     return max(custom + [floor])
 
 
+def calc_open_risk(open_trades) -> float:
+    """Money at risk if every open position hits its current stop.
+
+    Uses the remaining quantity after a partial exit. A stop at or above the
+    entry (breakeven / trailing) adds no risk, so it never offsets other trades.
+    """
+    total = 0.0
+    for t in open_trades:
+        qty = t.quantity
+        if getattr(t, 'partially_exited', False):
+            qty = t.quantity - (getattr(t, 'partial_exit_qty', 0) or 0)
+        total += max(0.0, t.entry_price - t.stop_loss) * max(0, qty)
+    return round(total, 2)
+
+

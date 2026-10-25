@@ -14,7 +14,7 @@ import json
 import pytz
 
 from models.database import Trade, Portfolio, get_session
-from utils.helpers import calculate_net_pnl, calc_return_pct
+from utils.helpers import calculate_net_pnl, calc_return_pct, calc_open_risk
 
 logger = logging.getLogger(__name__)
 
@@ -169,9 +169,9 @@ class PortfolioManager:
                     'positions_count': 0
                 }
 
-            open_positions = self.db.query(Trade).filter(
+            open_trades = self.db.query(Trade).filter(
                 Trade.status == 'OPEN'
-            ).count()
+            ).all()
 
             return {
                 'total_capital': portfolio.total_capital,
@@ -179,7 +179,8 @@ class PortfolioManager:
                 'deployed_capital': portfolio.deployed_capital,
                 'unrealized_pnl': portfolio.unrealized_pnl,
                 'realized_pnl': portfolio.realized_pnl,
-                'positions_count': open_positions
+                'positions_count': len(open_trades),
+                'open_risk_amount': calc_open_risk(open_trades)
             }
 
         except Exception as e:

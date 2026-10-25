@@ -1648,7 +1648,7 @@ def admin_system_status():
                 'min_score_to_save': int(os.getenv('MIN_SCORE_TO_SAVE', 50)),
                 'initial_capital': float(os.getenv('INITIAL_CAPITAL', 5000)),
                 'risk_per_trade': float(os.getenv('RISK_PER_TRADE', 0.02)),
-                'max_positions': int(os.getenv('MAX_POSITIONS', 20)),
+                'max_positions': int(os.getenv('MAX_POSITIONS', 7)),
                 'watchlist_type': os.getenv('WATCHLIST_TYPE', 'custom'),
             }
 
