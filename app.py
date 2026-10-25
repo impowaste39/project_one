@@ -335,11 +335,14 @@ def scan_market_job():
                     )
 
                     if evaluation['decision'] == 'ENTER':
-                        # Send Discord alert BEFORE entering trade
-                        discord_service.send_trade_entry_alert(evaluation)
-
                         success = portfolio_mgr.enter_trade(evaluation)
                         if success:
+                            # Send Discord alert AFTER successful entry
+                            try:
+                                discord_service.send_trade_entry_alert(evaluation)
+                            except Exception as alert_err:
+                                logger.warning(f"Discord alert failed for {evaluation['symbol']}: {alert_err}")
+
                             logger.info(
                                 f"✅ TRADE EXECUTED: {evaluation['symbol']} @ ₹{evaluation['entry_price']}")
                             scan_stats['trades_entered'] += 1
@@ -347,6 +350,8 @@ def scan_market_job():
                             # Refresh held_symbols so the same ticker is not
                             # re-evaluated if it appears again in this scan cycle
                             held_symbols.add(symbol)
+                        else:
+                            logger.info(f"❌ TRADE REFUSED: {evaluation['symbol']} - risk/limit check failed")
                     else:
                         logger.info(
                             f"⏭️  PASSED: {opp['symbol']} - {evaluation['reason']}")
