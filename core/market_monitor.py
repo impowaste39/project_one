@@ -321,6 +321,10 @@ class MarketMonitor:
 
             symbols = self.watchlist
             ranked_candidates = []
+            skipped_short = 0
+            skipped_error = 0
+            first_short = None
+            first_error = None
             chunk_size = 10
 
             for i in range(0, len(symbols), chunk_size):
@@ -345,6 +349,9 @@ class MarketMonitor:
                             sym_data = data[symbol][['High', 'Close', 'Volume']].dropna()
 
                         if sym_data.empty or len(sym_data) < 20:
+                            skipped_short += 1
+                            if first_short is None:
+                                first_short = (symbol, len(sym_data))
                             continue
 
                         # 1. 20-day Return
@@ -378,15 +385,23 @@ class MarketMonitor:
                             'vol_ratio': vol_ratio
                         })
                     except Exception as sym_err:
+                        skipped_error += 1
+                        if first_error is None:
+                            first_error = f"{symbol}: {type(sym_err).__name__}: {sym_err}"
                         logger.debug(f"[PreRank] Error processing {symbol}: {sym_err}")
 
                 del data  # free chunk before next download — prevents RAM accumulation
 
-            # Sort by composite rank score descending
-            ranked_candidates.sort(key=lambda x: x['rank_score'], reverse=True)
-
             # Extract top N symbols
             top_symbols = [c['symbol'] for c in ranked_candidates[:limit]]
+            logger.info(
+                f"[PreRank] eligible={len(ranked_candidates)}/{len(symbols)}, "
+                f"too_few_rows={skipped_short}, errors={skipped_error}")
+            if not ranked_candidates and symbols:
+                # an empty ranking silently disables every scan; make it loud
+                logger.warning(
+                    f"[PreRank] NO symbol could be ranked (first short-data case: "
+                    f"{first_short}, first error: {first_error})")
             logger.info(f"[PreRank] Watchlist ranked. Top 5: {top_symbols[:5]}")
             return top_symbols
 
