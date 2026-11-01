@@ -25,11 +25,12 @@ _NIFTY_CACHE = {
 class MarketMonitor:
     """Market scanning and opportunity detection"""
 
-    def __init__(self, db_session=None):
+    def __init__(self, db_session=None, watchlist: list = None):
         self.db = db_session
         self.data_service = DataService()
         self.indicator_service = IndicatorService()
-        self.watchlist = self.data_service.get_watchlist('custom')
+        # Use provided watchlist, otherwise fall back to fixed custom list
+        self.watchlist = watchlist if watchlist is not None else self.data_service.get_watchlist('custom')
         # Fallback context: returned when Nifty fetch fails, avoiding silent 20-pt score loss
         self._last_known_context = {
             'trend': 'sideways',
@@ -306,12 +307,19 @@ class MarketMonitor:
             logger.error(f"Error scanning {symbol}: {e}")
             return None
 
-    def pre_rank_watchlist(self, limit: int = 30) -> list:
+    def pre_rank_watchlist(self, limit: int = 30, symbols: list = None) -> list:
         """
-        Rank the watchlist by relative strength, momentum, and volume trend.
+        Rank a symbol list by relative strength, momentum, and volume trend.
         Returns the top `limit` ranked symbols.
+
+        Args:
+            limit: Maximum number of symbols to return
+            symbols: Optional symbol list to rank. If None, uses self.watchlist.
         """
-        logger.info(f"[PreRank] Pre-ranking watchlist ({len(self.watchlist)} symbols)...")
+        if symbols is None:
+            symbols = self.watchlist
+
+        logger.info(f"[PreRank] Pre-ranking {len(symbols)} symbols...")
         try:
             # Fetch Nifty 20d return
             lookback = int(os.getenv('RS_LOOKBACK_DAYS', '20'))
@@ -319,7 +327,6 @@ class MarketMonitor:
             if nifty_return_20d is None:
                 nifty_return_20d = 0.0
 
-            symbols = self.watchlist
             ranked_candidates = []
             skipped_short = 0
             skipped_error = 0
@@ -392,6 +399,9 @@ class MarketMonitor:
 
                 del data  # free chunk before next download — prevents RAM accumulation
 
+            # Sort by rank_score descending
+            ranked_candidates.sort(key=lambda x: x['rank_score'], reverse=True)
+
             # Extract top N symbols
             top_symbols = [c['symbol'] for c in ranked_candidates[:limit]]
             logger.info(
@@ -404,6 +414,92 @@ class MarketMonitor:
                     f"{first_short}, first error: {first_error})")
             logger.info(f"[PreRank] Watchlist ranked. Top 5: {top_symbols[:5]}")
             return top_symbols
+
+        except Exception as e:
+            logger.warning(f"[PreRank] Watchlist pre-ranking failed ({e}) — using input order")
+            return symbols[:limit]
+
+    def save_daily_watchlist(self, symbols_with_scores: list, scan_date) -> int:
+        """
+        Save the daily watchlist to the database.
+        Replaces any existing entries for the same scan_date.
+
+        Args:
+            symbols_with_scores: List of dicts with keys: symbol, rank_score, rs_score, proximity, vol_ratio
+            scan_date: Date object (naive IST)
+
+        Returns:
+            Number of rows inserted
+        """
+        if not self.db:
+            logger.warning("[DailyWatchlist] No DB session — cannot save watchlist")
+            return 0
+
+        from models.database import DailyWatchlist
+
+        try:
+            # Delete existing entries for this date
+            self.db.query(DailyWatchlist).filter(
+                DailyWatchlist.scan_date == scan_date
+            ).delete(synchronize_session=False)
+
+            # Insert new entries
+            count = 0
+            for item in symbols_with_scores:
+                row = DailyWatchlist(
+                    symbol=item['symbol'],
+                    rank_score=item['rank_score'],
+                    rs_score=item.get('rs_score'),
+                    proximity=item.get('proximity'),
+                    vol_ratio=item.get('vol_ratio'),
+                    scan_date=scan_date,
+                )
+                self.db.add(row)
+                count += 1
+
+            self.db.commit()
+            logger.info(
+                f"[DailyWatchlist] Saved {count} symbols for {scan_date}")
+            return count
+
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"[DailyWatchlist] Error saving watchlist: {e}")
+            return 0
+
+    def load_daily_watchlist(self, scan_date=None) -> list:
+        """
+        Load the daily watchlist from the database.
+
+        Args:
+            scan_date: Date object (naive IST). If None, uses today's date.
+
+        Returns:
+            List of symbol strings, ordered by rank_score descending
+        """
+        if not self.db:
+            logger.warning("[DailyWatchlist] No DB session — cannot load watchlist")
+            return []
+
+        from models.database import DailyWatchlist
+        from datetime import date
+
+        if scan_date is None:
+            scan_date = date.today()
+
+        try:
+            rows = self.db.query(DailyWatchlist).filter(
+                DailyWatchlist.scan_date == scan_date
+            ).order_by(DailyWatchlist.rank_score.desc()).all()
+
+            symbols = [row.symbol for row in rows]
+            logger.info(
+                f"[DailyWatchlist] Loaded {len(symbols)} symbols for {scan_date}")
+            return symbols
+
+        except Exception as e:
+            logger.error(f"[DailyWatchlist] Error loading watchlist: {e}")
+            return []
 
         except Exception as e:
             logger.warning(f"[PreRank] Watchlist pre-ranking failed ({e}) — using default watchlist order")

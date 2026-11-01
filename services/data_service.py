@@ -146,6 +146,34 @@ class DataService:
         else:
             return self.custom
 
+    def get_nse_universe(self) -> list:
+        """
+        Fetch Nifty 500 constituents from NSE website.
+        Falls back to nifty100 list if NSE is unreachable.
+        """
+        import io
+        import requests
+
+        url = "https://archives.nseindia.com/content/indices/ind_nifty500list.csv"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()
+            df = pd.read_csv(io.StringIO(response.text))
+            valid_symbols = df[~df['Symbol'].str.startswith('DUMMY')]
+            symbols = [f"{sym}.NS" for sym in valid_symbols['Symbol'].tolist()]
+            logger.info(
+                f"[DataService] Loaded {len(symbols)} symbols from NSE Nifty 500")
+            return symbols
+        except Exception as e:
+            logger.warning(
+                f"[DataService] Failed to fetch Nifty 500 from NSE: {e}. "
+                f"Falling back to nifty100 list ({len(self.nifty_50 + self.nifty_next_50)} symbols)."
+            )
+            return self.nifty_50 + self.nifty_next_50
+
     def fetch_stock_data(self, symbol: str, period: str = '3mo',
                          interval: str = '1d') -> pd.DataFrame:
         """
