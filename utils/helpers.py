@@ -182,3 +182,40 @@ def calc_open_risk(open_trades) -> float:
     return round(total, 2)
 
 
+def update_excursions(entry_price: float, current_price: float,
+                      current_mae_pct: float = None,
+                      current_mfe_pct: float = None) -> tuple:
+    """
+    Pure function to update MAE/MFE (max adverse/favorable excursion) percentages.
+
+    Args:
+        entry_price: Trade entry price
+        current_price: Current market price
+        current_mae_pct: Current stored MAE % (None = no prior observation)
+        current_mfe_pct: Current stored MFE % (None = no prior observation)
+
+    Returns:
+        Tuple of (new_mae_pct, new_mfe_pct) rounded to 4 decimal places.
+        MAE is negative (adverse = price below entry for longs).
+        MFE is positive (favorable = price above entry for longs).
+    """
+    if entry_price <= 0 or current_price <= 0:
+        return round(current_mae_pct or 0.0, 4), round(current_mfe_pct or 0.0, 4)
+
+    # Unrealized P&L % for a long position
+    unrealized_pct = ((current_price - entry_price) / entry_price) * 100
+
+    # First observation sets both MAE and MFE to current unrealized P&L %
+    if current_mae_pct is None:
+        new_mae_pct = unrealized_pct
+    else:
+        new_mae_pct = min(current_mae_pct, unrealized_pct)
+
+    if current_mfe_pct is None:
+        new_mfe_pct = unrealized_pct
+    else:
+        new_mfe_pct = max(current_mfe_pct, unrealized_pct)
+
+    return round(new_mae_pct, 4), round(new_mfe_pct, 4)
+
+

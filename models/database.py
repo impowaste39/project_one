@@ -78,6 +78,13 @@ class Trade(Base):
     atr = Column(Float, nullable=True)
     pattern_count = Column(Integer, nullable=True)
 
+    # Execution tracking (WP3) — nullable, populated offline/by owner
+    alert_price = Column(Float, nullable=True)   # price at alert time
+    fill_price = Column(Float, nullable=True)    # price owner actually filled at
+    slippage_pct = Column(Float, nullable=True)  # (fill - alert) / alert * 100
+    mae_pct = Column(Float, nullable=True)       # max adverse excursion %
+    mfe_pct = Column(Float, nullable=True)       # max favorable excursion %
+
     def __repr__(self):
         return f"<Trade {self.symbol} @ ₹{self.entry_price} - {self.status}>"
 
@@ -112,7 +119,12 @@ class Trade(Base):
             'macd': self.macd,
             'volume_ratio': self.volume_ratio,
             'atr': self.atr,
-            'pattern_count': self.pattern_count
+            'pattern_count': self.pattern_count,
+            'alert_price': self.alert_price,
+            'fill_price': self.fill_price,
+            'slippage_pct': self.slippage_pct,
+            'mae_pct': self.mae_pct,
+            'mfe_pct': self.mfe_pct,
         }
 
 
@@ -358,6 +370,11 @@ def _migrate_database(engine):
             ('volume_ratio', 'FLOAT'),
             ('atr', 'FLOAT'),
             ('pattern_count', 'INTEGER'),
+            ('alert_price', 'FLOAT'),
+            ('fill_price', 'FLOAT'),
+            ('slippage_pct', 'FLOAT'),
+            ('mae_pct', 'FLOAT'),
+            ('mfe_pct', 'FLOAT'),
         ]
 
         with engine.connect() as conn:
