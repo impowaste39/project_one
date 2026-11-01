@@ -702,9 +702,7 @@ def main():
                         help='Test exit variants against baseline')
     args = parser.parse_args()
 
-    session = next(get_session())
-
-    try:
+    with get_session() as session:
         signals = load_labeled_signals(session, limit=args.limit)
         logger.info(f"Loaded {len(signals)} labeled signals for backtesting")
 
@@ -752,9 +750,6 @@ def main():
             f"promote={pg['promote']}, "
             f"wins={pg['wins_in_last_3']}/{pg['total_last_3']}"
         )
-
-    finally:
-        session.close()
 
 
 if __name__ == '__main__':
