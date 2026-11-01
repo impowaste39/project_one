@@ -123,13 +123,20 @@ def apply_labeling_rules(
 
     risk_per_share = entry_price - stop_price
     if risk_per_share <= 0:
+        logger.debug(f"{symbol}: RISK_INVALID entry={entry_price} stop={stop_price} risk_per_share={risk_per_share}")
         return None
 
     if df is None or df.empty or len(df) < 1:
+        logger.debug(f"{symbol}: DF_EMPTY shape={df.shape if df is not None else None}")
         return None
 
+    # Flatten MultiIndex columns (yfinance returns ('Close', 'SYMBOL.NS') tuples)
+    if isinstance(df.columns, pd.MultiIndex):
+        df.columns = [c[0] if isinstance(c, tuple) else c for c in df.columns]
     required = {'Open', 'High', 'Low', 'Close'}
-    if not required.issubset(set(df.columns)):
+    flat_cols = set(df.columns)
+    if not required.issubset(flat_cols):
+        logger.debug(f"{symbol}: MISSING_COLUMNS have={flat_cols} need={required}")
         return None
 
     # Initialize tracking
@@ -264,6 +271,10 @@ def label_signal(scan_result, signal_timestamp, notional: float) -> Optional[dic
         logger.warning(f"yfinance download failed for {symbol}: {e}")
         return None
 
+    if df is None or df.empty or len(df) < 1:
+        logger.debug(f"{symbol}: yfinance returned empty/no data for {start_date} to {end_date}")
+        return None
+
     label_data = apply_labeling_rules(
         symbol=symbol,
         entry_price=entry_price,
@@ -274,6 +285,7 @@ def label_signal(scan_result, signal_timestamp, notional: float) -> Optional[dic
         notional=notional,
     )
     if label_data is None:
+        logger.debug(f"{symbol}: apply_labeling_rules returned None (no valid outcome)")
         return None
 
     return {
@@ -310,6 +322,7 @@ def main():
 
         labeled = 0
         failed = 0
+        fail_reasons = {}
         batch = []
         outcome_counts = {'TARGET': 0, 'STOP': 0, 'TIMEOUT': 0, 'NO_DATA': 0}
 
@@ -331,6 +344,8 @@ def main():
                     batch = []
 
             except Exception as e:
+                reason = type(e).__name__
+                fail_reasons[reason] = fail_reasons.get(reason, 0) + 1
                 logger.error(f"Error labeling scan_result {scan_result.id}: {e}")
                 failed += 1
                 continue
@@ -343,7 +358,7 @@ def main():
 
         logger.info(
             f"Labeling complete: {labeled} labeled, {failed} failed. "
-            f"Outcomes: {outcome_counts}"
+            f"Outcomes: {outcome_counts}. Fail reasons: {fail_reasons}"
         )
 
 
