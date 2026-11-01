@@ -300,9 +300,7 @@ def main():
     parser.add_argument('--notional', type=float, default=DEFAULT_NOTIONAL, help='Notional position size (default 25000)')
     args = parser.parse_args()
 
-    session = next(get_session())
-
-    try:
+    with get_session() as session:
         signals = get_eligible_signals(session, limit=args.limit)
         logger.info(f"Found {len(signals)} eligible signals for labeling")
 
@@ -347,9 +345,6 @@ def main():
             f"Labeling complete: {labeled} labeled, {failed} failed. "
             f"Outcomes: {outcome_counts}"
         )
-
-    finally:
-        session.close()
 
 
 if __name__ == '__main__':
