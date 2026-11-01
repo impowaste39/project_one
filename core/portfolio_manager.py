@@ -458,7 +458,8 @@ class PortfolioManager:
                 macd=evaluation.get('macd'),
                 volume_ratio=evaluation.get('volume_ratio'),
                 atr=evaluation.get('atr'),
-                pattern_count=evaluation.get('pattern_count')
+                pattern_count=evaluation.get('pattern_count'),
+                alert_price=evaluation['entry_price'],
             )
 
             self.db.add(trade)

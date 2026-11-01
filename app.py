@@ -31,7 +31,7 @@ from services.email_service import EmailService
 from services.data_service import DataService
 from services.discord_service import DiscordService
 from services.reporting_service import ReportingService
-from utils.helpers import get_ist_now, is_market_hours, get_market_status_message, calc_return_pct
+from utils.helpers import get_ist_now, is_market_hours, get_market_status_message, calc_return_pct, update_excursions
 from utils.memory import memory_guard
 
 # Configure logging
@@ -414,6 +414,13 @@ def monitor_positions_job():
                         continue
 
                     current_price = batch_prices[trade.symbol]
+
+                    # Update MAE/MFE (max adverse/favorable excursion)
+                    new_mae, new_mfe = update_excursions(
+                        trade.entry_price, current_price,
+                        trade.mae_pct, trade.mfe_pct)
+                    trade.mae_pct = new_mae
+                    trade.mfe_pct = new_mfe
 
                     # Check exit conditions (pass None for data as it only needs current_price)
                     exit_decision = brain.check_exit_conditions(
@@ -1568,6 +1575,73 @@ def admin_flush_all():
 
     except Exception as e:
         logger.error(f"[ADMIN] flush-all error: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/api/admin/trades/<int:trade_id>/fill', methods=['POST'])
+@require_api_key
+def admin_record_fill(trade_id: int):
+    """
+    Record the actual fill price for a trade — owner posts via Postman.
+    Computes slippage against alert_price.
+
+    JSON body: {"fill_price": 123.45}
+    """
+    try:
+        body = request.get_json(silent=True) or {}
+        fill_price = body.get('fill_price')
+
+        if fill_price is None:
+            return jsonify({
+                'status': 'error',
+                'message': 'Missing fill_price in JSON body'
+            }), 400
+
+        try:
+            fill_price = float(fill_price)
+        except (TypeError, ValueError):
+            return jsonify({
+                'status': 'error',
+                'message': f'Invalid fill_price: {fill_price}'
+            }), 400
+
+        with get_session() as db:
+            trade = db.query(Trade).filter_by(id=trade_id).first()
+            if not trade:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Trade {trade_id} not found'
+                }), 404
+
+            trade.fill_price = fill_price
+
+            if trade.alert_price and trade.alert_price > 0:
+                trade.slippage_pct = round(
+                    (fill_price - trade.alert_price) / trade.alert_price * 100, 4
+                )
+            else:
+                trade.slippage_pct = None
+
+            db.commit()
+
+            logger.info(
+                f"[ADMIN] fill recorded: trade {trade_id} ({trade.symbol}) "
+                f"alert={trade.alert_price} fill={fill_price} "
+                f"slippage={trade.slippage_pct}%"
+            )
+
+            return jsonify({
+                'status': 'success',
+                'trade_id': trade_id,
+                'symbol': trade.symbol,
+                'alert_price': trade.alert_price,
+                'fill_price': trade.fill_price,
+                'slippage_pct': trade.slippage_pct,
+                'timestamp': datetime.now(IST).isoformat()
+            })
+
+    except Exception as e:
+        logger.error(f"[ADMIN] record-fill error: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
