@@ -290,39 +290,6 @@ class SignalLabel(Base):
         }
 
 
-class DailyWatchlist(Base):
-    """Daily dynamic watchlist — symbols selected during pre-market scan.
-
-    Populated at 8:45 AM IST by premarket_scan_job. Used by scan_market_job
-    during market hours instead of the fixed custom watchlist.
-    """
-    __tablename__ = 'daily_watchlist'
-
-    id = Column(Integer, primary_key=True)
-    symbol = Column(String(20), nullable=False, index=True)
-    rank_score = Column(Float, nullable=False)
-    rs_score = Column(Float, nullable=True)
-    proximity = Column(Float, nullable=True)
-    vol_ratio = Column(Float, nullable=True)
-    scan_date = Column(DateTime, nullable=False, index=True)  # naive IST date
-    created_at = Column(DateTime, nullable=False, default=_ist_now)  # naive IST
-
-    def __repr__(self):
-        return f"<DailyWatchlist {self.symbol} score={self.rank_score:.1f}>"
-
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'symbol': self.symbol,
-            'rank_score': self.rank_score,
-            'rs_score': self.rs_score,
-            'proximity': self.proximity,
-            'vol_ratio': self.vol_ratio,
-            'scan_date': self.scan_date.isoformat() if self.scan_date else None,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-        }
-
-
 # Database initialization
 _engine = None
 _SessionLocal = None
@@ -422,36 +389,6 @@ def _migrate_database(engine):
                     logging.getLogger(__name__).info(
                         f"[Migration] Added column trades.{col_name}"
                     )
-
-        # Create daily_watchlist table if not exists
-        existing_tables = {t['name'] for t in insp.get_table_names()}
-        if 'daily_watchlist' not in existing_tables:
-            with engine.connect() as conn:
-                conn.execute(text("""
-                    CREATE TABLE IF NOT EXISTS daily_watchlist (
-                        id SERIAL PRIMARY KEY,
-                        symbol VARCHAR(20) NOT NULL,
-                        rank_score FLOAT NOT NULL,
-                        rs_score FLOAT,
-                        proximity FLOAT,
-                        vol_ratio FLOAT,
-                        scan_date TIMESTAMP NOT NULL,
-                        created_at TIMESTAMP NOT NULL DEFAULT NOW()
-                    )
-                """))
-                conn.execute(text("""
-                    CREATE INDEX IF NOT EXISTS idx_daily_watchlist_symbol
-                    ON daily_watchlist (symbol)
-                """))
-                conn.execute(text("""
-                    CREATE INDEX IF NOT EXISTS idx_daily_watchlist_scan_date
-                    ON daily_watchlist (scan_date)
-                """))
-                conn.commit()
-                import logging
-                logging.getLogger(__name__).info(
-                    "[Migration] Created table daily_watchlist"
-                )
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning(

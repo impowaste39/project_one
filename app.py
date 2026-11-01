@@ -241,18 +241,7 @@ def scan_market_job():
             # Initialize components
             from services.reporting_service import ReportingService
 
-            # Load today's dynamic watchlist from pre-market scan.
-            # Falls back to fixed custom watchlist if daily watchlist is empty.
             monitor = MarketMonitor(db)
-            daily_symbols = monitor.load_daily_watchlist()
-            if daily_symbols:
-                logger.info(
-                    f"[MarketScan] Using dynamic daily watchlist: {len(daily_symbols)} symbols")
-                monitor = MarketMonitor(db, watchlist=daily_symbols)
-            else:
-                logger.info(
-                    f"[MarketScan] Daily watchlist empty — using fixed custom watchlist")
-
             risk_manager = RiskManager()
             brain = _get_brain(db, risk_manager)          # reused singleton
             portfolio_mgr = PortfolioManager(db, risk_manager, email_service)
@@ -266,7 +255,7 @@ def scan_market_job():
             # Get portfolio state
             portfolio_state = portfolio_mgr.get_portfolio_state()
 
-            # Scan market for opportunities (only daily-selected symbols)
+            # Scan market for opportunities
             opportunities = monitor.scan_market()
 
             # Calculate scan duration
@@ -702,9 +691,6 @@ def end_of_day_analysis_job():
 def premarket_scan_job():
     """
     Pre-market scan — runs at 8:45 AM IST Mon-Fri.
-    Scans the full NSE universe (Nifty 500), pre-ranks the top 15-20 stocks,
-    saves them to the daily_watchlist table, and sends the top setups to Discord.
-    During market hours, scan_market_job scans only these daily-selected symbols.
     """
     if os.getenv('PRE_MARKET_SCAN_ENABLED', 'true').lower() != 'true':
         logger.info("Pre-market scan disabled via PRE_MARKET_SCAN_ENABLED=false")
@@ -719,79 +705,10 @@ def premarket_scan_job():
             monitor = MarketMonitor(db)
             brain = TradingBrain(db, None)
 
-            # ── STEP 1: Build dynamic daily watchlist from full NSE universe ──
-            nse_universe = monitor.data_service.get_nse_universe()
-            logger.info(
-                f"[DailyWatchlist] NSE universe size: {len(nse_universe)} symbols")
-
-            # Pre-rank the full universe and take top 15 — captures scores for DB
-            lookback = int(os.getenv('RS_LOOKBACK_DAYS', '20'))
-            nifty_return_20d = monitor.data_service.fetch_nifty_return(lookback)
-            if nifty_return_20d is None:
-                nifty_return_20d = 0.0
-
-            ranked_candidates = []
-            chunk_size = 10
-            for i in range(0, len(nse_universe), chunk_size):
-                chunk = nse_universe[i:i + chunk_size]
-                data = yf.download(
-                    chunk,
-                    period='1mo',
-                    interval='1d',
-                    progress=False,
-                    group_by='ticker',
-                    auto_adjust=True
-                )
-                for symbol in chunk:
-                    try:
-                        if len(chunk) == 1:
-                            sym_data = data[['High', 'Close', 'Volume']].dropna()
-                        else:
-                            sym_data = data[symbol][['High', 'Close', 'Volume']].dropna()
-                        if sym_data.empty or len(sym_data) < 20:
-                            continue
-                        price_series = sym_data['Close'].tail(lookback)
-                        start_p = price_series.iloc[0]
-                        end_p = price_series.iloc[-1]
-                        stock_return = ((end_p - start_p) / start_p) * 100 if start_p > 0 else 0.0
-                        rs_score = stock_return - nifty_return_20d
-                        high_1m = sym_data['High'].max()
-                        current_price = float(sym_data['Close'].iloc[-1])
-                        proximity = (current_price / high_1m) if high_1m > 0 else 0.0
-                        vol_5d = sym_data['Volume'].tail(5).mean()
-                        vol_prev = sym_data['Volume'].iloc[-20:-5].mean()
-                        vol_ratio = (vol_5d / vol_prev) if vol_prev > 0 else 1.0
-                        rank_score = (rs_score * 0.5) + (proximity * 30.0) + (vol_ratio * 20.0)
-                        ranked_candidates.append({
-                            'symbol': symbol,
-                            'rank_score': rank_score,
-                            'rs_score': rs_score,
-                            'proximity': proximity,
-                            'vol_ratio': vol_ratio
-                        })
-                    except Exception:
-                        continue
-                del data
-
-            ranked_candidates.sort(key=lambda x: x['rank_score'], reverse=True)
-            top_15 = ranked_candidates[:15]
-
-            # Save to daily_watchlist table
-            from datetime import date
-            saved_count = monitor.save_daily_watchlist(top_15, date.today())
-            logger.info(
-                f"[DailyWatchlist] Saved {saved_count} symbols for today's trading")
-
-            # Use these top 15 symbols for the pre-market scan below
-            daily_symbols = [c['symbol'] for c in top_15]
-
-            # ── STEP 2: Pre-market scan on the daily-selected symbols ──
+            # Step 1: Get market context for the Discord embed header
             market_context = monitor.get_market_context()
 
-            candidates = monitor.scan_market_preopen()
-            # scan_market_preopen uses self.watchlist (fixed custom list).
-            # Override it to use our daily-selected symbols instead:
-            monitor.watchlist = daily_symbols
+            # Step 2: Scan all watchlist stocks (uses yesterday's closes)
             candidates = monitor.scan_market_preopen()
 
             # Step 3: Score each candidate
