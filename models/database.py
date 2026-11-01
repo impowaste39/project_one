@@ -230,6 +230,54 @@ class EmailLog(Base):
         return f"<Email {self.email_type} @ {self.sent_at}>"
 
 
+class SignalLabel(Base):
+    """Labeled outcome for a scan signal — foundation for ML training and backtesting.
+
+    One row per scan_result_id (unique). Populated offline by scripts/label_outcomes.py,
+    never on Render.
+    """
+    __tablename__ = 'signal_labels'
+
+    id = Column(Integer, primary_key=True)
+    scan_result_id = Column(Integer, nullable=False, unique=True, index=True)
+    symbol = Column(String(20), nullable=False, index=True)
+    signal_date = Column(DateTime, nullable=False, index=True)  # naive IST
+    entry_price = Column(Float, nullable=False)
+    stop_price = Column(Float, nullable=False)
+    target1_price = Column(Float, nullable=False)
+
+    outcome = Column(String(12), nullable=False, index=True)  # TARGET | STOP | TIMEOUT | NO_DATA
+    days_to_outcome = Column(Integer, nullable=False)
+    r_gross = Column(Float, nullable=False)      # (exit - entry) / (entry - stop)
+    r_net = Column(Float, nullable=False)        # r_gross minus charges for notional
+    mfe_r = Column(Float, nullable=False)        # max favorable excursion in R
+    mae_r = Column(Float, nullable=False)        # max adverse excursion in R
+    path_json = Column(Text, nullable=True)      # up to 15 daily [high_r, low_r, close_r]
+    labeled_at = Column(DateTime, nullable=False, default=_ist_now)  # naive IST
+
+    def __repr__(self):
+        return f"<SignalLabel {self.symbol} {self.outcome} R={self.r_net:.2f}>"
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'scan_result_id': self.scan_result_id,
+            'symbol': self.symbol,
+            'signal_date': self.signal_date.isoformat() if self.signal_date else None,
+            'entry_price': self.entry_price,
+            'stop_price': self.stop_price,
+            'target1_price': self.target1_price,
+            'outcome': self.outcome,
+            'days_to_outcome': self.days_to_outcome,
+            'r_gross': self.r_gross,
+            'r_net': self.r_net,
+            'mfe_r': self.mfe_r,
+            'mae_r': self.mae_r,
+            'path_json': self.path_json,
+            'labeled_at': self.labeled_at.isoformat() if self.labeled_at else None,
+        }
+
+
 # Database initialization
 _engine = None
 _SessionLocal = None
