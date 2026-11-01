@@ -358,6 +358,7 @@ def test_variants(signals: list, notional: float = DEFAULT_NOTIONAL) -> pd.DataF
                 'exit_reason': exit_reason,
                 'exit_day': exit_day,
                 'score': sig['score'],
+                'patterns': sig.get('patterns'),
                 'market_trend': sig['market_trend'],
                 'market_strength': sig['market_strength'],
                 'report_date': sig['report_date'],
@@ -499,15 +500,46 @@ def promotion_gate(wf_result: dict) -> dict:
 # =============================================================================
 
 def breakdown_by_pattern(df: pd.DataFrame, notional: float = DEFAULT_NOTIONAL) -> dict:
-    """Metrics grouped by pattern."""
-    if df.empty:
+    """Metrics grouped by pattern.
+
+    patterns column stores JSON text like ["bullish_ma_crossover"].
+    We check if a pattern name appears anywhere in the list.
+    """
+    if df.empty or 'patterns' not in df.columns:
         return {}
     result = {}
-    for pattern in df['patterns'].dropna().unique():
-        sub = df[df['patterns'] == pattern]
+    # Collect all unique pattern names across all rows
+    all_patterns = set()
+    for p in df['patterns'].dropna():
+        try:
+            pat_list = json.loads(p) if isinstance(p, str) else p
+            if isinstance(pat_list, list):
+                all_patterns.update(pat_list)
+        except (json.JSONDecodeError, TypeError):
+            continue
+
+    for pattern in sorted(all_patterns):
+        # Check if pattern name appears in the JSON list
+        mask = df['patterns'].apply(
+            lambda p: _pattern_in_list(p, pattern) if pd.notna(p) else False
+        )
+        sub = df[mask]
+        if sub.empty:
+            continue
         trades = [{'r_net': r, 'r_gross': r} for r in sub['r_net']]
         result[pattern] = compute_metrics(trades, notional)
     return result
+
+
+def _pattern_in_list(patterns_val, target_pattern: str) -> bool:
+    """Check if target_pattern appears in a JSON pattern list string."""
+    try:
+        pat_list = json.loads(patterns_val) if isinstance(patterns_val, str) else patterns_val
+        if isinstance(pat_list, list):
+            return target_pattern in pat_list
+    except (json.JSONDecodeError, TypeError):
+        pass
+    return False
 
 
 def breakdown_by_score_bucket(df: pd.DataFrame,
@@ -701,6 +733,11 @@ def main():
     parser.add_argument('--variants', action='store_true',
                         help='Test exit variants against baseline')
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
 
     with get_session() as session:
         signals = load_labeled_signals(session, limit=args.limit)
