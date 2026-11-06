@@ -431,15 +431,25 @@ class TradingBrain:
 
         entry_price = current_price
 
-        # ── Two stop loss candidates ──────────────────────────────────────────
-        # 1. ATR-based (2x ATR below entry) — volatility-aware
+        # ── Stop loss candidates ──────────────────────────────────────────────
+        # 1. Swing low based stop (from analysis if available, else 8% default)
+        swing_low_stop = analysis.get('swing_low_stop', current_price * 0.92)
+
+        # 2. ATR-based (2x ATR below entry) — volatility-aware
         atr_stop = current_price - (2 * atr)
 
-        max_distance_stop = current_price * 0.88    # loosest allowed: 12% away
-        min_distance_stop = current_price * 0.985   # tightest allowed: 1.5% away
+        # 3. Absolute maximum risk: 8% below entry
+        max_risk_stop = current_price * 0.92   # never wider than 8%
 
-        stop_loss = max(atr_stop, max_distance_stop)   # never wider than 12%
-        stop_loss = min(stop_loss, min_distance_stop)  # never tighter than 1.5%
+        # 4. Minimum stop distance: 1.5% below entry
+        min_distance_stop = current_price * 0.985   # never tighter than 1.5%
+
+        # Use the widest stop (lowest price) between swing low and ATR,
+        # capped at 8% max risk, floored at 1.5% min distance.
+        # This avoids whipsaws from overly tight stops while limiting risk.
+        stop_loss = min(swing_low_stop, atr_stop)   # wider of the two candidates
+        stop_loss = max(stop_loss, max_risk_stop)   # don't exceed 8% risk
+        stop_loss = min(stop_loss, min_distance_stop)  # don't go tighter than 1.5%
         # ─────────────────────────────────────────────────────────────────────
 
         risk = entry_price - stop_loss
@@ -964,10 +974,10 @@ class TradingBrain:
         else:
             days_held = 0
 
-        if days_held >= 7 and current_price < trade.entry_price * 0.97:
+        if days_held >= 15 and current_price < trade.entry_price:
             return {
                 "action": "EXIT",
-                "reason": f"Time decay ({days_held} days with loss >3%)",
+                "reason": f"Time decay ({days_held} days, below entry)",
                 "exit_type": "time_stop",
                 "urgency": "normal",
             }

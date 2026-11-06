@@ -438,10 +438,13 @@ def monitor_positions_job():
                         trade.partial_exit_qty = partial_qty
                         trade.partial_exit_date = datetime.now(IST).replace(tzinfo=None)  # FIX: naive datetime for DB
                         
-                        # Never lower the stop: if the trailing-stop ratchet in
-                        # check_exit_conditions() already moved it above entry_price
-                        # (price ran to +1R before T1 triggered), keep that stronger level.
-                        trade.stop_loss = max(trade.stop_loss, trade.entry_price)
+                        # Lock in 0.5R on remaining position after T1 partial exit.
+                        # Initial SL may have been ratcheted by trailing stop — use
+                        # initial_stop_loss (original) to compute true risk per share.
+                        initial_sl = trade.initial_stop_loss if trade.initial_stop_loss else trade.stop_loss
+                        risk_per_share = trade.entry_price - initial_sl
+                        locked_stop = trade.entry_price + (risk_per_share * 0.5)
+                        trade.stop_loss = max(trade.stop_loss, locked_stop)
                         db.commit()
 
                         # Release the partial sale's principal back to available capital now.
