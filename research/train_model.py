@@ -71,11 +71,11 @@ def load_labeled_data(session, min_signals: int = DEFAULT_MIN_SIGNALS) -> pd.Dat
 
     for sl, features_json, trend, strength in rows:
         try:
-            features = json.loads(features_json) if features_json else {}
-        except (json.JSONDecodeError, TypeError):
-            continue
-
-        if not features or len(features) != NUM_FEATURES:
+            features_list = json.loads(features_json) if features_json else []
+            if not features_list or len(features_list) != NUM_FEATURES:
+                continue
+            features = dict(zip(FEATURE_NAMES, features_list))
+        except (json.JSONDecodeError, TypeError, ValueError):
             continue
 
         record = dict(features)
@@ -178,8 +178,13 @@ def train_model(X: np.ndarray, y: np.ndarray):
     final_model.fit(X, y)
 
     # Calibrate using the full dataset (isotonic)
-    calibrated = CalibratedClassifierCV(final_model, method='isotonic', cv='prefit')
-    calibrated.fit(X, y)
+    try:
+        calibrated = CalibratedClassifierCV(final_model, method='isotonic', cv=5)
+        calibrated.fit(X, y)
+    except Exception:
+        # Fallback: use uncalibrated model if calibration fails
+        logger.warning("Calibration failed, using uncalibrated model")
+        calibrated = final_model
 
     metrics = {
         'n_samples': n_samples,
@@ -190,8 +195,22 @@ def train_model(X: np.ndarray, y: np.ndarray):
         'feature_names': FEATURE_NAMES,
         'n_features': NUM_FEATURES,
         'trained_at': datetime.now().isoformat(),
-        'feature_importances': dict(zip(FEATURE_NAMES, final_model.feature_importances_.tolist())),
     }
+    # Get feature importances if available
+    if hasattr(final_model, 'feature_importances_'):
+        feature_importances = {}
+        for name, imp in zip(FEATURE_NAMES, final_model.feature_importances_.tolist()):
+            feature_importances[name] = float(imp)
+        metrics['feature_importances'] = feature_importances
+        logger.info(f"Top features:")
+        for name, imp in sorted(
+            feature_importances.items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:10]:
+            logger.info(f"  {name}: {imp:.4f}")
+    else:
+        logger.info("Feature importances not available for this model type")
 
     return calibrated, metrics
 
@@ -276,12 +295,15 @@ def main():
         logger.info(f"Mean Brier: {metrics['mean_brier']:.3f}")
         logger.info(f"Mean Accuracy: {metrics['mean_accuracy']:.3f}")
         logger.info(f"Top features:")
-        for name, imp in sorted(
-            metrics['feature_importances'].items(),
-            key=lambda x: x[1],
-            reverse=True
-        )[:10]:
-            logger.info(f"  {name}: {imp:.4f}")
+        if 'feature_importances' in metrics:
+            for name, imp in sorted(
+                metrics['feature_importances'].items(),
+                key=lambda x: x[1],
+                reverse=True
+            )[:10]:
+                logger.info(f"  {name}: {imp:.4f}")
+        else:
+            logger.info("Feature importances not available for this model type")
 
         model_id = save_model(model, metrics, session)
         logger.info(f"\nModel saved as pattern_classifier_v2 (id={model_id}, is_active=False)")

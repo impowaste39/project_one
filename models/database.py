@@ -380,16 +380,22 @@ def _migrate_database(engine):
         with engine.connect() as conn:
             for col_name, col_type in new_columns:
                 if col_name not in existing_cols:
-                    conn.execute(
-                        text(
-                            f'ALTER TABLE trades ADD COLUMN {col_name} {col_type}'
+                    try:
+                        conn.execute(
+                            text(
+                                f'ALTER TABLE trades ADD COLUMN {col_name} {col_type}'
+                            )
                         )
-                    )
-                    conn.commit()
-                    import logging
-                    logging.getLogger(__name__).info(
-                        f"[Migration] Added column trades.{col_name}"
-                    )
+                        conn.commit()
+                        import logging
+                        logging.getLogger(__name__).info(
+                            f"[Migration] Added column trades.{col_name}"
+                        )
+                    except Exception as e:
+                        import logging
+                        logging.getLogger(__name__).warning(
+                            f"[Migration] Could not add trades.{col_name}: {e}"
+                        )
 
         # Add scan_results columns (features_json, shadow_prob)
         scan_result_cols = [
@@ -399,22 +405,30 @@ def _migrate_database(engine):
         scan_result_cols_existing = {c['name'] for c in insp.get_columns('scan_results')}
         for col_name, col_type in scan_result_cols:
             if col_name not in scan_result_cols_existing:
-                conn.execute(
-                    text(
-                        f'ALTER TABLE scan_results ADD COLUMN {col_name} {col_type}'
+                try:
+                    with engine.connect() as conn2:
+                        conn2.execute(
+                            text(
+                                f'ALTER TABLE scan_results ADD COLUMN {col_name} {col_type}'
+                            )
+                        )
+                        conn2.commit()
+                        import logging
+                        logging.getLogger(__name__).info(
+                            f"[Migration] Added column scan_results.{col_name}"
+                        )
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).warning(
+                        f"[Migration] Could not add scan_results.{col_name}: {e}"
                     )
-                )
-                conn.commit()
-                import logging
-                logging.getLogger(__name__).info(
-                    f"[Migration] Added column scan_results.{col_name}"
-                )
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning(
             f"[Migration] Schema migration warning (safe to ignore if Postgres handles it): {e}"
         )
 
+@contextmanager
 def get_session():
     """
     FIX #5: Context-manager session — always commits or rolls back, always closes.
