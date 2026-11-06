@@ -87,7 +87,10 @@ class TradingBrain:
                 )
 
                 if model_record:
-                    self.shadow_model = pickle.loads(model_record.model_data)
+                    model_data = model_record.model_data
+                    if hasattr(model_data, 'read'):
+                        model_data = model_data.read()
+                    self.shadow_model = pickle.loads(model_data)
                     logger.info("Shadow ML model loaded from database")
                     return
 
