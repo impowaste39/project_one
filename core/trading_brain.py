@@ -13,12 +13,14 @@ import yfinance as yf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 import pickle
+import io
 import logging
 import os
 import pytz
 from datetime import datetime
 from utils.helpers import calculate_net_pnl, resolve_base_threshold
 from core.features import build_features, FEATURE_NAMES
+from sklearn.externals import joblib
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +92,7 @@ class TradingBrain:
                     model_data = model_record.model_data
                     if hasattr(model_data, 'read'):
                         model_data = model_data.read()
-                    self.shadow_model = pickle.loads(model_data)
+                    self.shadow_model = joblib.load(io.BytesIO(model_data))
                     logger.info("Shadow ML model loaded from database")
                     return
 
