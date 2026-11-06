@@ -18,6 +18,7 @@ import os
 import pytz
 from datetime import datetime
 from utils.helpers import calculate_net_pnl, resolve_base_threshold
+from core.features import build_features, FEATURE_NAMES
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +33,11 @@ class TradingBrain:
         self.data_service = data_service
         self.ml_model = None
         self.scaler = None
+        self.shadow_model = None
         # default 58 matches render.yaml and the /api status endpoints (was 70 here only)
         self.min_confidence_score = int(os.getenv("MIN_CONFIDENCE_SCORE", 58))
         self.reload_ml_model()
+        self.reload_shadow_model()
 
     def reload_ml_model(self):
         """Reload existing ML model from database or initialize a new one."""
@@ -64,6 +67,36 @@ class TradingBrain:
             logger.error(f"Error loading model: {e}")
             self.ml_model = RandomForestClassifier(n_estimators=100)
             self.scaler = StandardScaler()
+
+    def reload_shadow_model(self):
+        """Load shadow ML model (pattern_classifier_v2) for shadow mode.
+
+        The shadow model predicts trade profitability but does NOT affect
+        entry decisions until promoted by the WP6 promotion gate.
+        Its probability is written to scan_results.shadow_prob for later
+        walk-forward analysis.
+        """
+        try:
+            if self.db:
+                from models.database import MLModel
+
+                model_record = (
+                    self.db.query(MLModel)
+                    .filter_by(model_name="pattern_classifier_v2", is_active=False)
+                    .first()
+                )
+
+                if model_record:
+                    self.shadow_model = pickle.loads(model_record.model_data)
+                    logger.info("Shadow ML model loaded from database")
+                    return
+
+            self.shadow_model = None
+            logger.info("No shadow model found — shadow probability disabled")
+
+        except Exception as e:
+            logger.error(f"Error loading shadow model: {e}")
+            self.shadow_model = None
 
     def prime_adaptive_thresholds(self):
         """
@@ -571,6 +604,17 @@ class TradingBrain:
             patterns=analysis.get("patterns", []),
         )
 
+        # --- SHADOW MODEL PROBABILITY (WP5) ---
+        # Compute feature vector and shadow probability (does not affect entry decision)
+        features = build_features(analysis, market_context)
+        shadow_prob = None
+        if self.shadow_model is not None:
+            try:
+                shadow_prob = float(self.shadow_model.predict_proba([features])[0][1])
+            except Exception as e:
+                logger.debug(f"Shadow model prediction failed: {e}")
+                shadow_prob = None
+
         return {
             "symbol": symbol,
             "score": score_breakdown["total_score"],
@@ -611,6 +655,8 @@ class TradingBrain:
             "volume_ratio": analysis.get("volume_ratio"),
             "atr": analysis.get("atr"),
             "pattern_count": analysis.get("pattern_count", 0),
+            "features_json": features,
+            "shadow_prob": shadow_prob,
         }
 
     def should_enter_trade(

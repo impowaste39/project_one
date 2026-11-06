@@ -116,6 +116,8 @@ class ReportingService:
                 pattern_score=evaluation.get('pattern_score'),
                 market_score=evaluation.get('market_score'),
                 ml_score=evaluation.get('ml_score'),
+                shadow_prob=evaluation.get('shadow_prob'),
+                features_json=json.dumps(evaluation.get('features_json', [])),
                 decision=evaluation.get('decision'),
                 rejection_reason=evaluation.get('reason'),
                 entry_price=evaluation.get('entry_price'),

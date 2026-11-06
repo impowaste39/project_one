@@ -382,21 +382,39 @@ def _migrate_database(engine):
                 if col_name not in existing_cols:
                     conn.execute(
                         text(
-                            f'ALTER TABLE trades ADD COLUMN {col_name} {col_type}')
+                            f'ALTER TABLE trades ADD COLUMN {col_name} {col_type}'
+                        )
                     )
                     conn.commit()
                     import logging
                     logging.getLogger(__name__).info(
                         f"[Migration] Added column trades.{col_name}"
                     )
+
+        # Add scan_results columns (features_json, shadow_prob)
+        scan_result_cols = [
+            ('features_json', 'TEXT'),
+            ('shadow_prob', 'FLOAT'),
+        ]
+        scan_result_cols_existing = {c['name'] for c in insp.get_columns('scan_results')}
+        for col_name, col_type in scan_result_cols:
+            if col_name not in scan_result_cols_existing:
+                conn.execute(
+                    text(
+                        f'ALTER TABLE scan_results ADD COLUMN {col_name} {col_type}'
+                    )
+                )
+                conn.commit()
+                import logging
+                logging.getLogger(__name__).info(
+                    f"[Migration] Added column scan_results.{col_name}"
+                )
     except Exception as e:
         import logging
         logging.getLogger(__name__).warning(
             f"[Migration] Schema migration warning (safe to ignore if Postgres handles it): {e}"
         )
 
-
-@contextmanager
 def get_session():
     """
     FIX #5: Context-manager session — always commits or rolls back, always closes.

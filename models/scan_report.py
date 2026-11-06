@@ -94,6 +94,10 @@ class ScanResult(Base):
     target = Column(Float)
     rr_ratio = Column(Float)
 
+    # ML features and shadow probability (WP4/WP5)
+    features_json = Column(Text)  # JSON array of 22 feature values
+    shadow_prob = Column(Float)   # ML model probability (shadow mode only)
+
     # Relationship
     scan_report = relationship("ScanReport", back_populates="results")
 
