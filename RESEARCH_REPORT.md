@@ -1,80 +1,81 @@
 # WP2 Backtest Report — Exit Variant Analysis
 
-Generated: 2026-11-01
+Generated: 2026-11-07
 Notional per trade: ₹25,000
-Total signals: 39
+Total signals: 544
 
 ## Baseline Performance (Original Stops & Targets)
 
 | Metric | Value |
 |--------|-------|
-| Trades | 39 |
-| Expectancy (R) | -0.4069 |
-| Expectancy (₹) | -10172.82 |
-| Profit Factor | 0.29 |
-| Win Rate | 38.5% |
-| Break-even Win Rate | 68.2% |
-| Max Drawdown (R) | -18.8451 |
-| Avg Win (R) | 0.4358 |
-| Avg Loss (R) | -0.9336 |
-| Avg R:R | 0.47 |
-| Bootstrap CI | [-0.6303, -0.1767] |
+| Trades | 544 |
+| Expectancy (R) | -0.5164 |
+| Expectancy (₹) | -12910.07 |
+| Profit Factor | 0.26 |
+| Win Rate | 26.7% |
+| Break-even Win Rate | 58.2% |
+| Max Drawdown (R) | -288.6117 |
+| Avg Win (R) | 0.6857 |
+| Avg Loss (R) | -0.9532 |
+| Avg R:R | 0.72 |
+| Bootstrap CI | [-0.5889, -0.4443] |
 | Bootstrap Significant | True |
 
 ## Exit Variant Comparison
 
 | Variant | Expectancy (R) | Profit Factor | Win Rate | Max DD (R) | vs Baseline |
 |---------|----------------|---------------|----------|------------|-------------|
-| stop_1.5r | -0.4646 | 0.27 | 38.5% | -21.0932 | -0.0577 |
-| stop_2.0r | -0.4721 | 0.26 | 38.5% | -21.3864 | -0.0652 |
-| target_1.5r | -0.4069 | 0.29 | 38.5% | -18.8451 | +0.0000 |
-| target_2.0r | -0.4069 | 0.29 | 38.5% | -18.8451 | +0.0000 |
-| time_stop_7d | -0.3173 | 0.30 | 28.2% | -12.7503 | +0.0896 |
-| time_stop_10d | -0.3358 | 0.31 | 33.3% | -13.4357 | +0.0711 |
+| stop_1.5r | -0.5190 | 0.26 | 26.7% | -290.9821 | -0.0026 |
+| stop_2.0r | -0.5245 | 0.26 | 26.7% | -293.9517 | -0.0081 |
+| target_1.5r | -0.5070 | 0.27 | 26.7% | -284.6156 | +0.0094 |
+| target_2.0r | -0.5062 | 0.28 | 26.7% | -284.1479 | +0.0102 |
+| time_stop_7d | -0.3298 | 0.36 | 31.1% | -184.3009 | +0.1866 |
+| time_stop_10d | -0.4069 | 0.29 | 27.2% | -223.7793 | +0.1095 |
 
 ## Walk-Forward Analysis
 
 | Fold | Test Month | Train Trades | Test Trades | Baseline (R) | Best Variant | Best (R) | Improvement (R) |
 |------|------------|--------------|-------------|--------------|--------------|----------|-----------------|
-| 1 | 2026-09 | 22 | 8 | -0.4027 | stop_1.5r | -0.3237 | +0.0790 |
-| 2 | 2026-10 | 30 | 9 | -1.0290 | time_stop_7d | -0.3022 | +0.7268 |
+| 1 | 2026-09 | 298 | 144 | -0.7408 | time_stop_7d | -0.6157 | +0.1251 |
+| 2 | 2026-10 | 442 | 73 | -0.6578 | time_stop_7d | -0.2399 | +0.4179 |
+| 3 | 2026-11 | 515 | 29 | 0.0179 | stop_1.5r | 0.0179 | +0.0000 |
 
 ## Promotion Gate
 
 | Criterion | Result |
 |-----------|--------|
-| Promote variant | YES |
-| Wins in last 3 folds | 2 / 2 |
-| Bootstrap significant | True |
-| Mean improvement (R) | +0.4029 |
+| Promote variant | NO |
+| Wins in last 3 folds | 2 / 3 |
+| Bootstrap significant | False |
+| Mean improvement (R) | +0.1810 |
 
 ## Breakdown by Pattern
 
-| breakout_with_volume | 35 | -0.6248 | 20.0% | 0.06 |
-| bullish_ma_crossover | 119 | -0.5728 | 26.9% | 0.21 |
-| macd_bullish_crossover | 49 | -0.2324 | 53.1% | 0.48 |
-| pullback_in_uptrend | 35 | 0.0398 | 62.9% | 1.14 |
-| rsi_oversold_bounce | 14 | -1.0143 | 0.0% | 0.00 |
-| stochastic_oversold | 28 | -0.2110 | 32.1% | 0.23 |
-| strong_momentum | 203 | -0.3570 | 40.9% | 0.36 |
-| trend_strength | 21 | -0.4181 | 47.6% | 0.17 |
+| breakout_with_volume | 574 | -0.5977 | 22.7% | 0.17 |
+| bullish_ma_crossover | 1225 | -0.6077 | 20.4% | 0.20 |
+| macd_bullish_crossover | 791 | -0.6380 | 20.1% | 0.18 |
+| pullback_in_uptrend | 511 | -0.1261 | 49.7% | 0.70 |
+| rsi_oversold_bounce | 217 | -0.9373 | 12.0% | 0.03 |
+| stochastic_oversold | 280 | -0.3866 | 28.2% | 0.36 |
+| strong_momentum | 2660 | -0.5117 | 26.3% | 0.24 |
+| trend_strength | 518 | -0.3035 | 34.2% | 0.40 |
 
 ## Breakdown by Score Bucket
 
-| <65 | 217 | -0.4753 | 31.3% | 0.21 |
-| 65-74 | 42 | -0.0490 | 59.5% | 0.86 |
-| 75-84 | 7 | -1.0458 | 0.0% | 0.00 |
-| 85+ | 7 | 0.4153 | 85.7% | 7.46 |
+| <65 | 3129 | -0.4913 | 26.5% | 0.26 |
+| 65-74 | 546 | -0.2772 | 36.6% | 0.48 |
+| 75-84 | 105 | -0.8810 | 6.7% | 0.04 |
+| 85+ | 28 | -0.6942 | 21.4% | 0.15 |
 
 ## Breakdown by Market Regime
 
-| bullish | 63 | -0.0047 | 61.9% | 0.99 |
-| sideways | 119 | -0.3215 | 36.1% | 0.32 |
-| bearish | 91 | -0.7808 | 18.7% | 0.08 |
+| bullish | 903 | -0.1096 | 46.0% | 0.77 |
+| sideways | 1813 | -0.4637 | 25.7% | 0.25 |
+| bearish | 1092 | -0.7884 | 14.8% | 0.10 |
 
 ## Recommendation
 
-✅ **Promote `N/A`**: beats baseline in last 3 folds with significant bootstrap CI.
+❌ **Do not promote**: no variant shows consistent, significant improvement over baseline.
 
 ---
 *Go/No-Go after WP2: if no rule variant shows net expectancy above zero with a bootstrap CI that excludes zero, the honest conclusion is that this strategy has no demonstrated edge.*

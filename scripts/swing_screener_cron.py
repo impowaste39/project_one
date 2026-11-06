@@ -67,23 +67,88 @@ def fetch_nifty500_symbols():
 def get_fallback_symbols():
     """Fallback symbols if NSE download fails"""
     return [
-        # 'RELIANCE.NS', 'TCS.NS', 'HDFCBANK.NS', 'INFY.NS', 'ICICIBANK.NS',
-        # 'HINDUNILVR.NS', 'ITC.NS', 'SBIN.NS', 'BHARTIARTL.NS', 'KOTAKBANK.NS',
-        # 'LT.NS', 'AXISBANK.NS', 'ASIANPAINT.NS', 'MARUTI.NS', 'SUNPHARMA.NS',
-        # 'TITAN.NS', 'NESTLEIND.NS', 'ULTRACEMCO.NS', 'BAJFINANCE.NS', 'HCLTECH.NS',
-        # 'WIPRO.NS', 'ONGC.NS', 'NTPC.NS', 'POWERGRID.NS', 'M&M.NS',
-        # 'TATASTEEL.NS', 'TATAMOTORS.NS', 'TECHM.NS', 'ADANIPORTS.NS', 'COALINDIA.NS',
-        # 'BAJAJFINSV.NS', 'INDUSINDBK.NS', 'HEROMOTOCO.NS', 'DIVISLAB.NS', 'CIPLA.NS',
-        # 'DRREDDY.NS', 'EICHERMOT.NS', 'GRASIM.NS', 'HINDALCO.NS', 'JSWSTEEL.NS',
-        # 'BRITANNIA.NS', 'APOLLOHOSP.NS', 'TATACONSUM.NS', 'SHREECEM.NS', 'UPL.NS',
-        # 'SBILIFE.NS', 'HDFCLIFE.NS', 'BAJAJ-AUTO.NS', 'ADANIENT.NS', 'BPCL.NS',
-        # 'HAVELLS.NS', 'GODREJCP.NS', 'DABUR.NS', 'SIEMENS.NS', 'INDIGO.NS',
-        # 'COLPAL.NS', 'PGHH.NS', 'NAUKRI.NS', 'ACC.NS', 'BOSCHLTD.NS',
-        # 'PIDILITIND.NS', 'MARICO.NS', 'ABB.NS', 'BANKBARODA.NS', 'TVSMOTOR.NS',
-        # 'AMBUJACEM.NS', 'GAIL.NS', 'DLF.NS', 'MCDOWELL-N.NS', 'SBICARD.NS',
-        # 'PNB.NS', 'CANBK.NS', 'UNIONBANK.NS', 'IDFCFIRSTB.NS', 'IRFC.NS',
-        # 'SUZLON.NS', 'NHPC.NS', 'TATAPOWER.NS', 'ADANIPOWER.NS', 'BHEL.NS',
-        # 'RVNL.NS', 'RITES.NS', 'SAIL.NS', 'NMDC.NS', 'VEDL.NS'
+        # ADDED FROM TOP SELECTIONS (sorted by PF desc)
+        "MRPL.NS",
+        "SWIGGY.NS",
+        "TARIL.NS",
+        "KOTAKBANK.NS",
+        "COALINDIA.NS",
+        "BELRISE.NS",
+        "USHAMART.NS",
+        "CUB.NS",
+        "ACMESOLAR.NS",
+        "JIOFIN.NS",
+        "HINDPETRO.NS",
+        "KARURVYSYA.NS",
+        "BPCL.NS",
+        "LTF.NS",
+        "INDIACEM.NS",
+        "NYKAA.NS",
+        "ICICIPRULI.NS",
+        "SWANCORP.NS",
+        "ITCHOTELS.NS",
+        "ANGELONE.NS",
+        "LICI.NS",
+
+        # PSU BANKS & FINANCE
+        "SBIN.NS",
+        "PNB.NS",
+        "BANKBARODA.NS",
+        "CANBK.NS",
+        "UNIONBANK.NS",
+        "MAHABANK.NS",
+        "IDFCFIRSTB.NS",
+        "IRFC.NS",
+        "RECLTD.NS",
+        "PFC.NS",
+
+        # POWER / ENERGY
+        "SUZLON.NS",
+        "NTPC.NS",
+        "NHPC.NS",
+        "TATAPOWER.NS",
+        "ADANIPOWER.NS",
+        "BHEL.NS",
+        "IOC.NS",
+        "ONGC.NS",
+        "GAIL.NS",
+        "IEX.NS",
+
+        # RAILWAYS / INFRA
+        "RVNL.NS",
+        "RITES.NS",
+        "IRB.NS",
+        "NCC.NS",
+
+        # METALS & MATERIALS
+        "SAIL.NS",
+        "NMDC.NS",
+        "HINDCOPPER.NS",
+        "VEDL.NS",
+        "JINDALSTEL.NS",
+        "NATIONALUM.NS",
+
+        # IT & TECH
+        "WIPRO.NS",
+        "REDINGTON.NS",
+        "ROUTE.NS",
+
+        # AUTO & INDUSTRIAL
+        "ASHOKLEY.NS",
+        "MOTHERSON.NS",
+
+        # FMCG / CONSUMER
+        "ITC.NS",
+        "DABUR.NS",
+
+        # PHARMA
+        "AUROPHARMA.NS",
+        "ZYDUSLIFE.NS",
+
+        # HIGH BETA / MOMENTUM
+        "IDEA.NS",
+        "JPPOWER.NS",
+        "BEL.NS"
     ]
 
 
@@ -267,16 +332,24 @@ def push_to_bot(symbols):
     headers = {"X-API-KEY": API_KEY, "Content-Type": "application/json"}
 
     print(f"\nPushing {len(symbols)} symbols to {API_URL}...")
-    try:
-        response = requests.post(
-            API_URL, json=payload, headers=headers, timeout=10)
-        if response.status_code == 200:
-            print("✅ Successfully updated the bot's dynamic watchlist!")
-        else:
-            print(f"❌ Failed to update bot. HTTP {response.status_code}")
-            print(response.text)
-    except Exception as e:
-        print(f"❌ Connection error: {e}")
+    # 2 attempts, 30s timeout: Render free-tier cold starts can take 30-50s+
+    # after inactivity, and this push now determines tomorrow's watchlist.
+    for attempt in range(1, 3):
+        try:
+            response = requests.post(
+                API_URL, json=payload, headers=headers, timeout=30)
+            if response.status_code == 200:
+                print("✅ Successfully updated the bot's dynamic watchlist!")
+                return
+            else:
+                print(f"❌ Failed to update bot. HTTP {response.status_code}")
+                print(response.text)
+                return
+        except Exception as e:
+            print(f"❌ Connection error (attempt {attempt}/2): {e}")
+            if attempt < 2:
+                time.sleep(5)
+    print("❌ Giving up after 2 attempts — watchlist NOT updated for today.")
 
 
 if __name__ == "__main__":
@@ -295,3 +368,5 @@ if __name__ == "__main__":
     print(f"\nCompleted in {time.time() - start_time:.1f} seconds.")
     print(
         f"Selected {len(final_symbols)} out of requested {args.count} stocks.")
+
+    push_to_bot(final_symbols)

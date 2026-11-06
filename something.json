@@ -1,0 +1,42 @@
+{
+    "mcpServers": {
+      "render": {
+        "serverUrl": "https://mcp.render.com/mcp",
+        "headers": {
+          "Authorization": "Bearer rnd_LOmwg6rNDp4mjg5QMJmeO2JCsFos"
+        },
+        "disabled": false
+      },
+      "aiven-mcp": {
+        "serverUrl": "https://mcp.aiven.live/mcp?services_scope=pg&read_only=true",
+        "headers": {
+          "Authorization": "Bearer 3/BMw+TI/PtJYn9+1fj2Yau+e6NQNTKqH9VxhyDZ7oglVVzUFmtH7ISfAhwnpAXP6G5688tWoeOH27c7h7LJoZoygRTRtyugzcocTM+S4Vpcvr9ilo6kfChPcsbBB5sYzW3BxupZXm51dwcncvZhWjUcENlxsdSQl+T/jBGCJAE6qGfjSZ69toMuZan8V0dRe9tz9pwvn9YervfOqQsC0PDIxET2HdCdPokWwoC7+iQtyBxGu2ttvWxDq/CJaTD4KYzAis/h+KGbj6H1q7RLRal1UDOnMvOxsoPSkaIlk9/VwtB4FqZty9AyOxTBjRdrewE6PtS77JwSFJlJs5YWRt8GYQiWkwKTBOWgtmNcOR6++qmW"
+        },
+        "disabledTools": [
+          "aiven_kafka_topic_get",
+          "aiven_kafka_topic_list",
+          "aiven_kafka_topic_message_list",
+          "aiven_kafka_connect_available_connectors",
+          "aiven_kafka_connect_list",
+          "aiven_kafka_connect_get_connector_status",
+          "aiven_kafka_schema_registry_subjects",
+          "aiven_kafka_schema_registry_subject_version_get",
+          "aiven_vcs_integration_repository_list",
+          "aiven_vcs_integration_list",
+          "aiven_application_redeploy",
+          "aiven_application_deploy",
+          "aiven_pg_write",
+          "aiven_kafka_connect_edit_connector",
+          "aiven_kafka_connect_create_connector",
+          "aiven_pg_bouncer_delete",
+          "aiven_pg_bouncer_update",
+          "aiven_pg_bouncer_create",
+          "aiven_pg_service_query_statistics",
+          "aiven_kafka_connect_restart_connector",
+          "aiven_kafka_connect_delete_connector",
+          "aiven_kafka_connect_resume_connector",
+          "aiven_kafka_connect_pause_connector"
+        ]
+      }
+    }
+  }
