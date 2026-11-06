@@ -26,6 +26,7 @@ yfinance==1.7.0
 
 # Machine Learning
 scikit-learn==1.9.1
+joblib==1.4.0
 
 # HTTP Requests
 requests==2.34.2

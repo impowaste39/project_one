@@ -20,7 +20,7 @@ import pytz
 from datetime import datetime
 from utils.helpers import calculate_net_pnl, resolve_base_threshold
 from core.features import build_features, FEATURE_NAMES
-from sklearn.externals import joblib
+import joblib
 
 logger = logging.getLogger(__name__)
 
