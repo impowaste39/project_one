@@ -445,7 +445,7 @@
         <div class="row g-3 mb-3">
             <div class="col-6 col-md-3">
                 <div class="stat-card">
-                    <div class="stat-value {{ 'positive' if (portfolio.total_capital if portfolio else 5000) >= (INITIAL_CAPITAL if 'INITIAL_CAPITAL' in globals() else 5000) else 'negative' }}">
+                    <div class="stat-value {{ 'positive' if (portfolio.total_capital if portfolio else 5000) >= (initial_capital if initial_capital else 5000) else 'negative' }}">
                         ₹{{ "%.2f"|format(portfolio.total_capital if portfolio else 5000) }}
                     </div>
                     <div class="stat-label">Total Capital</div>

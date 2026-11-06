@@ -1011,7 +1011,8 @@ def dashboard():
         market_status=market_status,
         now=datetime.now(IST),
         current_prices=current_prices,
-        ml_readiness=ml_readiness
+        ml_readiness=ml_readiness,
+        initial_capital=float(os.getenv('INITIAL_CAPITAL', 5000)),
     )
 
 
