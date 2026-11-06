@@ -386,6 +386,47 @@ def variant_summary(df: pd.DataFrame, notional: float = DEFAULT_NOTIONAL) -> dic
     return summary
 
 
+def filter_signals(signals: list,
+                   min_score: int | None = None,
+                   max_score: int | None = None,
+                   market_trend: str | None = None,
+                   patterns: list | None = None) -> list:
+    """
+    Filter signals by score range, market trend, and/or pattern.
+
+    Args:
+        signals: List of signal dicts from load_labeled_signals()
+        min_score: Minimum entry score (inclusive)
+        max_score: Maximum entry score (inclusive)
+        market_trend: Market trend filter ('bullish', 'sideways', 'bearish')
+        patterns: List of pattern names; signal must contain at least one
+
+    Returns:
+        Filtered list of signal dicts
+    """
+    filtered = []
+    for sig in signals:
+        score = sig.get('score') or 0
+        if min_score is not None and score < min_score:
+            continue
+        if max_score is not None and score > max_score:
+            continue
+        if market_trend is not None and sig.get('market_trend') != market_trend:
+            continue
+        if patterns is not None:
+            sig_patterns = sig.get('patterns') or []
+            if isinstance(sig_patterns, str):
+                import json
+                try:
+                    sig_patterns = json.loads(sig_patterns)
+                except Exception:
+                    sig_patterns = []
+            if not any(p in sig_patterns for p in patterns):
+                continue
+        filtered.append(sig)
+    return filtered
+
+
 # =============================================================================
 # WALK-FORWARD ANALYSIS
 # =============================================================================
@@ -774,6 +815,62 @@ def main():
                     f"({imp:+.4f}R vs baseline), PF={m.get('profit_factor', 0):.2f}, "
                     f"WR={m.get('win_rate', 0):.1%}"
                 )
+
+        # --- Filtered variant testing ---
+        logger.info("\nFiltered variant testing:")
+
+        filtered_sets = {
+            'pullback_in_uptrend (all regimes)': {
+                'signals': filter_signals(signals, patterns=['pullback_in_uptrend']),
+                'label': 'pullback_in_uptrend'
+            },
+            'pullback_in_uptrend + bullish': {
+                'signals': filter_signals(
+                    signals, patterns=['pullback_in_uptrend'], market_trend='bullish'),
+                'label': 'pullback_in_uptrend + bullish'
+            },
+            'score 65-74': {
+                'signals': filter_signals(signals, min_score=65, max_score=74),
+                'label': 'score 65-74'
+            },
+            'score 75+': {
+                'signals': filter_signals(signals, min_score=75),
+                'label': 'score 75+'
+            },
+            'score 85+': {
+                'signals': filter_signals(signals, min_score=85),
+                'label': 'score 85+'
+            },
+            'bullish regime': {
+                'signals': filter_signals(signals, market_trend='bullish'),
+                'label': 'bullish regime'
+            },
+        }
+
+        for label, info in filtered_sets.items():
+            filt = info['signals']
+            if not filt:
+                logger.info(f"  {label}: no signals")
+                continue
+            filt_df = test_variants(filt, notional=args.notional)
+            filt_summary = variant_summary(filt_df, notional=args.notional)
+            filt_base = filt_summary.get('baseline', {})
+            best_variant = None
+            best_exp = filt_base.get('expectancy_r', 0)
+            for variant, m in filt_summary.items():
+                if variant == 'baseline':
+                    continue
+                if m.get('expectancy_r', 0) > best_exp:
+                    best_exp = m.get('expectancy_r', 0)
+                    best_variant = variant
+            logger.info(
+                f"  {label}: n={len(filt)}, baseline "
+                f"{filt_base.get('expectancy_r', 0):.4f}R, "
+                f"WR={filt_base.get('win_rate', 0):.1%}, "
+                f"best={best_variant or 'none'} "
+                f"{best_exp:.4f}R"
+            )
+
 
         if args.report:
             report = generate_report(signals, notional=args.notional)
